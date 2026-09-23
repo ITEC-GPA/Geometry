@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "+IA9mERy4ug=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\g.pacini\\Documents\\Repository\\Geometry\\GPCGeometry\\GPCGeometry.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\g.pacini\\.nuget\\packages\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
+    "C:\\Users\\g.pacini\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Users\\g.pacini\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

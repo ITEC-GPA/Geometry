@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{26B6C70A-6A1A-4A93-AC66-C1F3584B7310}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UnitTest</RootNamespace>
+    <AssemblyName>UnitTest</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="GMsh.Net, Version=1.4.13.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\GMsh.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="GPCUtilities">
+      <HintPath>..\..\Utilities\GPCUtilities\bin\Release\netstandard2.0\GPCUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="MaffeisTestUtilities, Version=1.0.0.8, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaffeisTestUtilities.1.0.0.8\lib\net472\MaffeisTestUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="MaffeisUtilities, Version=2.0.0.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaffeisUtilities.2.0.0.5\lib\netstandard2.0\MaffeisUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.5.0.0\lib\net461\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.3.1.1\lib\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.3.1.1\lib\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="UnsafeEx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\UnsafeEx.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collections\CollectionExtension.cs" />
+    <Compile Include="Geometry\BoundingBox2d.cs" />
+    <Compile Include="Geometry\Circle3dTest.cs" />
+    <Compile Include="Geometry\CoordinateSystemTest.cs" />
+    <Compile Include="Geometry\GeometryEqualsHashCode.cs" />
+    <Compile Include="Geometry\GeometryPerformance.cs" />
+    <Compile Include="Geometry\Line2dTest.cs" />
+    <Compile Include="Geometry\Line3dTest.cs" />
+    <Compile Include="Geometry\PlaneTest.cs" />
+    <Compile Include="Geometry\Point3dTest.cs" />
+    <Compile Include="Geometry\Polygon2dTest.cs" />
+    <Compile Include="Geometry\Polygon3dTest.cs" />
+    <Compile Include="Geometry\SerializationTest.cs" />
+    <Compile Include="Geometry\Shape2dTest.cs" />
+    <Compile Include="Geometry\ShapeTest.cs" />
+    <Compile Include="Geometry\Vector2dTest.cs" />
+    <Compile Include="Geometry\Vector3dTest.cs" />
+    <Compile Include="Mesh\DelaunayMeshTestGeneric.cs" />
+    <Compile Include="Mesh\GenericMeshTest.cs" />
+    <Compile Include="Mesh\GMeshTestGeneric.cs" />
+    <Compile Include="Mesh\GMeshTestLine.cs" />
+    <Compile Include="Mesh\GMeshTestPoint.cs" />
+    <Compile Include="Mesh\GMeshTestShape.cs" />
+    <Compile Include="Mesh\GMeshTestSplit.cs" />
+    <Compile Include="Mesh\InitialMeshTestGeneric.cs" />
+    <Compile Include="Mesh\MeshBVH.cs" />
+    <Compile Include="Mesh\MeshEqualsHashCode.cs" />
+    <Compile Include="Mesh\MeshIntersection.cs" />
+    <Compile Include="Mesh\MeshPerformance.cs" />
+    <Compile Include="Mesh\MeshTest.cs" />
+    <Compile Include="Mesh\Parametrization.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DelaunayMesh\DelaunayMesh.csproj">
+      <Project>{e7363045-ef1a-45ca-bff5-6bd6d18d5ce7}</Project>
+      <Name>DelaunayMesh</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GMesh\GMesh.csproj">
+      <Project>{3b8a7be3-456d-413f-8dc6-674e05faab92}</Project>
+      <Name>GMesh</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GPCGeometry\GPCGeometry.csproj">
+      <Project>{ecb34f4b-691d-428a-932e-73ee23bc7350}</Project>
+      <Name>GPCGeometry</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props'))" />
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.targets'))" />
+  </Target>
+  <Import Project="..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.targets" Condition="Exists('..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.targets')" />
+</Project>

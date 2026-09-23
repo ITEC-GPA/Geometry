@@ -1,0 +1,8 @@
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\bin\Debug\netstandard2.0\MaffeisGeometry.deps.json
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\bin\Debug\netstandard2.0\MaffeisGeometry.dll
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\bin\Debug\netstandard2.0\MaffeisGeometry.pdb
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\obj\Debug\netstandard2.0\MaffeisGeometry.csproj.AssemblyReference.cache
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\obj\Debug\netstandard2.0\MaffeisGeometry.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\obj\Debug\netstandard2.0\MaffeisGeometry.csproj.CoreCompileInputs.cache
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\obj\Debug\netstandard2.0\MaffeisGeometry.dll
+C:\Users\g.pacini\Workspace\Libs\MaffeisGeometry\MaffeisGeometry\obj\Debug\netstandard2.0\MaffeisGeometry.pdb

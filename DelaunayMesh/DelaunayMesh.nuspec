@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>GPC Engineering SpA</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://git.GPC.it/developers/GPCGeometry</projectUrl>
+    <description>Mesh generator based on GPC solver engine</description>
+    <copyright>$copyright$</copyright>
+    <tags>GPC Geometry</tags>
+  </metadata>
+</package>
