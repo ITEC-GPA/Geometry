@@ -89,3 +89,8 @@ C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\obj\Release\UnitTest.dl
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\obj\Release\UnitTest.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\GMsh.Net.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnsafeEx.pdb
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.TestPlatform.AdapterUtilities.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.TestPlatform.CoreUtilities.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
