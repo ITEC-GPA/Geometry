@@ -143,13 +143,177 @@ namespace GPC.Geometry
 		/// <param name="point">The point to add</param>
 		/// <param name="tolerance"></param>
 		/// <exception cref="ArgumentException">Thrown when the point parameter make the polygon not planar</exception>
+		/// <remarks>Only the new point is checked, against a plane of three points of the polygon kept up to date by the previous calls (O(1)).
+		/// The whole polygon is checked only if the new point is not on that plane</remarks>
 		public void Add(Point3d point, double tolerance = GeometryBase.Tolerance)
 		{
+			if (point == null)
+				return;
+
+			if (!IsPlaneBasisValid(tolerance))
+				ComputePlaneBasis(tolerance);
+
 			AddWithoutChecks(point);
 
-			if (!IsPlanar(tolerance))
-				throw new ArgumentException($"Polygon with additional point {point} is not planar");
+			bool isOnPlane = UpdatePlaneBasis(point, _points.Length - 1, tolerance);
+
+			if (!isOnPlane)
+			{
+				_planeBasisIndices = null; // it will be computed again with the new point
+
+				if (!IsPlanar(tolerance))
+					throw new ArgumentException($"Polygon with additional point {point} is not planar");
+			}
 		}
+
+		#region Plane basis used by Add
+
+		// Up to three points of the polygon (index and reference) that define its plane (3 points), its line (2 points: the points are aligned)
+		// or its position (1 point: the points are coincident). The references tell if the points have been changed by other methods
+		[NonSerialized]
+		private int[] _planeBasisIndices;
+		[NonSerialized]
+		private Point3d[] _planeBasisPoints;
+		[NonSerialized]
+		private double _planeBasisTolerance;
+
+		private bool IsPlaneBasisValid(double tolerance)
+		{
+			if (_planeBasisIndices == null || _planeBasisTolerance != tolerance)
+				return false;
+
+			for (int k = 0; k < _planeBasisIndices.Length; k++)
+			{
+				int i = _planeBasisIndices[k];
+				if (i >= _points.Length || !ReferenceEquals(_points[i], _planeBasisPoints[k]))
+					return false;
+			}
+
+			return true;
+		}
+
+		private void SetPlaneBasis(double tolerance, params int[] indices)
+		{
+			_planeBasisIndices = indices;
+			_planeBasisPoints = new Point3d[indices.Length];
+			for (int k = 0; k < indices.Length; k++)
+				_planeBasisPoints[k] = _points[indices[k]];
+			_planeBasisTolerance = tolerance;
+		}
+
+		/// <summary>
+		/// Choose the basis among all the points: the first point, the farthest point from it and the farthest point from the line of the two
+		/// </summary>
+		private void ComputePlaneBasis(double tolerance)
+		{
+			if (_points.Length == 0)
+			{
+				SetPlaneBasis(tolerance);
+				return;
+			}
+
+			int b = -1;
+			double maxDistance = tolerance;
+			for (int i = 1; i < _points.Length; i++)
+			{
+				double distance = _points[0].DistanceTo(_points[i]);
+				if (distance > maxDistance)
+				{
+					maxDistance = distance;
+					b = i;
+				}
+			}
+
+			if (b < 0)
+			{
+				SetPlaneBasis(tolerance, 0);
+				return;
+			}
+
+			int c = -1;
+			maxDistance = tolerance;
+			for (int i = 1; i < _points.Length; i++)
+			{
+				double distance = DistanceFromLine(_points[0], _points[b], _points[i]);
+				if (distance > maxDistance)
+				{
+					maxDistance = distance;
+					c = i;
+				}
+			}
+
+			if (c < 0)
+				SetPlaneBasis(tolerance, 0, b);
+			else
+				SetPlaneBasis(tolerance, 0, b, c);
+		}
+
+		/// <summary>
+		/// Update the basis with the point just added at <paramref name="index"/>
+		/// </summary>
+		/// <returns>False if the basis is a plane and the point is not on it</returns>
+		private bool UpdatePlaneBasis(Point3d point, int index, double tolerance)
+		{
+			int[] basis = _planeBasisIndices;
+
+			switch (basis.Length)
+			{
+				case 0:
+					SetPlaneBasis(tolerance, index);
+					return true;
+
+				case 1:
+					if (_points[basis[0]].DistanceTo(point) > tolerance)
+						SetPlaneBasis(tolerance, basis[0], index);
+					return true;
+
+				case 2:
+				{
+					Point3d a = _points[basis[0]];
+					Point3d b = _points[basis[1]];
+					if (DistanceFromLine(a, b, point) > tolerance)
+						SetPlaneBasis(tolerance, basis[0], basis[1], index);
+					else if (a.DistanceTo(point) > a.DistanceTo(b))
+						SetPlaneBasis(tolerance, basis[0], index); // longer line, better defined
+					return true;
+				}
+
+				default:
+				{
+					Point3d a = _points[basis[0]];
+					Point3d b = _points[basis[1]];
+					Point3d c = _points[basis[2]];
+
+					double abX = b.X - a.X, abY = b.Y - a.Y, abZ = b.Z - a.Z;
+					double acX = c.X - a.X, acY = c.Y - a.Y, acZ = c.Z - a.Z;
+					double nX = abY * acZ - abZ * acY;
+					double nY = abZ * acX - abX * acZ;
+					double nZ = abX * acY - abY * acX;
+					double nLength = Math.Sqrt(nX * nX + nY * nY + nZ * nZ);
+
+					double distanceFromPlane = Math.Abs(nX * (point.X - a.X) + nY * (point.Y - a.Y) + nZ * (point.Z - a.Z)) / nLength;
+					if (!(distanceFromPlane < tolerance))
+						return false;
+
+					if (DistanceFromLine(a, b, point) > DistanceFromLine(a, b, c))
+						SetPlaneBasis(tolerance, basis[0], basis[1], index); // wider triangle, better defined plane
+					return true;
+				}
+			}
+		}
+
+		/// <returns>The distance of <paramref name="point"/> from the infinite line through <paramref name="a"/> and <paramref name="b"/></returns>
+		private static double DistanceFromLine(Point3d a, Point3d b, Point3d point)
+		{
+			double abX = b.X - a.X, abY = b.Y - a.Y, abZ = b.Z - a.Z;
+			double apX = point.X - a.X, apY = point.Y - a.Y, apZ = point.Z - a.Z;
+			double cX = abY * apZ - abZ * apY;
+			double cY = abZ * apX - abX * apZ;
+			double cZ = abX * apY - abY * apX;
+			return Math.Sqrt((cX * cX + cY * cY + cZ * cZ) / (abX * abX + abY * abY + abZ * abZ));
+		}
+
+		#endregion
 
 		/// <summary>
 		/// Add a new point to the polygon. This method don't check if the polygon is planar or not
@@ -362,8 +526,11 @@ namespace GPC.Geometry
 		/// <returns>True if the point already exists</returns>
 		public bool PointExists(Point3d point, double tolerance = GeometryBase.Tolerance)
 		{
-			if (_points.Count(p => p.DistanceTo(point) < tolerance) > 0)
-				return true;
+			for (int i = 0; i < _points.Length; i++)
+			{
+				if (_points[i].DistanceTo(point) < tolerance)
+					return true;
+			}
 			return false;
 		}
 
@@ -388,16 +555,39 @@ namespace GPC.Geometry
 		/// <returns>The index of the edge where the point is on, otherwise -1</returns>
 		public int IsPointOnEdge(Point3d point, double tolerance = GeometryBase.Tolerance)
 		{
+			if (point == null)
+				throw new ArgumentNullException("Point can not be null");
+
 			for (int i = 0; i < _points.Length; i++)
 			{
-				Line3d line = new Line3d(_points[i], GetNextPoint(i));
-				if (line.IsPointOnLine(point, tolerance))
+				if (IsPointOnSegment(_points[i], GetNextPoint(i), point, tolerance))
 				{
 					return i;
 				}
 			}
 
 			return -1;
+		}
+
+		/// <summary>
+		/// Same test of <see cref="Line3d.IsPointOnLine(Point3d, double)"/>, without creating lines and vectors
+		/// </summary>
+		private static bool IsPointOnSegment(Point3d start, Point3d end, Point3d point, double tolerance)
+		{
+			double v1X = start.X - point.X, v1Y = start.Y - point.Y, v1Z = start.Z - point.Z;
+			double v2X = end.X - point.X, v2Y = end.Y - point.Y, v2Z = end.Z - point.Z;
+
+			double crossX = v1Y * v2Z - v1Z * v2Y;
+			double crossY = -(v1X * v2Z - v1Z * v2X);
+			double crossZ = v1X * v2Y - v1Y * v2X;
+
+			double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(Math.Sqrt(v1X * v1X + v1Y * v1Y + v1Z * v1Z), Math.Sqrt(v2X * v2X + v2Y * v2Y + v2Z * v2Z), tolerance, tolerance);
+
+			if (!(Math.Abs(crossX) < tol && Math.Abs(crossY) < tol && Math.Abs(crossZ) < tol))
+				return false;
+
+			double length = start.DistanceTo(end);
+			return start.DistanceTo(point) <= length && end.DistanceTo(point) <= length;
 		}
 
 		/// <summary>
@@ -537,7 +727,45 @@ namespace GPC.Geometry
 		/// <param name="tolerance">The tolerance</param>
 		/// <returns>A unitized vector normal to the polygon</returns>
 		/// <exception cref="NotSupportedException">Thrown when Number of unique points not sufficient to create a normal vector</exception>
+		/// <remarks>The normal is the unitized Newell area vector (right hand rule on the vertices order), so it is correct also for concave polygons.
+		/// Only for degenerate polygons (area close to zero) the normal is computed from the first three not aligned points</remarks>
 		public Vector3d GetNormalVector(double tolerance = GeometryBase.Tolerance)
+		{
+			if (TryGetUnitNormal(tolerance, out Vector3d normal))
+				return normal;
+
+			return GetNormalVectorFromFirstPoints(tolerance);
+		}
+
+		/// <summary>
+		/// Unit normal from the Newell area vector
+		/// </summary>
+		/// <returns>False if the polygon has less than three points or if its area is too small, compared with its perimeter, to define a normal</returns>
+		internal bool TryGetUnitNormal(double tolerance, out Vector3d normal)
+		{
+			normal = null;
+			if (_points.Length < 3)
+				return false;
+
+			Vector3d area = GetAreaVector();
+			double length = area.Length;
+
+			if (!(length > tolerance * GetPerimeter()))
+				return false;
+
+			normal = new Vector3d(area.X / length, area.Y / length, area.Z / length);
+			return true;
+		}
+
+		private double GetPerimeter()
+		{
+			double perimeter = 0;
+			for (int i = 0; i < _points.Length; i++)
+				perimeter += _points[i].DistanceTo(_points[(i + 1) % _points.Length]);
+			return perimeter;
+		}
+
+		private Vector3d GetNormalVectorFromFirstPoints(double tolerance)
 		{
 			Polygon3d p = (Polygon3d)Clone();
 			p.RemoveDuplicatedPoints(tolerance);
@@ -747,7 +975,99 @@ namespace GPC.Geometry
 		/// <param name="pointToTest">Point to test</param>
 		/// <param name="tol"></param>
 		/// <returns>True if the point is inside the polygon</returns>
+		/// <remarks>The plane and the projection are given by the Newell area vector, without copies of the polygon.
+		/// Points on the border (within <paramref name="tol"/> in the projection) are inside</remarks>
 		public bool IsPointInside(Point3d pointToTest, double tol = GeometryBase.Tolerance)
+		{
+			if (_points.Length < 3)
+				return IsPointInsideByProjections(pointToTest, tol);
+
+			Vector3d area = GetAreaVector();
+			double length = area.Length;
+
+			if (!(length > tol * GetPerimeter()))
+				return IsPointInsideByProjections(pointToTest, tol); // degenerate polygon
+
+			Point3d origin = _points[0];
+			double distanceFromPlane = (area.X * (pointToTest.X - origin.X) + area.Y * (pointToTest.Y - origin.Y) + area.Z * (pointToTest.Z - origin.Z)) / length;
+			if (!(Math.Abs(distanceFromPlane) < tol))
+			{
+				// Point off the plane: the previous method decides, so the result does not change.
+				// With a large tolerance it does not check the plane, because RemoveAlignedPoints uses the tolerance as an angle
+				// and removes vertices of the polygon (e.g. Checker MixedSectionTest.FailureDomain02 relies on it)
+				return IsPointInsideByProjections(pointToTest, tol);
+			}
+
+			// Projection on the coordinate plane where the polygon has the largest area: the components of the area vector are the projected areas
+			double areaYZ = Math.Abs(area.X);
+			double areaXZ = Math.Abs(area.Y);
+			double areaXY = Math.Abs(area.Z);
+
+			if (areaXY >= areaYZ && areaXY >= areaXZ)
+				return IsPointInsideProjection(pointToTest, 0, 1, tol);
+			else if (areaYZ >= areaXY && areaYZ >= areaXZ)
+				return IsPointInsideProjection(pointToTest, 1, 2, tol);
+			else
+				return IsPointInsideProjection(pointToTest, 0, 2, tol);
+		}
+
+		private static double Coordinate(Point3d point, int axis)
+		{
+			return axis == 0 ? point.X : (axis == 1 ? point.Y : point.Z);
+		}
+
+		/// <summary>
+		/// Same test of <see cref="Polygon2d.IsPointInside(Point2d, double)"/> on the projection of the polygon on the coordinates <paramref name="u"/>, <paramref name="v"/>
+		/// </summary>
+		private bool IsPointInsideProjection(Point3d pointToTest, int u, int v, double tol)
+		{
+			int count = _points.Length;
+			double px = Coordinate(pointToTest, u);
+			double py = Coordinate(pointToTest, v);
+
+			// Points on the border (vertices and edges) are inside
+			double squareTolerance = tol * tol;
+			for (int i = 0; i < count; i++)
+			{
+				Point3d start = _points[i];
+				Point3d end = _points[(i + 1) % count];
+				double sx = Coordinate(start, u), sy = Coordinate(start, v);
+				double ex = Coordinate(end, u), ey = Coordinate(end, v);
+				double c = ex - sx;
+				double d = ey - sy;
+
+				double squareLength = c * c + d * d;
+				double param = squareLength != 0 ? ((px - sx) * c + (py - sy) * d) / squareLength : -1;
+
+				double qx, qy;
+				if (param < 0) { qx = sx; qy = sy; }
+				else if (param > 1) { qx = ex; qy = ey; }
+				else { qx = sx + param * c; qy = sy + param * d; }
+
+				double dx = px - qx, dy = py - qy;
+				if (dx * dx + dy * dy < squareTolerance)
+					return true;
+			}
+
+			// Crossing number with the "half-open" rule on the edges
+			bool inside = false;
+			for (int i = 0, j = count - 1; i < count; j = i++)
+			{
+				double ax = Coordinate(_points[i], u), ay = Coordinate(_points[i], v);
+				double bx = Coordinate(_points[j], u), by = Coordinate(_points[j], v);
+
+				if ((ay > py) != (by > py))
+				{
+					double xCross = ax + (py - ay) * (bx - ax) / (by - ay);
+					if (px < xCross)
+						inside = !inside;
+				}
+			}
+
+			return inside;
+		}
+
+		private bool IsPointInsideByProjections(Point3d pointToTest, double tol = GeometryBase.Tolerance)
 		{
 			if (IsPointOnPlane(pointToTest, tol))                              // se il punto non è sul piano torna falso
 			{

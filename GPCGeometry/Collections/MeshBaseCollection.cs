@@ -23,7 +23,16 @@ namespace GPC.Geometry
 
         protected int _maxId = -1;
 
+        [NonSerialized]
+        private int _version;
+
         public virtual int Count => _collection.Count;
+
+        /// <summary>
+        /// Incremented at every change of the collection (add, remove, replace, clear).
+        /// Used to know if an index built on the collection is still valid
+        /// </summary>
+        public int Version => _version;
 
         public virtual bool IsReadOnly => _collection.IsReadOnly;
 
@@ -61,8 +70,9 @@ namespace GPC.Geometry
             }
 
             _collection.Add(item);
-            _ids[item.Id] = _collection.Count() - 1;
+            _ids[item.Id] = _collection.Count - 1;
             _maxId = Math.Max(item.Id, _maxId);
+            _version++;
             return item.Id;
         }
 
@@ -134,6 +144,7 @@ namespace GPC.Geometry
                 }
                 _collection.RemoveAt(index);
                 _collection.Insert(index, value);
+                _version++;
             }
         }
 
@@ -318,6 +329,7 @@ namespace GPC.Geometry
             {
                 _maxId--;
             }
+            _version++;
             return true;
         }
 
@@ -331,6 +343,7 @@ namespace GPC.Geometry
             {
                 _maxId--;
             }
+            _version++;
             return true;
         }
 
@@ -357,6 +370,7 @@ namespace GPC.Geometry
                 _ids.Clear();
                 _collection.Clear();
                 _maxId = -1;
+                _version++;
             }
         }
 

@@ -365,22 +365,10 @@ namespace GPC.Geometry
 
         /// <returns>A unitized vector normal to the shape</returns>
         /// <exception cref="NotSupportedException">Thrown when Number of unique points not sufficient to create a normal vector</exception>
+        /// <remarks>Same normal of the fill, see <see cref="Polygon3d.GetNormalVector(double)"/></remarks>
         public virtual Vector3d GetNormalVector(double tolerance = GeometryBase.Tolerance)
         {
-            var p = (Polygon3d)Fill.Clone();
-            p.RemoveDuplicatedPoints(tolerance);
-            p.RemoveAlignedPoints(tolerance);
-
-            if (p.Count < 3)
-                throw new NotSupportedException("Number of unique points not sufficient to create a normal vector");
-
-            var v1 = p[0].VectorTo(p[1]);
-            var v2 = p[0].VectorTo(p[2]);
-
-            var normal = v1.CrossProduct(v2);
-            normal.Unitize();
-
-            return normal;
+            return Fill.GetNormalVector(tolerance);
         }
 
         /// <summary>
@@ -453,19 +441,9 @@ namespace GPC.Geometry
         /// <returns>True if the point is on shape</returns>
         public bool IsPointInside(Point3d pointToTest, double tolerance = GeometryBase.Tolerance)
         {
-            Polygon3d polygon = new Polygon3d();                    // creo una copia del poligono da cui deriva la shape
-
-            for(int i = 0; i < _fill.Count; i++)                   // gli assegno i punti e rimuovo gli allineati e i duplicati
-                polygon.AddWithoutChecks(_fill[i]);                                 // in modo da avere un piano correto            
-
-            polygon.RemoveDuplicatedPoints(tolerance);
-            polygon.RemoveAlignedPoints(tolerance);
-
             bool isPointInHole = false;
 
-            Plane ShapePlane = new Plane(polygon[0], polygon[1], polygon[2], tolerance);
-
-            if (ShapePlane.IsPointOnPlane(pointToTest, tolerance))                 // controllo che sia sul piano
+            if (IsPointOnFillPlane(pointToTest, tolerance))                 // controllo che sia sul piano
             {
                 if (!_fill.PointExists(pointToTest, tolerance))                    // controllo che il punto non sia uno spigolo 
                 {
@@ -516,6 +494,30 @@ namespace GPC.Geometry
             }
             else
                 return false;
+        }
+
+        /// <summary>
+        /// Tell if the point is on the plane of the fill. The plane is given by the Newell normal of the fill (no copies of the polygon);
+        /// only for a degenerate fill it is built on the first three points, without duplicated and aligned points
+        /// </summary>
+        private bool IsPointOnFillPlane(Point3d point, double tolerance)
+        {
+            if (_fill.TryGetUnitNormal(tolerance, out Vector3d normal))
+            {
+                Point3d origin = _fill[0];
+                double distance = normal.X * (point.X - origin.X) + normal.Y * (point.Y - origin.Y) + normal.Z * (point.Z - origin.Z);
+                return Math.Abs(distance) < tolerance;
+            }
+
+            Polygon3d polygon = new Polygon3d();
+            for (int i = 0; i < _fill.Count; i++)
+                polygon.AddWithoutChecks(_fill[i]);
+
+            polygon.RemoveDuplicatedPoints(tolerance);
+            polygon.RemoveAlignedPoints(tolerance);
+
+            Plane plane = new Plane(polygon[0], polygon[1], polygon[2], tolerance);
+            return plane.IsPointOnPlane(point, tolerance);
         }
 
         /// <summary>

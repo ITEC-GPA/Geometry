@@ -21,6 +21,9 @@ namespace GPC.Geometry.Meshes
 
         protected GenerateOptions _options;
 
+        [NonSerialized]
+        private VertexGrid _vertexGrid; // spatial index of the vertices used by AddFaceMesh
+
         #endregion
 
         #region Properties
@@ -80,29 +83,139 @@ namespace GPC.Geometry.Meshes
             AddFaceMesh(points.Select(i => new MeshVertex(i)).ToArray());
         }
 
+        /// <summary>
+        /// Add a face to the mesh. A vertex closer than <paramref name="tolerance"/> to an existing vertex of the mesh is merged with it
+        /// (vertices of the same face are never merged together)
+        /// </summary>
+        /// <remarks>The existing vertices are searched with a spatial grid updated face by face, so adding n faces is O(n)</remarks>
         public int AddFaceMesh(MeshVertex[] vertices, double tolerance = GeometryBase.Tolerance)
         {
-            UpdateVertexBVH();
+            VertexGrid grid = GetVertexGrid(tolerance);
+            List<MeshVertex> newVertices = null;
 
             int[] verticesIds = new int[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
             {
-                List<int> ids = FindNeighbours(vertices[i].Point, tolerance);
+                MeshVertex existing = grid.FindClosest(vertices[i].Point, tolerance);
 
-                if (ids.Count == 0)
-                    verticesIds[i] = _vertices.Add(new MeshVertex(vertices[i]));
+                if (existing == null)
+                {
+                    MeshVertex vertex = new MeshVertex(vertices[i]);
+                    verticesIds[i] = _vertices.Add(vertex);
+                    (newVertices ?? (newVertices = new List<MeshVertex>())).Add(vertex);
+                }
                 else
-                    verticesIds[i] = ids.FirstOrDefault();
+                    verticesIds[i] = existing.Id;
 
                 if (i > 0)
                     _edges.Add(new MeshEdge(verticesIds[i - 1], verticesIds[i]));
             }
             _edges.Add(new MeshEdge(verticesIds[vertices.Length - 1], verticesIds[0]));
 
+            // the new vertices are indexed only now, so they are not merged with the vertices of the same face
+            if (newVertices != null)
+            {
+                for (int i = 0; i < newVertices.Count; i++)
+                    grid.Add(newVertices[i]);
+                VertexBVH = null; // no more up to date, FindNeighbours will rebuild it
+            }
+            grid.Version = _vertices.Version;
+
             MeshFace face = new MeshFace(verticesIds);
             _faces.Add(face);
 
             return face.Id;
+        }
+
+        /// <returns>The spatial grid of the vertices, rebuilt only if the vertices have been changed by other methods or if <paramref name="tolerance"/> needs bigger cells</returns>
+        private VertexGrid GetVertexGrid(double tolerance)
+        {
+            double cellSize = tolerance > 0 ? tolerance : VertexGrid.MinCellSize;
+
+            if (_vertexGrid == null || !ReferenceEquals(_vertexGrid.Collection, _vertices) || _vertexGrid.Version != _vertices.Version ||
+                _vertexGrid.CellSize < cellSize || _vertexGrid.CellSize > 16.0 * cellSize)
+            {
+                _vertexGrid = new VertexGrid(_vertices, cellSize);
+            }
+
+            return _vertexGrid;
+        }
+
+        /// <summary>
+        /// Uniform grid of the mesh vertices: a point is searched only in the 27 cells around it.
+        /// The cell size is not lower than the search tolerance
+        /// </summary>
+        private sealed class VertexGrid
+        {
+            public const double MinCellSize = 1E-9;
+
+            private readonly Dictionary<(long, long, long), List<MeshVertex>> _cells = new Dictionary<(long, long, long), List<MeshVertex>>();
+
+            public readonly double CellSize;
+            public readonly MeshBaseCollection<MeshVertex> Collection;
+            public int Version;
+
+            public VertexGrid(MeshBaseCollection<MeshVertex> vertices, double cellSize)
+            {
+                CellSize = cellSize;
+                Collection = vertices;
+                foreach (MeshVertex vertex in vertices)
+                    Add(vertex);
+                Version = vertices.Version;
+            }
+
+            private long Cell(double coordinate)
+            {
+                return (long)Math.Floor(coordinate / CellSize);
+            }
+
+            public void Add(MeshVertex vertex)
+            {
+                var key = (Cell(vertex.Point.X), Cell(vertex.Point.Y), Cell(vertex.Point.Z));
+                if (!_cells.TryGetValue(key, out List<MeshVertex> cell))
+                {
+                    cell = new List<MeshVertex>(1);
+                    _cells.Add(key, cell);
+                }
+                cell.Add(vertex);
+            }
+
+            /// <returns>The vertex closest to <paramref name="point"/> within <paramref name="tolerance"/> (distance lower or equal), null if there is none</returns>
+            public MeshVertex FindClosest(Point3d point, double tolerance)
+            {
+                long i = Cell(point.X);
+                long j = Cell(point.Y);
+                long k = Cell(point.Z);
+                double maxSquareDistance = tolerance * tolerance;
+
+                MeshVertex closest = null;
+                double closestSquareDistance = double.MaxValue;
+
+                for (long di = -1; di <= 1; di++)
+                    for (long dj = -1; dj <= 1; dj++)
+                        for (long dk = -1; dk <= 1; dk++)
+                        {
+                            if (!_cells.TryGetValue((i + di, j + dj, k + dk), out List<MeshVertex> cell))
+                                continue;
+
+                            for (int n = 0; n < cell.Count; n++)
+                            {
+                                Point3d p = cell[n].Point;
+                                double dx = p.X - point.X;
+                                double dy = p.Y - point.Y;
+                                double dz = p.Z - point.Z;
+                                double squareDistance = dx * dx + dy * dy + dz * dz;
+
+                                if (squareDistance <= maxSquareDistance && squareDistance < closestSquareDistance)
+                                {
+                                    closest = cell[n];
+                                    closestSquareDistance = squareDistance;
+                                }
+                            }
+                        }
+
+                return closest;
+            }
         }
 
         public int AddFaceMesh(MeshVertex[] vertices, int[] verticesIds, double tolerance = GeometryBase.Tolerance)
@@ -674,6 +787,11 @@ namespace GPC.Geometry.Meshes
         {
             foreach (var v in _vertices)
                 v.Point.Move(dX, dY, dz);
+
+            // the spatial indices refer to the old positions
+            _vertexGrid = null;
+            VertexBVH = null;
+            FaceBVH = null;
         }
 
         public void JoinMesh(Mesh meshToJoin)
