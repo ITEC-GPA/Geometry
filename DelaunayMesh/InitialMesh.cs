@@ -21,6 +21,9 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
 		#endregion
 
+		/// <summary>
+		/// Triangulation of the shape using only its vertices (constrained Delaunay triangulation, see <see cref="ConstrainedDelaunay"/>)
+		/// </summary>
 		public static bool Generate(Shape2d shape, out Mesh mesh, out InitialGenerateMeshStatus generateMeshStatus)
 		{
 			mesh = new Mesh();
@@ -28,11 +31,7 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
 			try
 			{
-				Helper.InitialTriangulationHelper triangulation = new Helper.InitialTriangulationHelper(shape);
-				List<Helper.Triangle> triangles = triangulation.Triangulate();
-
-				mesh = Helper.BuildMesh(triangles);
-
+				mesh = ConstrainedDelaunay.Triangulate(shape, double.PositiveInfinity, false);
 				return true;
 			}
 			catch (Exception)
