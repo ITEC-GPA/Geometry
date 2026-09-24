@@ -61,7 +61,7 @@ namespace GPC.Geometry.Meshes
             if (other is null)
                 return false;
 
-            return base.Equals(other) && (_a == other._a && _b == other._b) || (_a == other._b && _b == other._a);
+            return base.Equals(other) && ((_a == other._a && _b == other._b) || (_a == other._b && _b == other._a));
         }
 
         public bool EqualsWithoutId(MeshEdge other)
@@ -85,6 +85,8 @@ namespace GPC.Geometry.Meshes
         {
             if (ReferenceEquals(edge1, edge2))
                 return true;
+            if (edge1 is null || edge2 is null)
+                return false;
             return edge1.Equals(edge2);
         }
 
@@ -103,7 +105,7 @@ namespace GPC.Geometry.Meshes
             {
                 return Equals(edge);
             }
-            return Equals(obj);
+            return false;
         }
 
         public override int GetHashCode()

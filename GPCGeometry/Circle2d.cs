@@ -199,10 +199,10 @@ namespace GPC.Geometry
 
 		public override bool Equals(object obj)
 		{
-			if (obj is Circle3d circle)			
+			if (obj is Circle2d circle)
 				return Equals(circle);
-			
-			return Equals(obj);
+
+			return false;
 		}
 
 		public override int GetHashCode()

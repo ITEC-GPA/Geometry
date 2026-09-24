@@ -126,14 +126,14 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Perimeter of the circle
+		/// Length of the arc: radius * angle at center
 		/// </summary>
+		/// <remarks><see cref="GetAngle"/> is in the range [0, PI], so arcs larger than a half circle are not supported</remarks>
 		public double GetLenght()
 		{
-			double raggio = Start.DistanceTo(End);
-			double circonferenza = 2 * Math.PI * raggio;
+			double raggio = Start.DistanceTo(Center);
 
-			return circonferenza * GetAngle() / 360;
+			return raggio * GetAngle();
 		}
 
 		/// <summary>
@@ -215,10 +215,10 @@ namespace GPC.Geometry
 
 		public override bool Equals(object obj)
 		{
-			if (obj is Circle3d circle)
-				return Equals(circle);
+			if (obj is Circle3dArc arc)
+				return Equals(arc);
 
-			return Equals(obj);
+			return false;
 		}
 
 		public override bool Equals(GeometryBase geometryBase)
@@ -237,7 +237,10 @@ namespace GPC.Geometry
 			if (ReferenceEquals(this, circle3DArc))
 				return true;
 
-			return _passage.Equals(circle3DArc.Passage) &&
+			// _passage is null when the arc is created by start, end and center
+			bool passageEquals = _passage is null ? circle3DArc.Passage is null : _passage.Equals(circle3DArc.Passage);
+
+			return passageEquals &&
 				_center.Equals(circle3DArc.Center) &&
 				_end.Equals(circle3DArc.End) &&
 				_start.Equals(circle3DArc.Start);

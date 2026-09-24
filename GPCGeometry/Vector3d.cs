@@ -30,7 +30,7 @@ namespace GPC.Geometry
 
 		public double Z { get => _z; set => _z = value; }
 
-		public double Length => Math.Sqrt(Math.Pow(_x, 2) + Math.Pow(_y, 2) + Math.Pow(_z, 2));
+		public double Length => Math.Sqrt(_x * _x + _y * _y + _z * _z);
 
 		#endregion
 
@@ -187,8 +187,14 @@ namespace GPC.Geometry
 			return new Vector3d(this);
 		}
 
+		/// <summary>
+		/// Add the given increments to the components of the vector (same behaviour of <see cref="Move(Vector3d)"/>)
+		/// </summary>
 		public override void Move(double v1, double v2, double v3)
 		{
+			_x += v1;
+			_y += v2;
+			_z += v3;
 		}
 
 		public override void Move(Vector3d vector)
@@ -263,6 +269,8 @@ namespace GPC.Geometry
 		{
 			if (ReferenceEquals(vector1, vector2))
 				return true;
+			if (vector1 is null || vector2 is null)
+				return false;
 			return vector1.Equals(vector2);
 		}
 
@@ -308,10 +316,10 @@ namespace GPC.Geometry
 
 		public override bool Equals(object obj)
 		{
-			if (obj is Vector3d point)			
+			if (obj is Vector3d point)
 				return Equals(point);
-			
-			return Equals(obj);
+
+			return false;
 		}
 
 		public override int GetHashCode()

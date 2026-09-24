@@ -258,25 +258,9 @@ namespace GPC.Geometry
                 throw new ArgumentNullException("Point can not be null");
             }
 
-            // http://www.ambrsoft.com/TrigoCalc/Line3D/LineColinear.htm#:~:text=Collinear%203%20dimentional%20lines&text=Collinear%20points%20are%20all%20located%20on%20the%20same%20line.&text=Another%20way%20of%20checking%20whether,then%20the%20points%20are%20collinear.
-            // If the cross product of the vectors n1 and n2 is zero in all directions then the points are collinear, 
-            // n1 and n2 are the vectors connecting one point to the other two points
-
-            double crossProductZ = ((_end.X - _start.X) * (point.Y - _start.Y) - (point.X - _start.X) * (_end.Y - _start.Y));
-            double L1 = _start.DistanceTo(point);
-            double L2 = _end.DistanceTo(point);
-            double L = GetLength();
-
-            double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(crossProductZ, crossProductZ, tolerance, tolerance);
-
-            if (Math.Abs(crossProductZ) < tol && L1 <= L && L2 <= L)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // The point is on the segment if its distance from the segment (in the XY plane) is lower than the tolerance.
+            // The previous check on the cross product used a tolerance proportional to the cross product itself, i.e. almost zero
+            return SquareDistanceTo(new Point2d(point.X, point.Y)) < tolerance * tolerance;
         }
 
         /// <summary>

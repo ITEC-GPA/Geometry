@@ -230,6 +230,8 @@ namespace GPC.Geometry
         {
             if (ReferenceEquals(vector1, vector2))
                 return true;
+            if (vector1 is null || vector2 is null)
+                return false;
             return vector1.Equals(vector2);
         }
 
@@ -258,7 +260,7 @@ namespace GPC.Geometry
             {
                 return Equals(point);
             }
-            return Equals(obj);
+            return false;
         }
 
         public override bool Equals(GeometryBase geometryBase)

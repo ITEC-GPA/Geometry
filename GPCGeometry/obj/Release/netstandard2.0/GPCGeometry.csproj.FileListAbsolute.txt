@@ -20,3 +20,4 @@ C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstand
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeome.73C21845.Up2Date
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.pdb
+C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.sourcelink.json

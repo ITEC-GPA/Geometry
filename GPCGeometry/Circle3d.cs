@@ -88,8 +88,11 @@ namespace GPC.Geometry
             CalculateVaribles(p1, p2, p3, tolerance);
 		}
 
+        /// <summary>
+        /// Copy constructor (deep copy: moving the new circle does not move the original)
+        /// </summary>
         public Circle3d(Circle3d circle)
-            :this(circle.Center, circle.Radius, circle.Plane)
+            :this(new Point3d(circle.Center), circle.Radius, new Plane(circle.Plane))
 		{
 		}
 
@@ -101,7 +104,7 @@ namespace GPC.Geometry
 		protected Circle3d(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            _center = (Point2d)info.GetValue("Center", typeof(Point2d));
+            _center = (Point3d)info.GetValue("Center", typeof(Point3d));
             _plane = (Plane)info.GetValue("Plane", typeof(Plane));
             _radius = info.GetDouble("R");
         }
@@ -264,7 +267,7 @@ namespace GPC.Geometry
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("Center", _center, typeof(Point2d));
+            info.AddValue("Center", _center, typeof(Point3d));
             info.AddValue("Plane", _plane, typeof(Plane));
             info.AddValue("R", _radius, typeof(double));
         }
@@ -280,7 +283,7 @@ namespace GPC.Geometry
             {
                 return Equals(circle);
             }
-            return Equals(obj);
+            return false;
         }
 
 		public bool Equals(Circle3d other)

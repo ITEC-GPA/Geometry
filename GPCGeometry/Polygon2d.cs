@@ -480,59 +480,48 @@ namespace GPC.Geometry
         /// <param name="pointToTest">Point to test</param>
         /// <param name="tolerance"></param>
         /// <returns>True if the point is inside</returns>
+        /// <returns>True if the point is inside the polygon or on its border (vertices included) within <paramref name="tolerance"/></returns>
         public bool IsPointInside(Point2d pointToTest, double tolerance = GeometryBase.Tolerance)
         {
-            BoundingBox2d bbox = new BoundingBox2d(this);                       // Creo la Bounding Box del poligono
-            bbox.Scale(1.05);                                                   // Scalo per evitare di avere un vertice della BBox coincidente con uno del poligono
-            Line2d ray = new Line2d(pointToTest, bbox.Max);                     // Creo la linea tra il punto da testare e il max della BoundingBox (ray)
-            double tol = Math.Sqrt(Utilities.Maths.ErrorPropagation.SumSquareTolerance(tolerance, tolerance));
+            // Documentation: http://geomalgorithms.com/a03-_inclusion.html
+            // Crossing Number: a horizontal ray starting from the point to test is intersected with the edges of the polygon.
+            // If the number of crossings is odd the point is inside, if it is even the point is outside.
+            // The "half-open" rule on the edges (upward edges include the start point and exclude the end point, downward edges the opposite)
+            // handles the rays passing through the vertices without random rotations of the ray.
 
-			for (int i = 0; i < _points.Length; i++)                                  // controllo che il punto non sia un vertice
+            int count = _points.Length;
+            if (count == 0)
+                return false;
+
+            // Points on the border (vertices and edges) are inside
+            double squareTolerance = tolerance * tolerance;
+            for (int i = 0; i < count; i++)
             {
-				if (Math.Abs(pointToTest.X - _points[i].X) < tol && Math.Abs(pointToTest.Y - _points[i].Y) < tol)
-                     return true;
+                if (new Line2d(_points[i], _points[(i + 1) % count]).SquareDistanceTo(pointToTest) < squareTolerance)
+                    return true;
             }
 
-            Random random = new Random();
-            for (int i = 0; i < _points.Length; i++)                             // controllo che il raggio da pointToTest e BBox.max non intersechi un vertice.
-            {                                                                   // Se vero: ruoto il raggio (voglio evitare il caso limite del raggio che interseca uno spigolo)
-                //if (ray.IsPointOnLine(_points[i], tolerance))                              // continua a controllare finchè non trova un raggio che non interseca vertici
-                if (ray.DistanceTo(_points[i]) < tolerance)
+            if (count < 3)
+                return false;
+
+            bool inside = false;
+            double px = pointToTest.X;
+            double py = pointToTest.Y;
+
+            for (int i = 0, j = count - 1; i < count; j = i++)
+            {
+                Point2d a = _points[i];
+                Point2d b = _points[j];
+
+                if ((a.Y > py) != (b.Y > py))
                 {
-                    ray.Rotate(pointToTest, 1.0 / 30.0 + random.NextDouble());
-                    i = -1;
+                    double xCross = a.X + (py - a.Y) * (b.X - a.X) / (b.Y - a.Y);
+                    if (px < xCross)
+                        inside = !inside;
                 }
             }
 
-            int intersectionCount = 0;
-
-			Line2d[] array = this.Explode();
-			for (int i = 0; i < array.Length; i++)                             // creo i lati del poligono
-            {
-				//if (array[i].IsPointOnLine(pointToTest, tolerance))                            // controllo che il punto da testare non sia su un lato del poligono, altrimenti torna vero
-                if (array[i].DistanceTo(pointToTest) < tolerance)
-                    return true;
-                if (array[i].GetIntersection(ray, out _, tolerance))   // Cerco le intersezioni tra i lati e il raggio                
-                    intersectionCount++;                                        // e le aggiungo al contatore                
-            }
-
-            if (intersectionCount % 2 == 0)
-                return false;                                                   // se sono dispari è interno
-            else
-                return true;                                                    // se sono dispari è interno
-
-            //
-            // Documentation: http://geomalgorithms.com/a03-_inclusion.html
-            // Esistono 2 metodi: Crossing Number e Winding Number. Abbiamo utilizzato il crossing number. E' più leggero computazionalmente.
-            // Su poligoni a molti lati può essere pesante ma comunque molto meno dello winding number
-            // Possibili codici alternativi: https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
-            //
-            // Concetto base del metodo: creo una line2d ( ray ) dal punto da testare ad un punto " all'infinito " (che noi abbiamo preso coincidente con 
-            // il max della Bounding Box scalata => vedi commenti accanto al codice).
-            // Ricerco le intersezioni tra ray e tutti i lati del poligono. Se il conteggio è pari, il punto è esterno. Se è dispari, è interno.
-            // 
-            // "which counts the number of times a ray starting from the point P crosses the polygon boundary edges. 
-            // The point is outside when this "crossing number" is even; otherwise, when it is odd, the point is inside.
+            return inside;
         }
 
         /// <summary>

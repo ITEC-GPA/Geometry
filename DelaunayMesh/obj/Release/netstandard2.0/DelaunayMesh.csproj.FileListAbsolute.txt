@@ -22,3 +22,4 @@ C:\Users\g.pacini\Documents\Repository\Geometry\DelaunayMesh\obj\Release\netstan
 C:\Users\g.pacini\Documents\Repository\Geometry\DelaunayMesh\obj\Release\netstandard2.0\Delaunay.FAF10A51.Up2Date
 C:\Users\g.pacini\Documents\Repository\Geometry\DelaunayMesh\obj\Release\netstandard2.0\DelaunayMesh.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\DelaunayMesh\obj\Release\netstandard2.0\DelaunayMesh.pdb
+C:\Users\g.pacini\Documents\Repository\Geometry\DelaunayMesh\obj\Release\netstandard2.0\DelaunayMesh.sourcelink.json

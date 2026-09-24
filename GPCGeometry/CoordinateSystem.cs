@@ -82,7 +82,7 @@ namespace GPC.Geometry
         /// <param name="tolerance">The tolerance</param>
         /// <remarks>The 3 vector must be ortogonals</remarks>
         public CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name = "", double tolerance = GeometryBase.AngularTolerance)
-            : this(origin, v1, v2, v3, name, new Guid(), tolerance)
+            : this(origin, v1, v2, v3, name, Guid.NewGuid(), tolerance)
         {
 
         }
@@ -303,7 +303,6 @@ namespace GPC.Geometry
         {
             Polygon2d fill = ToLocal(shape.Fill);
 
-            bool hashHoles = false;
             Polygon2d[] holes = null;
             if (shape.HasHoles)
             {
@@ -314,7 +313,6 @@ namespace GPC.Geometry
                 }
             }
 
-            bool hashChilds = false;
             Shape2d[] childs = null;
             if (shape.HasChilds)
             {
@@ -325,17 +323,7 @@ namespace GPC.Geometry
                 }
             }
 
-            if (hashHoles && hashChilds)
-                return new Shape2d(fill, holes, childs);
-
-            else if (hashHoles && !hashChilds)
-                return new Shape2d(fill, holes, null);
-
-            else if (!hashHoles && hashChilds)
-                return new Shape2d(fill, null, childs);
-
-            else
-                return new Shape2d(fill);
+            return new Shape2d(fill, holes, childs);
         }
 
         /// <summary>
@@ -588,7 +576,7 @@ namespace GPC.Geometry
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateV1(double angle)
         {
-            Rotate(angle * _v1.X, angle * _v1.Y, angle * _v1.Z);
+            RotateAroundAxis(new Vector3d(_v1), angle);
         }
 
         /// <summary>
@@ -597,7 +585,7 @@ namespace GPC.Geometry
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateV2(double angle)
         {
-            Rotate(angle * _v2.X, angle * _v2.Y, angle * _v2.Z);
+            RotateAroundAxis(new Vector3d(_v2), angle);
         }
 
         /// <summary>
@@ -606,7 +594,29 @@ namespace GPC.Geometry
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateV3(double angle)
         {
-            Rotate(angle * _v3.X, angle * _v3.Y, angle * _v3.Z);
+            RotateAroundAxis(new Vector3d(_v3), angle);
+        }
+
+        /// <summary>
+        /// Rotate the axes of the coordinate system around the given axis passing through the origin (Rodrigues' rotation formula)
+        /// </summary>
+        /// <param name="axis">The rotation axis in global coordinates</param>
+        /// <param name="angle">The angle rotation in radians, counterclockwise looking from the tip of <paramref name="axis"/></param>
+        private void RotateAroundAxis(Vector3d axis, double angle)
+        {
+            axis.Unitize();
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+
+            Vector3d Rotate(Vector3d v)
+            {
+                // v cos + (k x v) sin + k (k . v)(1 - cos)
+                Vector3d rotated = v * cos + axis.CrossProduct(v) * sin + axis * (axis.DotProduct(v) * (1.0 - cos));
+                rotated.Unitize();
+                return rotated;
+            }
+
+            SetTransformationMatrix(Rotate(_v1), Rotate(_v2), Rotate(_v3));
         }
 
         public override void Move(double v1, double v2, double v3)

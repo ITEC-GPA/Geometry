@@ -84,6 +84,7 @@
     <Compile Include="Geometry\Point3dTest.cs" />
     <Compile Include="Geometry\Polygon2dTest.cs" />
     <Compile Include="Geometry\Polygon3dTest.cs" />
+    <Compile Include="Geometry\ReviewFixesTest.cs" />
     <Compile Include="Geometry\SerializationTest.cs" />
     <Compile Include="Geometry\Shape2dTest.cs" />
     <Compile Include="Geometry\ShapeTest.cs" />

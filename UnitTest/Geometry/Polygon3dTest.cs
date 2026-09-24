@@ -1412,7 +1412,8 @@ namespace Geometry
             };
 
             Assert.AreEqual(new Point3d(1,1,0), p1.GetBarycenterOfTriangle());
-            Assert.AreEqual(new Point3d(-44.789, 45.614, 5.678), p2.GetBarycenterOfTriangle());
+            // exact values: the rounded ones (-44.789, 45.614, 5.678) are outside the tolerance of Point3d.Equals
+            Assert.AreEqual(new Point3d(-134.368 / 3.0, 136.841 / 3.0, 17.035 / 3.0), p2.GetBarycenterOfTriangle());
             Console.WriteLine(p2.GetBarycenterOfTriangle());
         }
 

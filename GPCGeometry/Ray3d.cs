@@ -63,23 +63,29 @@ namespace GPC.Geometry
             // If the cross product of the vectors n1 and n2 is zero in all directions then the points are collinear, 
             // n1 and n2 are the vectors connecting one point to the other two points       
 
-            var _start = Point;
-            var _end = Point + Direction;
+            // The point is on the line if its distance from the line is lower than the tolerance.
+            // Distance = |d x (P - P0)| / |d|, independent from the length of the direction vector
 
-            double crossProductX = ((_end.Y - _start.Y) * (point.Z - _start.Z) - (point.Y - _start.Y) * (_end.Z - _start.Z));
-            double crossProductY = ((point.X - _start.X) * (_end.Z - _start.Z) - (_end.X - _start.X) * (point.Z - _start.Z));
-            double crossProductZ = ((_end.X - _start.X) * (point.Y - _start.Y) - (point.X - _start.X) * (_end.Y - _start.Y));
+            double dx = Direction.X;
+            double dy = Direction.Y;
+            double dz = Direction.Z;
+            double squareLength = dx * dx + dy * dy + dz * dz;
 
-            double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(crossProductX, crossProductY, crossProductZ, tolerance, tolerance, tolerance);
+            if (squareLength == 0.0)
+                return point.DistanceTo(Point) < tolerance;
 
-            if (Math.Abs(crossProductX) < tol && Math.Abs(crossProductY) < tol && Math.Abs(crossProductZ) < tol)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            double wx = point.X - Point.X;
+            double wy = point.Y - Point.Y;
+            double wz = point.Z - Point.Z;
+
+            double crossProductX = dy * wz - dz * wy;
+            double crossProductY = dz * wx - dx * wz;
+            double crossProductZ = dx * wy - dy * wx;
+
+            double squareCrossLength = crossProductX * crossProductX + crossProductY * crossProductY + crossProductZ * crossProductZ;
+
+            // distance^2 < tolerance^2
+            return squareCrossLength < tolerance * tolerance * squareLength;
         }
 
         /// <summary>
@@ -275,7 +281,7 @@ namespace GPC.Geometry
 
         public override object Clone()
         {
-            return new Ray3d(_point, _direction);
+            return new Ray3d(new Point3d(_point), new Vector3d(_direction));
         }
 
         public override bool Equals(object obj)

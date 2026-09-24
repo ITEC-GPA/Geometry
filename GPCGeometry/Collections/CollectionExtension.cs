@@ -38,12 +38,20 @@ namespace GPC.Geometry.Collections
         /// </summary>
         /// <param name="points">The points to triangulate</param>
         /// <returns>A Mesh with the triangles</returns>
+        /// <remarks>The input collection is not modified. A last point equal to the first one (closed polyline) is ignored</remarks>
         public static Mesh Triangulate(this ICollection<Point3d> points)
         {
+            // work on a copy: the points are removed while the triangles are created
+            List<Point3d> buffer = points.ToList();
+            if (buffer.Count > 3 && buffer[0].Equals(buffer[buffer.Count - 1]))
+                buffer.RemoveAt(buffer.Count - 1);
+
+            points = buffer;
+
             if (points.Count < 3)
                 return null;
             Mesh mesh = new Mesh();
-            do
+            while (points.Count > 3)
             {
                 int min_i = -1;
                 double min_a = double.MaxValue;
@@ -69,9 +77,18 @@ namespace GPC.Geometry.Collections
                             points.ElementAt(min_i),
                             points.ElementAt(min_i + 1)
                         });
-                    points.Remove(points.ElementAt(min_i));
+                    buffer.RemoveAt(min_i);
                 }
-            } while (points.Count > 3);
+                else
+                {
+                    break;
+                }
+            }
+
+            // the last three points are the last triangle
+            if (points.Count == 3)
+                mesh.AddFaceMesh(new[] { buffer[0], buffer[1], buffer[2] });
+
             return mesh;
         }
 

@@ -131,7 +131,7 @@ namespace GPC.Geometry
         /// <param name="factorZ">Scale factor</param>
         public Point3d Scale(Point3d center, double factorX, double factorY, double factorZ)
         {
-            return new Point3d(center.X + (X - center.X) * factorX, center.Y - (Y - center.Y) * factorY, center.Z - (Z - center.Z) * factorZ);
+            return new Point3d(center.X + (X - center.X) * factorX, center.Y + (Y - center.Y) * factorY, center.Z + (Z - center.Z) * factorZ);
         }
 
         /// <summary>
@@ -181,7 +181,10 @@ namespace GPC.Geometry
         /// <returns>The distance</returns>
         public double SquareDistanceTo(Point3d point)
         {
-            return Math.Pow(point._x - _x, 2) + Math.Pow(point._y - _y, 2) + Math.Pow(point._z - _z, 2);
+            double dx = point._x - _x;
+            double dy = point._y - _y;
+            double dz = point._z - _z;
+            return dx * dx + dy * dy + dz * dz;
         }
 
         /// <summary>
@@ -231,11 +234,13 @@ namespace GPC.Geometry
                 return false;
             }
 
-            double x, y, z = 0;
-            x = Convert.ToDouble(parts[0].Trim());
-            y = Convert.ToDouble(parts[1].Trim());
-            if (parts.Length >= 3)
-                z = Convert.ToDouble(parts[2].Trim());
+            double z = 0;
+            if (!double.TryParse(parts[0].Trim(), out double x) || !double.TryParse(parts[1].Trim(), out double y) ||
+                (parts.Length >= 3 && !double.TryParse(parts[2].Trim(), out z)))
+            {
+                result = null;
+                return false;
+            }
 
             result = new Point3d(x, y, z);
             return true;
@@ -377,7 +382,7 @@ namespace GPC.Geometry
 		/// <summary>
 		/// Check if two points are equals by means of the <paramref name="tolerance"/>
 		/// </summary>
-		/// <returns>True if the distance between point and other is less than <paramref name="tolerance"/>/></returns>
+		/// <returns>True if the distance between point and other is less than the combined tolerance of the two points, i.e. sqrt(2) * <paramref name="tolerance"/></returns>
 		public bool Equals(Point3d other, double tolerance = GeometryBase.Tolerance)
         {
             if (other is null)
@@ -386,8 +391,9 @@ namespace GPC.Geometry
             if (ReferenceEquals(this, other))
                 return true;
 
-            double tol = Math.Sqrt(Utilities.Maths.ErrorPropagation.SumSquareTolerance(tolerance, tolerance));
-            return SquareDistanceTo(other) <= tol;
+            // Square of the combined tolerance of two points: tol^2 + tol^2
+            double squareTolerance = Utilities.Maths.ErrorPropagation.SumSquareTolerance(tolerance, tolerance);
+            return SquareDistanceTo(other) <= squareTolerance;
         }
 
 		/// <summary>

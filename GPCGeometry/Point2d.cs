@@ -134,7 +134,9 @@ namespace GPC.Geometry
 		/// <returns>The distance</returns>
 		public double SquareDistanceTo(Point2d point)
         {
-            return Math.Pow(point._x - _x, 2) + Math.Pow(point._y - _y, 2);
+            double dx = point._x - _x;
+            double dy = point._y - _y;
+            return dx * dx + dy * dy;
         }
 
 		/// <summary>
@@ -200,9 +202,11 @@ namespace GPC.Geometry
                 return false;
             }
 
-            double x, y;
-            x = Convert.ToDouble(parts[0].Trim());
-            y = Convert.ToDouble(parts[1].Trim());
+            if (!double.TryParse(parts[0].Trim(), out double x) || !double.TryParse(parts[1].Trim(), out double y))
+            {
+                result = null;
+                return false;
+            }
 
             result = new Point2d(x, y);
             return true;
@@ -261,6 +265,8 @@ namespace GPC.Geometry
         {
             if (ReferenceEquals(point1, point2))
                 return true;
+            if (point1 is null || point2 is null)
+                return false;
             return point1.Equals(point2);
         }
 
@@ -289,7 +295,7 @@ namespace GPC.Geometry
             {
                 return Equals(point);
             }
-            return Equals(obj);
+            return false;
         }
 
 		public bool Equals(Point2d other)

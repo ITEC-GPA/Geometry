@@ -100,14 +100,9 @@ namespace GPC.Geometry
                 }
             }
 
-			if (childs != null)
-			{
-				_childs = new Shape[childs.Length];
-				for (int u = 0; u < childs.Length; u++)
-				{
-					_childs[u] = new Shape(childs[u]);
-				}
-			}
+			// The childs are kept as Shape2d instances (Shape2d.Childs2d casts them), as for the holes of the Polygon3d constructor
+			// the childs with opposite orientation are reversed in place
+			_childs = childs;
 
 			if (_childs != null)
 			{
@@ -119,8 +114,6 @@ namespace GPC.Geometry
 					}
 				}
 			}
-
-			_childs = childs;
         }
 
         /// <summary>
@@ -139,12 +132,12 @@ namespace GPC.Geometry
                     _holes[i] = new Polygon3d(shape._holes[i], tolerance);
                 }
             }
-            if (_childs != null)
+            if (shape._childs != null)
             {
                 _childs = new Shape[shape._childs.Length];
                 for (int i = 0; i < shape._childs.Length; i++)
                 {
-                    _childs[i] = new Shape(shape._childs[i], tolerance);
+                    _childs[i] = shape._childs[i] is Shape2d child2d ? new Shape2d(child2d, tolerance) : new Shape(shape._childs[i], tolerance); // keep the type of the child
                 }
             }
         }
@@ -164,12 +157,12 @@ namespace GPC.Geometry
 					_holes[i] = new Polygon3d(shape._holes[i]);
 				}
 			}
-			if (_childs != null)
+			if (shape._childs != null)
 			{
 				_childs = new Shape[shape._childs.Length];
 				for (int i = 0; i < shape._childs.Length; i++)
 				{
-					_childs[i] = new Shape(shape._childs[i]);
+					_childs[i] = shape._childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape._childs[i]); // keep the type of the child
 				}
 			}
 		}
@@ -190,12 +183,12 @@ namespace GPC.Geometry
                     _holes[i] = new Polygon3d(shape2d.Holes[i]);
                 }
             }
-            if (_childs != null)
+            if (shape2d.Childs != null)
             {
                 _childs = new Shape[shape2d.Childs.Length];
                 for (int i = 0; i < shape2d.Childs.Length; i++)
                 {
-                    _childs[i] = new Shape(shape2d.Childs[i]);
+                    _childs[i] = shape2d.Childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape2d.Childs[i]); // keep the type of the child
                 }
             }
         }
@@ -215,12 +208,12 @@ namespace GPC.Geometry
 					_holes[i] = new Polygon3d(shape2d.Holes[i]);
 				}
 			}
-			if (_childs != null)
+			if (shape2d.Childs != null)
 			{
 				_childs = new Shape[shape2d.Childs.Length];
 				for (int i = 0; i < shape2d.Childs.Length; i++)
 				{
-					_childs[i] = new Shape(shape2d.Childs[i]);
+					_childs[i] = shape2d.Childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape2d.Childs[i]); // keep the type of the child
 				}
 			}
 		}
@@ -923,39 +916,29 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Reverse the normal of the shape
+        /// Reverse the normal of the shape IN PLACE: the vertices order of fill, holes and childs is reversed
         /// </summary>
-        /// <returns></returns>
+        /// <returns>This same shape (not a copy), to allow chaining. To keep the original use <c>new Shape(shape).Reverse()</c></returns>
         public Shape Reverse()
         {
-            Polygon3d fill = new Polygon3d(_fill.Reverse());
-            List<Polygon3d> holes = new List<Polygon3d>();
-            List<Shape> childs = new List<Shape>();
+            _fill.Reverse();
 
             if (_holes != null)
                 for (int u = 0; u < _holes.Length; u++)
-                    holes[u] = new Polygon3d(_holes[u].Reverse());
+                    _holes[u].Reverse();
 
             if (_childs != null)
                 for (int u = 0; u < _childs.Length; u++)
-                    childs[u] = new Shape(_childs[u].Reverse());
+                    _childs[u].Reverse();
 
-            if (_holes != null && _childs != null)
-                return new Shape(fill, holes.ToArray(), childs.ToArray());
-
-            else if (_holes != null && _childs == null)
-                return new Shape(fill, holes.ToArray(), null);
-
-            else if (_holes == null && _childs != null)
-                return new Shape(fill, null, childs.ToArray());
-
-            else
-                return new Shape(fill, null, null);
+            return this;
         }
 
         internal Shape2d GetShape2d(double tolerance = GeometryBase.Tolerance)
         {
-            return new Shape2d(_fill.GetPolygon2d(tolerance), _holes.Select(i => i.GetPolygon2d(tolerance)).ToArray(), _childs.Select(i => i.GetShape2d(tolerance)).ToArray());
+            return new Shape2d(_fill.GetPolygon2d(tolerance),
+                _holes?.Select(i => i.GetPolygon2d(tolerance)).ToArray(),
+                _childs?.Select(i => i.GetShape2d(tolerance)).ToArray());
         }
 
         #endregion
@@ -1132,7 +1115,7 @@ namespace GPC.Geometry
                 for (int i = 0; i < b.Count(); i++)
                     newB[i] = newCoord.ToLocal(b[i]);
 
-                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctUnion);
+                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctUnion) ?? new Shape[0]; // null when the result is empty
                 outShapeGlobal = new Shape[outShapeLocal.Count()];
 
                 for (int i = 0; i < outShapeLocal.Count(); i++)
@@ -1321,7 +1304,7 @@ namespace GPC.Geometry
                 for (int i = 0; i < b.Count(); i++)
                     newB[i] = newCoord.ToLocal(b[i]);
 
-                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctXor);
+                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctXor) ?? new Shape[0]; // null when the result is empty
                 shapes = new Shape[outShapeLocal.Count()];
 
                 for (int i = 0; i < outShapeLocal.Count(); i++)

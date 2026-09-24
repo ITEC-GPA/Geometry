@@ -69,6 +69,8 @@ namespace GPC.Geometry.Meshes
         {
             if (ReferenceEquals(vertex1, vertex2))
                 return true;
+            if (vertex1 is null || vertex2 is null)
+                return false;
             return vertex1.Equals(vertex2);
         }
 
@@ -83,7 +85,7 @@ namespace GPC.Geometry.Meshes
 
         public bool Equals(MeshVertex other)
         {
-            return base.Equals(other) && _point == other._point;
+            return !(other is null) && base.Equals(other) && _point == other._point;
         }
 
         public bool EqualsWithoutId(MeshVertex other)
@@ -97,7 +99,7 @@ namespace GPC.Geometry.Meshes
             {
                 return Equals(vertex);
             }
-            return Equals(obj);
+            return false;
         }
 
         public override int GetHashCode()

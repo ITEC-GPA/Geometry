@@ -485,34 +485,50 @@ namespace GPC.Geometry
 		/// Calculate the area, positive if polygon is rightOriented
 		/// </summary>
 		/// <returns>The area of the polygon</returns>
+		/// <remarks>The area is positive if the polygon normal (right hand rule on the vertices order) has a positive component along the global Z axis,
+		/// negative otherwise (vertical polygons included)</remarks>
 		public double GetSignedArea(double tolerance = GeometryBase.Tolerance)
 		{
 			//TODO: testare con poligoni auto intersecanti
 			// https://math.stackexchange.com/a/2152697
 
-			// Area è la lunghezza di un vettore calcolato come somma dei cross product 
-			// di tutti i vertici con un punto casuale che sta nel piano
+			// Area è la lunghezza di un vettore calcolato come somma dei cross product
+			// di tutti i vertici con un punto che sta nel piano
 			// se il vettore è orientato verso le Z globali positive allora l'area è positiva
 
 			if (Count < 3)
 				return 0;
 
-			Vector3d area = Vector3d.Zero;
-			Vector3d normal = GetNormalVector(tolerance);
-			Polygon2d polygon2d = GetPolygon2d(tolerance);
-			Point2d basePoint = polygon2d[0];
+			Vector3d area = GetAreaVector();
+			double norm = area.Length;
 
-			for (int i = 1; i < polygon2d.Count - 1; i++)
+			return area.Z > 0 ? norm : -norm;
+		}
+
+		/// <summary>
+		/// Newell area vector: its direction is the normal of the polygon (right hand rule on the vertices order) and its length is the area.
+		/// Correct also for concave polygons and for polygons in any plane
+		/// </summary>
+		private Vector3d GetAreaVector()
+		{
+			double x = 0, y = 0, z = 0;
+			Point3d basePoint = _points[0];
+
+			for (int i = 1; i < _points.Length - 1; i++)
 			{
-				Vector3d vector = new Vector3d(new Point3d(polygon2d[i] - basePoint));
-				Vector3d crossProduct = 0.5 * vector.CrossProduct(new Vector3d(new Point3d(polygon2d.GetNextPoint(i) - basePoint)));
-				area += crossProduct;
+				double ax = _points[i].X - basePoint.X;
+				double ay = _points[i].Y - basePoint.Y;
+				double az = _points[i].Z - basePoint.Z;
+				double bx = _points[i + 1].X - basePoint.X;
+				double by = _points[i + 1].Y - basePoint.Y;
+				double bz = _points[i + 1].Z - basePoint.Z;
+
+				x += ay * bz - az * by;
+				y += az * bx - ax * bz;
+				z += ax * by - ay * bx;
 			}
 
-			if (area.DotProduct(normal) > 0)
-				return area.Norm();
-			else
-				return -area.Norm();
+			return new Vector3d(0.5 * x, 0.5 * y, 0.5 * z);
 		}
 
 		/// <summary>
@@ -565,13 +581,13 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Flip the normal of the polygon
+		/// Flip the normal of the polygon, reversing the order of the vertices IN PLACE
 		/// </summary>
+		/// <returns>This same polygon (not a copy), to allow chaining. To keep the original use <c>new Polygon3d(polygon).Reverse()</c></returns>
 		public Polygon3d Reverse()
 		{
-			Point3d[] list = _points;
-			Array.Reverse(list);
-			return new Polygon3d(list);
+			Array.Reverse(_points);
+			return this;
 		}
 
 		/// <summary>
@@ -882,13 +898,20 @@ namespace GPC.Geometry
 		/// <returns>Return true if the polygon is convex</returns>
 		public bool IsConvex()
 		{
-			// For each set of three adjacent points A, B, C, find the cross product AB · BC. If the sign of
+			// For each set of three adjacent points A, B, C, find the cross product AB x BC projected on the polygon normal. If the sign of
 			// all the cross products is the same, the angles are all positive or negative (depending on the
 			// order in which we visit them) so the polygon is convex.
+			// The projection on the normal makes the check valid for polygons in any plane (not only the XY plane)
 
 			bool got_negative = false;
 			bool got_positive = false;
 			int num_points = _points.Count();
+
+			if (num_points < 3)
+				return true;
+
+			Vector3d normal = GetAreaVector();
+			double zero = 1e-12 * normal.DotProduct(normal); // round-off threshold, same dimension of cross_product
 
 			int B, C;
 			for (int A = 0; A < num_points; A++)
@@ -896,13 +919,14 @@ namespace GPC.Geometry
 				B = (A + 1) % num_points;
 				C = (B + 1) % num_points;
 
-				double cross_product = CrossProductLength(_points[A].X, _points[A].Y, _points[B].X, _points[B].Y, _points[C].X, _points[C].Y);
+				double cross_product = new Vector3d(_points[A], _points[B]).CrossProduct(new Vector3d(_points[B], _points[C])).DotProduct(normal);
 
-				if (cross_product < 0)
+				// aligned points (null cross product apart from round-off) do not change the convexity
+				if (cross_product < -zero)
 				{
 					got_negative = true;
 				}
-				else if (cross_product > 0)
+				else if (cross_product > zero)
 				{
 					got_positive = true;
 				}
@@ -940,28 +964,6 @@ namespace GPC.Geometry
 			BoundingBox3d bbox = new BoundingBox3d();
 			bbox.Update(_points);
 			return bbox;
-		}
-
-		/// <summary>
-		/// Return the cross product AB x BC
-		/// </summary>
-		/// <param name="Ax"></param>
-		/// <param name="Ay"></param>
-		/// <param name="Bx"></param>
-		/// <param name="By"></param>
-		/// <param name="Cx"></param>
-		/// <param name="Cy"></param>
-		/// <returns></returns>
-		private double CrossProductLength(double Ax, double Ay, double Bx, double By, double Cx, double Cy)
-		{
-			// Get the vectors' coordinates.
-			double BAx = Ax - Bx;
-			double BAy = Ay - By;
-			double BCx = Cx - Bx;
-			double BCy = Cy - By;
-
-			// Calculate the Z coordinate of the cross product.
-			return (BAx * BCy - BAy * BCx);
 		}
 
 		/// <summary>
@@ -1052,28 +1054,39 @@ namespace GPC.Geometry
 			// is equivalent to the mass being at the vertices only.
 			// In the case of a convex polygon, it is easy enough to see, however, how triangulating the polygon will lead to a formula for its centroid.
 
-			Point3d centre = GetCenter();
+			// Fan triangulation from the first vertex. The area of each triangle is signed respect to the polygon normal,
+			// so the result is exact also for concave polygons and for polygons in any plane (e.g. vertical)
 
-			Polygon3d[] listOfTriangles = TriangularizationWithoutChecks(centre);
+			if (_points.Length < 3)
+				return GetCenter();
 
-			double[] areaTot = new double[listOfTriangles.Length];
-			double[] numeratorX = new double[listOfTriangles.Length];
-			double[] numeratorY = new double[listOfTriangles.Length];
-			double[] numeratorZ = new double[listOfTriangles.Length];
+			Vector3d normal = GetAreaVector();
+			double normalLength = normal.Length;
+			if (normalLength == 0)
+				return GetCenter(); // degenerate polygon (aligned points)
 
-			Parallel.For(0, listOfTriangles.Length, (i) =>
+			normal /= normalLength;
+
+			Point3d p0 = _points[0];
+			double areaTot = 0;
+			double numeratorX = 0;
+			double numeratorY = 0;
+			double numeratorZ = 0;
+
+			for (int i = 1; i < _points.Length - 1; i++)
 			{
-				Point3d triangleBarycenter = listOfTriangles[i].GetBarycenterOfTriangle();
+				Point3d p1 = _points[i];
+				Point3d p2 = _points[i + 1];
 
-				areaTot[i] = listOfTriangles[i].GetSignedArea();
+				double area = 0.5 * new Vector3d(p0, p1).CrossProduct(new Vector3d(p0, p2)).DotProduct(normal);
 
-				numeratorX[i] = triangleBarycenter.X * areaTot[i];
-				numeratorY[i] = triangleBarycenter.Y * areaTot[i];
-				numeratorZ[i] = triangleBarycenter.Z * areaTot[i];
-			});
+				areaTot += area;
+				numeratorX += area * (p0.X + p1.X + p2.X) / 3.0;
+				numeratorY += area * (p0.Y + p1.Y + p2.Y) / 3.0;
+				numeratorZ += area * (p0.Z + p1.Z + p2.Z) / 3.0;
+			}
 
-			double area = areaTot.Sum();
-			return new Point3d(numeratorX.Sum() / area, numeratorY.Sum() / area, numeratorZ.Sum() / area);
+			return new Point3d(numeratorX / areaTot, numeratorY / areaTot, numeratorZ / areaTot);
 
 			//double areaTot = 0;
 			//double numeratorX = 0;
@@ -1244,13 +1257,13 @@ namespace GPC.Geometry
 			double tol = Math.Sqrt(Utilities.Maths.ErrorPropagation.SumSquareTolerance(tolerance, tolerance));
 
 			if (int1 != null && int2 != null)
-				if ((Math.Abs(int1.X - int2.X) < tol) && (Math.Abs(int1.Y - int2.Y) < tol) && (Math.Abs(int1.Y - int2.Y) < tol))
+				if ((Math.Abs(int1.X - int2.X) < tol) && (Math.Abs(int1.Y - int2.Y) < tol) && (Math.Abs(int1.Z - int2.Z) < tol))
 					return int1;
 			if (int1 != null && int3 != null)
-				if ((Math.Abs(int1.X - int3.X) < tol) && (Math.Abs(int1.Y - int3.Y) < tol) && (Math.Abs(int1.Y - int3.Y) < tol))
+				if ((Math.Abs(int1.X - int3.X) < tol) && (Math.Abs(int1.Y - int3.Y) < tol) && (Math.Abs(int1.Z - int3.Z) < tol))
 					return int1;
 			if (int3 != null && int2 != null)
-				if ((Math.Abs(int2.X - int3.X) < tol) && (Math.Abs(int2.Y - int3.Y) < tol) && (Math.Abs(int2.Y - int3.Y) < tol))
+				if ((Math.Abs(int2.X - int3.X) < tol) && (Math.Abs(int2.Y - int3.Y) < tol) && (Math.Abs(int2.Z - int3.Z) < tol))
 					return int3;
 			if (int1 != null)
 				return int1;
@@ -1293,6 +1306,9 @@ namespace GPC.Geometry
 							}
 						}
 
+						if (index == -1)
+							throw new InvalidOperationException("Fail to find the triangle of the parametrization in the base polygon");
+
 						// ricerco la terna i, i+1, i+2 nel nuovo polygono
 						Point3d newCenter = newPolygon.GetCenter();
 						Point3d[] pointsTriangle = new Point3d[] { newPolygon._points[index], newPolygon._points[GetNextIndex(index)], newCenter };
@@ -1319,8 +1335,8 @@ namespace GPC.Geometry
 		/// <returns>The Line3d in global coordinates in the new polygon</returns>
 		public Line3d Transform(Line3d lineToParam, Polygon3d newPolygon, double tolerance = GeometryBase.Tolerance)
 		{
-			Point3d newStart = newPolygon.Transform(lineToParam.Start, newPolygon, tolerance);
-			Point3d newEnd = newPolygon.Transform(lineToParam.End, newPolygon, tolerance);
+			Point3d newStart = Transform(lineToParam.Start, newPolygon, tolerance);
+			Point3d newEnd = Transform(lineToParam.End, newPolygon, tolerance);
 
 			return new Line3d(newStart, newEnd);
 		}
@@ -1334,19 +1350,12 @@ namespace GPC.Geometry
 		/// <returns>The Line3d in global coordinates in the new polygon</returns>
 		public Polygon3d Transform(Polygon3d polygonToParam, Polygon3d newPolygon, double tolerance = GeometryBase.Tolerance)
 		{
-			HashSet<Point3d> points = new HashSet<Point3d>();
-			Line3d[] lines = polygonToParam.Explode();
+			Point3d[] points = new Point3d[polygonToParam.Count];
 
-			for (int i = 0; i < lines.Length; i++)
-			{
-				Line3d line = lines[i];
-				Point3d newStart = newPolygon.Transform(line.Start, newPolygon, tolerance);
-				Point3d newEnd = newPolygon.Transform(line.End, newPolygon, tolerance);
-				points.Add(newStart);
-				points.Add(newEnd);
-			}
+			for (int i = 0; i < polygonToParam.Count; i++)
+				points[i] = Transform(polygonToParam[i], newPolygon, tolerance);
 
-			return new Polygon3d(points.ToArray(), tolerance);
+			return new Polygon3d(points, tolerance);
 		}
 
 		/// <summary>
@@ -1358,28 +1367,22 @@ namespace GPC.Geometry
 		/// <returns>The Line3d in global coordinates in the new polygon</returns>
 		public Shape Transform(Shape shapeToParam, Polygon3d newPolygon, double tolerance = GeometryBase.Tolerance)
 		{
-			Polygon3d newFill = newPolygon.Transform(shapeToParam.Fill, newPolygon, tolerance);
+			Polygon3d newFill = Transform(shapeToParam.Fill, newPolygon, tolerance);
 
-			List<Polygon3d> holes = new List<Polygon3d>();
+			Polygon3d[] holes = null;
 			if (shapeToParam.HasHoles)
 			{
+				holes = new Polygon3d[shapeToParam.Holes.Length];
 				for (int i = 0; i < shapeToParam.Holes.Length; i++)
-				{
-					Polygon3d hole = shapeToParam.Holes[i];
-					Polygon3d newHole = newPolygon.Transform(hole, newPolygon, tolerance);
-					if (!holes.Contains(hole))
-					{
-						holes.Add(newHole);
-					}
-				}
+					holes[i] = Transform(shapeToParam.Holes[i], newPolygon, tolerance);
 			}
 
-			if (shapeToParam.Childs.Count() > 0)
+			if (shapeToParam.HasChilds && shapeToParam.Childs.Length > 0)
 			{
 				throw new NotImplementedException("Childs not implemented");
 			}
 
-			return new Shape(newFill, holes.ToArray(), null);
+			return new Shape(newFill, holes, null);
 		}
 
 		/// <summary>

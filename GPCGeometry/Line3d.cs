@@ -507,7 +507,8 @@ namespace GPC.Geometry
             {
                 for (int i = 0; i < parameters.Count(); i++)
                 {
-                    if (parameters[i] > tolerance && (parameters[i] - 1.0) < tolerance)
+                    // strictly inside the line: parameters close to 0 or 1 would create zero length lines
+                    if (parameters[i] > tolerance && (1.0 - parameters[i]) > tolerance)
                     {
                         if (!param.Contains(parameters[i]))
                             param.Add(parameters[i]);

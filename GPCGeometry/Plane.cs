@@ -80,14 +80,22 @@ namespace GPC.Geometry
         /// </summary>
         /// <param name="point">The origin point</param>
         /// <param name="normal">The normal vector</param>
+        /// <exception cref="ArgumentException">If <paramref name="normal"/> has zero length</exception>
         public Plane(Point3d point, Vector3d normal)
         {
-            _normal = normal ?? throw new ArgumentNullException(nameof(normal));
-            _normal.Unitize();
+            if (normal is null)
+                throw new ArgumentNullException(nameof(normal));
+
+            _normal = new Vector3d(normal); // the vector of the caller must not be modified
+            UnitizeNormal();
             _p1 = point ?? throw new ArgumentNullException(nameof(point));
             ComputePointsFromOriginAndNormal();
         }
 
+        /// <summary>
+        /// Plane by origin and two directions lying on the plane. The two directions must not be parallel, but they can be not orthogonal
+        /// </summary>
+        /// <exception cref="ArgumentException">If the two directions are parallel</exception>
         public Plane(Point3d origin, Vector3d xAxis, Vector3d yAxis)
         {
             if (xAxis is null)
@@ -96,13 +104,15 @@ namespace GPC.Geometry
             if (yAxis is null)
                 throw new ArgumentNullException(nameof(yAxis));
 
-            xAxis.Unitize();
-            yAxis.Unitize();
+            // copies: the vectors of the caller must not be modified
+            Vector3d x = Vector3d.Unitize(xAxis);
+            Vector3d y = Vector3d.Unitize(yAxis);
 
-            _normal = xAxis.CrossProduct(yAxis);
+            _normal = x.CrossProduct(y);
+            UnitizeNormal(); // x and y are unit vectors but not necessarily orthogonal
             _p1 = origin ?? throw new ArgumentNullException(nameof(origin));
-            _p2 = _p1 + xAxis;
-            _p3 = _p1 + yAxis;
+            _p2 = _p1 + x;
+            _p3 = _p1 + y;
         }
 
         /// <summary>
@@ -112,15 +122,21 @@ namespace GPC.Geometry
         /// <param name="b">Parameter "B" in general plane equation.</param>
         /// <param name="c">Parameter "C" in general plane equation.</param>
         /// <param name="d">Parameter "D" in general plane equation.</param>
+        /// <exception cref="ArgumentException">If a, b and c are all zero</exception>
         public Plane(double a, double b, double c, double d)
         {
-            if (Math.Abs(a) > Math.Abs(b) && Math.Abs(a) > Math.Abs(c))
+            // the origin is taken on the axis with the largest coefficient, so the division is never by zero
+            if (Math.Abs(a) >= Math.Abs(b) && Math.Abs(a) >= Math.Abs(c) && a != 0)
                 _p1 = new Point3d(-d / a, 0, 0);
-            else if (Math.Abs(b) > Math.Abs(a) && Math.Abs(b) > Math.Abs(c))
+            else if (Math.Abs(b) >= Math.Abs(c) && b != 0)
                 _p1 = new Point3d(0, -d / b, 0);
-            else
+            else if (c != 0)
                 _p1 = new Point3d(0, 0, -d / c);
+            else
+                throw new ArgumentException("The coefficients a, b and c cannot be all zero");
+
             _normal = new Vector3d(a, b, c);
+            UnitizeNormal(); // the normal must be unitized, IsPointOnPlane and D rely on it
             ComputePointsFromOriginAndNormal();
         }
 
@@ -148,6 +164,14 @@ namespace GPC.Geometry
         #endregion
 
         #region Private methods
+
+        private void UnitizeNormal()
+        {
+            if (_normal.Length == 0)
+                throw new ArgumentException("Fail to create the plane: the normal vector has zero length");
+
+            _normal.Unitize();
+        }
 
         /// <summary>
         /// Calculate 3 points on plane starting from the plane origin and normal
@@ -446,6 +470,9 @@ namespace GPC.Geometry
             if (ReferenceEquals(this, other))
                 return true;
 
+            if (other is null)
+                return false;
+
             //return other._p1.Equals(_p1) && other._p2.Equals(_p2) && other._p3.Equals(_p3);
             return IsPointOnPlane(other.Origin) && other.Normal.IsParallelTo(_normal);
         }
@@ -454,7 +481,7 @@ namespace GPC.Geometry
         {
             if (obj is Plane plane)
                 return Equals(plane);
-            return Equals(obj);
+            return false;
         }
 
         public override bool Equals(GeometryBase geometryBase)

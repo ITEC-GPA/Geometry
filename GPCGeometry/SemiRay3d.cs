@@ -99,7 +99,7 @@ namespace GPC.Geometry
 
 		public override object Clone()
 		{
-			return new SemiRay3d(_point, _direction);
+			return new SemiRay3d(new Point3d(_point), new Vector3d(_direction));
 		}
 
 		public override bool Equals(object obj)

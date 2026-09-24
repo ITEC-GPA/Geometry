@@ -182,6 +182,8 @@ namespace GPC.Geometry.Meshes
         {
             if (ReferenceEquals(face1, face2))
                 return true;
+            if (face1 is null || face2 is null)
+                return false;
             return face1.Equals(face2);
         }
 
@@ -200,7 +202,7 @@ namespace GPC.Geometry.Meshes
             {
                 return Equals(face);
             }
-            return Equals(obj);
+            return false;
         }
 
         public override int GetHashCode()

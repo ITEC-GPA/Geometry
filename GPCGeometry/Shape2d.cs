@@ -12,9 +12,11 @@ namespace GPC.Geometry
 
 		public Polygon2d Fill2d => new Polygon2d(_fill);
 
-		public Polygon2d[] Holes2d => _holes.Select(i => new Polygon2d(i)).ToArray();
+		/// <remarks>Null if the shape has no holes</remarks>
+		public Polygon2d[] Holes2d => _holes?.Select(i => new Polygon2d(i)).ToArray();
 
-		public Shape2d[] Childs2d => _childs.Cast<Shape2d>().ToArray();
+		/// <remarks>Null if the shape has no childs</remarks>
+		public Shape2d[] Childs2d => _childs?.Cast<Shape2d>().ToArray();
 
 		#endregion
 
@@ -473,6 +475,10 @@ namespace GPC.Geometry
 
 		public static bool operator ==(Shape2d left, Shape2d right)
 		{
+			if (ReferenceEquals(left, right))
+				return true;
+			if (left is null || right is null)
+				return false;
 			return left.Equals(right);
 		}
 
