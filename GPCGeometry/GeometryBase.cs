@@ -12,8 +12,11 @@ namespace GPC.Geometry
 
 		#region Constructor 
 
+		/// <summary>
+		/// The Guid is generated only when it is requested (see <see cref="BaseObject.Guid"/>)
+		/// </summary>
 		protected GeometryBase()
-            : base(Guid.NewGuid())
+            : base()
         {
 
         }

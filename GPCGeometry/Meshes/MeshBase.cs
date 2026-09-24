@@ -12,8 +12,9 @@ namespace GPC.Geometry.Meshes
 
         public const int Unset = -1;
 
+        /// <remarks>The Guid is generated only when it is requested (see <see cref="BaseObject.Guid"/>)</remarks>
         protected MeshBase()
-            : base(Guid.NewGuid())
+            : base()
         {
             Id = Unset;
         }

@@ -52,7 +52,7 @@ namespace GPC.Geometry
 		/// <param name="p3">A point on the Y axes</param>
 		/// <param name="name">The name of the CS</param>
 		public CoordinateSystem(Point3d p1, Point3d p2, Point3d p3, string name = "")
-            : this(p1, p2, p3, name, Guid.NewGuid())
+            : this(p1, p2, p3, name, Guid.Empty)
         {
 
         }
@@ -66,7 +66,7 @@ namespace GPC.Geometry
 		/// <param name="name"></param>
 		/// <param name="tolerance"></param>
 		public CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, string name = "", double tolerance = GeometryBase.AngularTolerance)
-            : this(origin, v1, v2, v1.CrossProduct(v2), name, Guid.NewGuid(), tolerance)
+            : this(origin, v1, v2, v1.CrossProduct(v2), name, Guid.Empty, tolerance)
         {
 
         }
@@ -82,7 +82,7 @@ namespace GPC.Geometry
         /// <param name="tolerance">The tolerance</param>
         /// <remarks>The 3 vector must be ortogonals</remarks>
         public CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name = "", double tolerance = GeometryBase.AngularTolerance)
-            : this(origin, v1, v2, v3, name, Guid.NewGuid(), tolerance)
+            : this(origin, v1, v2, v3, name, Guid.Empty, tolerance)
         {
 
         }
@@ -100,11 +100,12 @@ namespace GPC.Geometry
         /// <param name="p2">A point on the X axes</param>
         /// <param name="p3">A point on the Y axes</param>
         /// <param name="name">The name of the CS</param>
-        /// <param name="guid">The Guid</param>
+        /// <param name="guid">The Guid. <see cref="Guid.Empty"/>: generated when it is requested</param>
         protected CoordinateSystem(Point3d p1, Point3d p2, Point3d p3, string name, Guid guid)
         {
             _name = name;
-            _guid = guid;
+            if (guid != Guid.Empty)
+                SetGuid(guid);
             _trfMatrix = Matrix<double>.Build.Dense(3, 4, 0.0);
 
             SetOrigin(p1);
@@ -141,7 +142,7 @@ namespace GPC.Geometry
         /// <param name="v2">The Y axis vector</param>
         /// <param name="v3">The Z axis vector</param>
         /// <param name="name">The name of the CS</param>
-        /// <param name="guid">The unique GUID</param>
+        /// <param name="guid">The unique GUID. <see cref="Guid.Empty"/>: generated when it is requested</param>
         /// <param name="tolerance">The tolerance</param>
         /// <remarks>The 3 vector must be ortogonals</remarks>
         protected CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name, Guid guid, double tolerance = GeometryBase.AngularTolerance)
@@ -162,7 +163,8 @@ namespace GPC.Geometry
             }
 
             _name = name;
-            _guid = guid;
+            if (guid != Guid.Empty)
+                SetGuid(guid);
             _trfMatrix = Matrix<double>.Build.Dense(3, 4, 0.0);
             SetOrigin(origin);
             SetTransformationMatrix(v1, v2, v3);

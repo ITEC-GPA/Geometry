@@ -181,5 +181,76 @@ namespace Geometry
         }
 
         #endregion
+
+        #region Guid generated when requested
+
+        [TestMethod]
+        public void GuidIsStableAndUnique()
+        {
+            var p1 = new Point3d(1, 2, 3);
+            var p2 = new Point3d(1, 2, 3);
+
+            Guid guid = p1.Guid;
+            Assert.AreNotEqual(Guid.Empty, guid);
+            Assert.AreEqual(guid, p1.Guid);
+            Assert.AreNotEqual(guid, p2.Guid);
+            Assert.IsTrue(p1.CompareGuid(guid));
+            Assert.IsTrue(p1.CompareGuid(p1));
+            Assert.IsFalse(p1.CompareGuid(p2));
+
+            var vertex = new MeshVertex(p1);
+            Assert.AreNotEqual(Guid.Empty, vertex.Guid);
+            Assert.AreEqual(vertex.Guid, vertex.Guid);
+
+            var cs = new CoordinateSystem(P(0, 0), new Vector3d(1, 0, 0), new Vector3d(0, 1, 0));
+            Assert.AreNotEqual(Guid.Empty, cs.Guid);
+            Assert.AreEqual(cs.Guid, cs.Guid);
+        }
+
+        [TestMethod]
+        public void GuidIsTheSameForAllTheThreads()
+        {
+            for (int i = 0; i < 200; i++)
+            {
+                var point = new Point3d(i, 0, 0);
+                var guids = new Guid[16];
+                System.Threading.Tasks.Parallel.For(0, guids.Length, k => guids[k] = point.Guid);
+
+                Assert.IsTrue(guids.All(g => g == guids[0] && g != Guid.Empty));
+            }
+        }
+
+        [TestMethod]
+        public void GuidIsKeptByTheSerialization()
+        {
+            // MeshVertex reads the Guid when deserialized (Point3d, as before, gets a new one)
+            var vertex = new MeshVertex(new Point3d(1, 2, 3));
+            Guid guid = vertex.Guid;
+
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var stream = new System.IO.MemoryStream())
+            {
+                formatter.Serialize(stream, vertex);
+                stream.Position = 0;
+                var copy = (MeshVertex)formatter.Deserialize(stream);
+
+                Assert.AreEqual(guid, copy.Guid);
+                Assert.AreEqual(vertex.Point, copy.Point);
+            }
+
+            // Guid never requested before the serialization: it is generated and saved
+            var other = new MeshVertex(new Point3d(4, 5, 6));
+            using (var stream = new System.IO.MemoryStream())
+            {
+                formatter.Serialize(stream, other);
+                stream.Position = 0;
+                var copy = (MeshVertex)formatter.Deserialize(stream);
+
+                Assert.AreNotEqual(Guid.Empty, copy.Guid);
+                Assert.AreEqual(other.Guid, copy.Guid);
+            }
+        }
+
+        #endregion
     }
 }
