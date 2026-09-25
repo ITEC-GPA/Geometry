@@ -245,6 +245,11 @@ namespace GPC.Geometry.Meshes
                                     && _e == other._e && _f == other._f && _g == other._g && _h == other._h;
         }
 
+        internal override bool HasSameContent(MeshBase other)
+        {
+            return other is MeshVolume volume && Equals(volume);
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is MeshVolume face)

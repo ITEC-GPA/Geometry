@@ -1115,7 +1115,9 @@ namespace Meshes.GMsh
 
 			GMesh.Generate(shapes, embeddedGeometries, lineSubdivision, options, out List<Mesh> meshes, out GMesh.GMeshGenerateMeshStatus generateMeshStatus);
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
-            CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus,5);
+            // the minimum size is the subdivision of the lines, smaller than the mesh size (before, options.MeshSize: two faces of 2.4
+            // near the lines were "smaller than allowed", 2.5 = 5^2 / 10)
+            CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, subd, generateMeshStatus,5);
         }
 
         [TestMethod]

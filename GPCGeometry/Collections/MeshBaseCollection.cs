@@ -115,14 +115,19 @@ namespace GPC.Geometry
             return ids;
         }
 
+        /// <summary>
+        /// Add <paramref name="item"/> only if the collection has no element with the same content (point, nodes)
+        /// </summary>
+        /// <returns>The Id of the existing element or of the added one</returns>
+        /// <remarks>Before, only the hash codes were compared: two different elements with the same hash code were merged</remarks>
         public int AddUnique(T item)
         {
+            int hash = item.GetHashCode();
             for (int i = 0; i < _collection.Count; ++i)
             {
-                if (_collection.ElementAt(i).GetHashCode() == item.GetHashCode())
-                {
-                    return _collection.ElementAt(i).Id;
-                }
+                T element = _collection[i];
+                if (element.GetHashCode() == hash && element.HasSameContent(item))
+                    return element.Id;
             }
             return Add(item);
         }

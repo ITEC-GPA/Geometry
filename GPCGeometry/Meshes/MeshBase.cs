@@ -43,6 +43,15 @@ namespace GPC.Geometry.Meshes
             return (other != null) && Id == other.Id;
         }
 
+        /// <summary>
+        /// True if <paramref name="other"/> has the same content (point, nodes), whatever its Id.
+        /// Used by <see cref="MeshBaseCollection{T}.AddUnique(T)"/> after the comparison of the hash codes
+        /// </summary>
+        internal virtual bool HasSameContent(MeshBase other)
+        {
+            return true;
+        }
+
         public static bool operator ==(MeshBase obj1, MeshBase obj2)
         {
             if (ReferenceEquals(obj1, obj2))

@@ -93,6 +93,11 @@ namespace GPC.Geometry.Meshes
             return _point == other._point;
         }
 
+        internal override bool HasSameContent(MeshBase other)
+        {
+            return other is MeshVertex vertex && _point == vertex._point;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is MeshVertex vertex)

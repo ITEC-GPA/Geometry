@@ -201,6 +201,94 @@ namespace Geometry
         }
 
         [TestMethod]
+        public void AddFaceMeshAddsEveryEdgeOnce()
+        {
+            var mesh = new Mesh();
+            for (int i = 0; i < 2; i++)
+                for (int j = 0; j < 2; j++)
+                    mesh.AddFaceMesh(new[] { P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1) });
+
+            // before, every inner edge was added twice (16 edges)
+            Assert.AreEqual(12, mesh.EdgesCount);
+            Assert.AreEqual(12, mesh.Edges.Select(e => (Math.Min(e.A, e.B), Math.Max(e.A, e.B))).Distinct().Count());
+
+            // an edge added from outside is found too
+            var other = new Mesh();
+            int a = other.AddVertex(new MeshVertex(P(0, 0)));
+            int b = other.AddVertex(new MeshVertex(P(1, 0)));
+            other.Edges.Add(new MeshEdge(a, b));
+            other.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0, 1) });
+            Assert.AreEqual(3, other.EdgesCount);
+        }
+
+        [TestMethod]
+        public void AddUniqueComparesTheContent()
+        {
+            // two different edges with the same hash code (the hash of the edges is a product: there are many)
+            var byHash = new Dictionary<int, MeshEdge>();
+            MeshEdge first = null, second = null;
+            for (int i = 0; i < 3000 && second is null; i++)
+            {
+                for (int j = i + 1; j < 3000; j++)
+                {
+                    var edge = new MeshEdge(i, j);
+                    if (byHash.TryGetValue(edge.GetHashCode(), out MeshEdge existing))
+                    {
+                        first = existing;
+                        second = edge;
+                        break;
+                    }
+                    byHash[edge.GetHashCode()] = edge;
+                }
+            }
+            Assert.IsNotNull(second, "no collision found");
+
+            var edges = new MeshBaseCollection<MeshEdge>();
+            int id1 = edges.AddUnique(first);
+            int id2 = edges.AddUnique(second);
+
+            // before, the second edge was considered the first one
+            Assert.AreNotEqual(id1, id2);
+            Assert.AreEqual(2, edges.Count);
+            Assert.AreEqual(id1, edges.AddUnique(new MeshEdge(first.B, first.A)), "the same edge is found");
+        }
+
+        [TestMethod]
+        public void Polygon3dSerializationKeepsLargePolygons()
+        {
+            // more than 32767 points (before, GetInt16 overflowed) and a polygon planar only with a tolerance larger than the default one
+            var circle = new Polygon3d(Enumerable.Range(0, 40000).Select(i => P(Math.Cos(2 * Math.PI * i / 40000), Math.Sin(2 * Math.PI * i / 40000), 0)).ToArray());
+            var warped = new Polygon3d(new[] { P(0, 0, 0), P(10, 0, 0), P(10, 10, 0.01), P(0, 10, 0) }, 0.1);
+
+            foreach (Polygon3d polygon in new[] { circle, warped })
+            {
+                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                using (var stream = new System.IO.MemoryStream())
+                {
+                    formatter.Serialize(stream, polygon);
+                    stream.Position = 0;
+                    var copy = (Polygon3d)formatter.Deserialize(stream);
+
+                    Assert.AreEqual(polygon.Count, copy.Count);
+                    for (int i = 0; i < polygon.Count; i += 997)
+                        Assert.AreEqual(0, polygon[i].DistanceTo(copy[i]), 1e-12);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Polygon3dFromPolygon2dWithTolerance()
+        {
+            var polygon = Circle(10, 5000);
+            var withTolerance = new Polygon3d(polygon, 1e-3);
+            var withoutTolerance = new Polygon3d(polygon);
+
+            Assert.AreEqual(5000, withTolerance.Count);
+            for (int i = 0; i < 5000; i++)
+                Assert.AreEqual(0, withTolerance[i].DistanceTo(withoutTolerance[i]), 0);
+        }
+
+        [TestMethod]
         public void AddRangeEnumeratesOnce()
         {
             var collection = new MeshBaseCollection<MeshVertex>();

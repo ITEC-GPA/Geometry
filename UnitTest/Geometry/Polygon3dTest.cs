@@ -1508,18 +1508,19 @@ namespace Geometry
             double expN2_3 = 0.8;
             double expN3_3 = 0;
 
-            //Assert;
-            Assert.IsTrue(N1_1 == expN1_1);
-            Assert.IsTrue(N2_1 == expN2_1);
-            Assert.IsTrue(N3_1 == expN3_1);
+            //Assert; (the shape functions are computed in floating point: the comparison with == failed for rounding errors)
+            const double delta = 1e-12;
+            Assert.AreEqual(expN1_1, N1_1, delta);
+            Assert.AreEqual(expN2_1, N2_1, delta);
+            Assert.AreEqual(expN3_1, N3_1, delta);
 
-            Assert.IsTrue(N1_2 == expN1_2);
-            Assert.IsTrue(N2_2 == expN2_2);
-            Assert.IsTrue(N3_2 == expN3_2);
+            Assert.AreEqual(expN1_2, N1_2, delta);
+            Assert.AreEqual(expN2_2, N2_2, delta);
+            Assert.AreEqual(expN3_2, N3_2, delta);
 
-            Assert.IsTrue(N1_3 == expN1_3);
-            Assert.IsTrue(N2_3 == expN2_3);
-            Assert.IsTrue(N3_3 == expN3_3);
+            Assert.AreEqual(expN1_3, N1_3, delta);
+            Assert.AreEqual(expN2_3, N2_3, delta);
+            Assert.AreEqual(expN3_3, N3_3, delta);
         }
 
         [TestMethod]

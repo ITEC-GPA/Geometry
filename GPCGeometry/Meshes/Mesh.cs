@@ -24,6 +24,13 @@ namespace GPC.Geometry.Meshes
         [NonSerialized]
         private VertexGrid _vertexGrid; // spatial index of the vertices used by AddFaceMesh
 
+        [NonSerialized]
+        private HashSet<long> _edgeKeys; // keys of the edges, used by AddFaceMesh to not add an edge twice
+        [NonSerialized]
+        private MeshBaseCollection<MeshEdge> _edgeKeysCollection;
+        [NonSerialized]
+        private int _edgeKeysVersion;
+
         #endregion
 
         #region Properties
@@ -90,10 +97,12 @@ namespace GPC.Geometry.Meshes
         /// Add a face to the mesh. A vertex closer than <paramref name="tolerance"/> to an existing vertex of the mesh is merged with it
         /// (vertices of the same face are never merged together)
         /// </summary>
-        /// <remarks>The existing vertices are searched with a spatial grid updated face by face, so adding n faces is O(n)</remarks>
+        /// <remarks>The existing vertices are searched with a spatial grid updated face by face, so adding n faces is O(n).
+        /// An edge shared with a face already in the mesh is not added again (before, every inner edge was added twice)</remarks>
         public int AddFaceMesh(MeshVertex[] vertices, double tolerance = GeometryBase.Tolerance)
         {
             VertexGrid grid = GetVertexGrid(tolerance);
+            HashSet<long> edgeKeys = GetEdgeKeys();
             List<MeshVertex> newVertices = null;
 
             int[] verticesIds = new int[vertices.Length];
@@ -111,9 +120,10 @@ namespace GPC.Geometry.Meshes
                     verticesIds[i] = existing.Id;
 
                 if (i > 0)
-                    _edges.Add(new MeshEdge(verticesIds[i - 1], verticesIds[i]));
+                    AddEdgeOnce(edgeKeys, verticesIds[i - 1], verticesIds[i]);
             }
-            _edges.Add(new MeshEdge(verticesIds[vertices.Length - 1], verticesIds[0]));
+            AddEdgeOnce(edgeKeys, verticesIds[vertices.Length - 1], verticesIds[0]);
+            _edgeKeysVersion = _edges.Version;
 
             // the new vertices are indexed only now, so they are not merged with the vertices of the same face
             if (newVertices != null)
@@ -128,6 +138,27 @@ namespace GPC.Geometry.Meshes
             _faces.Add(face);
 
             return face.Id;
+        }
+
+        private void AddEdgeOnce(HashSet<long> edgeKeys, int a, int b)
+        {
+            if (edgeKeys.Add(EdgeKey(a, b)))
+                _edges.Add(new MeshEdge(a, b));
+        }
+
+        /// <returns>The keys of the edges, rebuilt only if the edges have been changed by other methods</returns>
+        private HashSet<long> GetEdgeKeys()
+        {
+            if (_edgeKeys == null || !ReferenceEquals(_edgeKeysCollection, _edges) || _edgeKeysVersion != _edges.Version)
+            {
+                _edgeKeys = new HashSet<long>(LongKeyComparer.Instance);
+                foreach (MeshEdge edge in _edges)
+                    _edgeKeys.Add(EdgeKey(edge.A, edge.B));
+                _edgeKeysCollection = _edges;
+                _edgeKeysVersion = _edges.Version;
+            }
+
+            return _edgeKeys;
         }
 
         /// <returns>The spatial grid of the vertices, rebuilt only if the vertices have been changed by other methods or if <paramref name="tolerance"/> needs bigger cells</returns>

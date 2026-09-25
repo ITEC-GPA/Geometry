@@ -72,6 +72,11 @@ namespace GPC.Geometry.Meshes
             return (_a == other._a && _b == other._b) || (_a == other._b && _b == other._a);
         }
 
+        internal override bool HasSameContent(MeshBase other)
+        {
+            return other is MeshEdge edge && EqualsWithoutId(edge);
+        }
+
         public object Clone()
         {
             return new MeshEdge(this);

@@ -127,6 +127,11 @@ namespace GPC.Geometry.Meshes
             return base.Equals(other) && _a == other._a && _b == other._b && _c == other._c && _d == other._d;
         }
 
+        internal override bool HasSameContent(MeshBase other)
+        {
+            return other is MeshFace face && _a == face._a && _b == face._b && _c == face._c && _d == face._d;
+        }
+
         public object Clone()
         {
             return new MeshFace(this);

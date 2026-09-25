@@ -110,24 +110,29 @@ namespace GPC.Geometry
 				_points[i] = new Point3d(polygon[i]);
 		}
 
+		/// <remarks>The points of a <see cref="Polygon2d"/> are on the plane z = 0: they are copied in one allocation without the planarity check
+		/// (before, Add copied the array at every point: O(n^2))</remarks>
 		public Polygon3d(Polygon2d polygon, double tolerance = GeometryBase.Tolerance)
-			: this()
+			: this(polygon)
 		{
-			for (int i = 0; i < polygon.Count; i++)
-			{
-				Add(new Point3d(polygon[i]), tolerance);
-			}
 		}
 
+		/// <remarks>The count is read once as Int32 (before, GetInt16 at every iteration: overflow over 32767 points).
+		/// The points are copied without the planarity check: the polygon was valid when it was serialized, also if it was created
+		/// with a tolerance larger than the default one (before, Add checked it again with the default tolerance)</remarks>
 		private Polygon3d(SerializationInfo info, StreamingContext context)
 		{
-			_points = new Point3d[0];
+			int count = info.GetInt32("Count");
+			var points = new List<Point3d>(count);
 
-			for (int i = 0; i < info.GetInt16("Count"); i++)
+			for (int i = 0; i < count; i++)
 			{
 				Point3d point = (Point3d)info.GetValue($"Point{i}", typeof(Point3d));
-				Add(point);
+				if (point != null)
+					points.Add(point);
 			}
+
+			_points = points.ToArray();
 		}
 
 		#endregion

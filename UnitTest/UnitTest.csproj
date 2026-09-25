@@ -95,6 +95,7 @@
     <Compile Include="Mesh\ConstrainedDelaunayTest.cs" />
     <Compile Include="Mesh\QuadMeshTest.cs" />
     <Compile Include="Mesh\MeshCutTest.cs" />
+    <Compile Include="Mesh\GMeshReviewTest.cs" />
     <Compile Include="Mesh\DelaunayMeshTestGeneric.cs" />
     <Compile Include="Mesh\GenericMeshTest.cs" />
     <Compile Include="Mesh\GMeshTestGeneric.cs" />
