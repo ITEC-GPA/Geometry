@@ -18,6 +18,11 @@ namespace GPC.Geometry
         protected Matrix<double> _trfMatrix;
         protected string _name;
 
+        // components of the axes, of the origin and of the inverse origin (the transformations read these fields instead of the
+        // indexer of the MathNet matrix: about 10 times faster)
+        [NonSerialized] private double _v1x, _v1y, _v1z, _v2x, _v2y, _v2z, _v3x, _v3y, _v3z;
+        [NonSerialized] private double _ox, _oy, _oz, _ix, _iy, _iz;
+
         #endregion
 
         #region Properties
@@ -180,6 +185,7 @@ namespace GPC.Geometry
             _InvOrigin = (Vector3d)info.GetValue("InvariantOrigin", typeof(Vector3d));
             _trfMatrix = (Matrix<double>)info.GetValue("TransformationMatrix", typeof(Matrix<double>));
             _name = info.GetString("Name");
+            UpdateComponents();
         }
 
         #endregion
@@ -192,6 +198,33 @@ namespace GPC.Geometry
             _trfMatrix[1, 3] = origin.Y;
             _trfMatrix[2, 3] = origin.Z;
             _origin = new Point3d(origin.X, origin.Y, origin.Z);
+
+            // the inverse origin must follow the origin (before, it was updated only with the axes: ToLocal used the old origin)
+            if (_v1 != null && _v2 != null && _v3 != null)
+                SetInverseOrigin();
+        }
+
+        private void SetInverseOrigin()
+        {
+            _InvOrigin = new Vector3d(-(_trfMatrix[0, 0] * Origin.X + _trfMatrix[1, 0] * Origin.Y + _trfMatrix[2, 0] * Origin.Z),
+                                      -(_trfMatrix[0, 1] * Origin.X + _trfMatrix[1, 1] * Origin.Y + _trfMatrix[2, 1] * Origin.Z),
+                                      -(_trfMatrix[0, 2] * Origin.X + _trfMatrix[1, 2] * Origin.Y + _trfMatrix[2, 2] * Origin.Z));
+            UpdateComponents();
+        }
+
+        /// <summary>
+        /// Copy the axes, the origin and the inverse origin in the fields used by the transformations
+        /// </summary>
+        private void UpdateComponents()
+        {
+            if (_v1 == null || _v2 == null || _v3 == null || _origin == null || _InvOrigin == null)
+                return;
+
+            _v1x = _v1.X; _v1y = _v1.Y; _v1z = _v1.Z;
+            _v2x = _v2.X; _v2y = _v2.Y; _v2z = _v2.Z;
+            _v3x = _v3.X; _v3y = _v3.Y; _v3z = _v3.Z;
+            _ox = _origin.X; _oy = _origin.Y; _oz = _origin.Z;
+            _ix = _InvOrigin.X; _iy = _InvOrigin.Y; _iz = _InvOrigin.Z;
         }
 
         /// <summary>
@@ -240,9 +273,7 @@ namespace GPC.Geometry
             _trfMatrix[1, 2] = v3.Y;
             _trfMatrix[2, 2] = v3.Z;
 
-            _InvOrigin = new Vector3d(-(_trfMatrix[0, 0] * Origin.X + _trfMatrix[1, 0] * Origin.Y + _trfMatrix[2, 0] * Origin.Z),
-                                      -(_trfMatrix[0, 1] * Origin.X + _trfMatrix[1, 1] * Origin.Y + _trfMatrix[2, 1] * Origin.Z),
-                                      -(_trfMatrix[0, 2] * Origin.X + _trfMatrix[1, 2] * Origin.Y + _trfMatrix[2, 2] * Origin.Z));
+            SetInverseOrigin();
         }
 
         /// <summary>
@@ -252,9 +283,9 @@ namespace GPC.Geometry
         /// <returns>The point mooved in the local system</returns>
         public virtual Point3d ToLocal(Point3d point)
         {
-            return new Point3d(_trfMatrix[0, 0] * point.X + _trfMatrix[1, 0] * point.Y + _trfMatrix[2, 0] * point.Z + _InvOrigin.X,
-                               _trfMatrix[0, 1] * point.X + _trfMatrix[1, 1] * point.Y + _trfMatrix[2, 1] * point.Z + _InvOrigin.Y,
-                               _trfMatrix[0, 2] * point.X + _trfMatrix[1, 2] * point.Y + _trfMatrix[2, 2] * point.Z + _InvOrigin.Z
+            return new Point3d(_v1x * point.X + _v1y * point.Y + _v1z * point.Z + _ix,
+                               _v2x * point.X + _v2y * point.Y + _v2z * point.Z + _iy,
+                               _v3x * point.X + _v3y * point.Y + _v3z * point.Z + _iz
                               );
         }
 
@@ -265,9 +296,9 @@ namespace GPC.Geometry
         /// <returns>The vector moved in the local system</returns>
         public virtual Vector3d ToLocal(Vector3d vector)
         {
-            return new Vector3d(_trfMatrix[0, 0] * vector.X + _trfMatrix[1, 0] * vector.Y + _trfMatrix[2, 0] * vector.Z,
-                                _trfMatrix[0, 1] * vector.X + _trfMatrix[1, 1] * vector.Y + _trfMatrix[2, 1] * vector.Z,
-                                _trfMatrix[0, 2] * vector.X + _trfMatrix[1, 2] * vector.Y + _trfMatrix[2, 2] * vector.Z
+            return new Vector3d(_v1x * vector.X + _v1y * vector.Y + _v1z * vector.Z,
+                                _v2x * vector.X + _v2y * vector.Y + _v2z * vector.Z,
+                                _v3x * vector.X + _v3y * vector.Y + _v3z * vector.Z
                                );
         }
 
@@ -335,7 +366,10 @@ namespace GPC.Geometry
         /// <returns>A new point in global system</returns>
         public virtual Point3d ToGlobal(Point3d point)
         {
-            return _origin + point.X * _v1 + point.Y * _v2 + point.Z * _v3;
+            // same operations, in the same order, of origin + x v1 + y v2 + z v3, without the intermediate vectors
+            return new Point3d(_ox + point.X * _v1x + point.Y * _v2x + point.Z * _v3x,
+                               _oy + point.X * _v1y + point.Y * _v2y + point.Z * _v3y,
+                               _oz + point.X * _v1z + point.Y * _v2z + point.Z * _v3z);
         }
 
         /// <summary>
@@ -345,13 +379,10 @@ namespace GPC.Geometry
         /// <returns>A new vector in global system</returns>
         public virtual Vector3d ToGlobal(Vector3d vector)
         {
-            var transposed = _trfMatrix.Transpose();
-
-            return new Vector3d(transposed[0, 0] * vector.X + transposed[1, 0] * vector.Y + transposed[2, 0] * vector.Z,
-                                  transposed[0, 1] * vector.X + transposed[1, 1] * vector.Y + transposed[2, 1] * vector.Z,
-                                  transposed[0, 2] * vector.X + transposed[1, 2] * vector.Y + transposed[2, 2] * vector.Z
-                                  );
-
+            // x v1 + y v2 + z v3 (before, the transposed matrix was allocated at every call)
+            return new Vector3d(_v1x * vector.X + _v2x * vector.Y + _v3x * vector.Z,
+                                _v1y * vector.X + _v2y * vector.Y + _v3y * vector.Z,
+                                _v1z * vector.X + _v2z * vector.Y + _v3z * vector.Z);
         }
 
         /// <summary>

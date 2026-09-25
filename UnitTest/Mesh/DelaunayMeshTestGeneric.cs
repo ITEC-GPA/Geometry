@@ -73,7 +73,7 @@ namespace Meshes
 
             Shape2d s1 = new Shape2d(p1) { Tag = 1 };
 
-            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions();
+            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions() { Recombine = false };
             DelaunayMesh.Generate(s1, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus generateMeshStatus);
 
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), mesh);
@@ -115,7 +115,7 @@ namespace Meshes
 
             Shape2d s1 = new Shape2d(p1);
 
-            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions();
+            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions() { Recombine = false };
             DelaunayMesh.Generate(s1, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus generateMeshStatus);
 
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), mesh);
@@ -138,7 +138,7 @@ namespace Meshes
 
             Shape2d s1 = new Shape2d(p1);
 
-            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions();
+            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions() { Recombine = false };
             DelaunayMesh.Generate(s1, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus generateMeshStatus);
 
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), mesh);
@@ -162,7 +162,7 @@ namespace Meshes
 
             Shape2d s1 = new Shape2d(p1);
 
-            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions();
+            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions() { Recombine = false };
             DelaunayMesh.Generate(s1, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus generateMeshStatus);
 
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), mesh);
@@ -331,7 +331,7 @@ namespace Meshes
 
             Shape2d s1 = new Shape2d(p1);
 
-            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions();
+            DelaunayMesh.DelaunayGenerateOptions options = new DelaunayMesh.DelaunayGenerateOptions() { Recombine = false };
             DelaunayMesh.Generate(s1, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus generateMeshStatus);
 
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), mesh);

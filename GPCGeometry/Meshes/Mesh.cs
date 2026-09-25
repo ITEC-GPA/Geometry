@@ -80,7 +80,10 @@ namespace GPC.Geometry.Meshes
         /// <remarks>This is an O(n) operation</remarks>
         public void AddFaceMesh(Point3d[] points)
         {
-            AddFaceMesh(points.Select(i => new MeshVertex(i)).ToArray());
+            MeshVertex[] vertices = new MeshVertex[points.Length];
+            for (int i = 0; i < points.Length; i++)
+                vertices[i] = new MeshVertex(points[i]);
+            AddFaceMesh(vertices);
         }
 
         /// <summary>
@@ -135,14 +138,15 @@ namespace GPC.Geometry.Meshes
             if (_vertexGrid == null || !ReferenceEquals(_vertexGrid.Collection, _vertices) || _vertexGrid.Version != _vertices.Version ||
                 _vertexGrid.CellSize < cellSize || _vertexGrid.CellSize > 16.0 * cellSize)
             {
-                _vertexGrid = new VertexGrid(_vertices, cellSize);
+                // cells bigger than the tolerance: a search usually crosses 1 or 2 cells per axis
+                _vertexGrid = new VertexGrid(_vertices, 4.0 * cellSize);
             }
 
             return _vertexGrid;
         }
 
         /// <summary>
-        /// Uniform grid of the mesh vertices: a point is searched only in the 27 cells around it.
+        /// Uniform grid of the mesh vertices: a point is searched only in the cells around it.
         /// The cell size is not lower than the search tolerance
         /// </summary>
         private sealed class VertexGrid
@@ -181,21 +185,22 @@ namespace GPC.Geometry.Meshes
             }
 
             /// <returns>The vertex closest to <paramref name="point"/> within <paramref name="tolerance"/> (distance lower or equal), null if there is none</returns>
+            /// <remarks>Only the cells crossed by the box of side 2 * <paramref name="tolerance"/> around the point are searched (before, always 27 cells)</remarks>
             public MeshVertex FindClosest(Point3d point, double tolerance)
             {
-                long i = Cell(point.X);
-                long j = Cell(point.Y);
-                long k = Cell(point.Z);
+                long i0 = Cell(point.X - tolerance), i1 = Cell(point.X + tolerance);
+                long j0 = Cell(point.Y - tolerance), j1 = Cell(point.Y + tolerance);
+                long k0 = Cell(point.Z - tolerance), k1 = Cell(point.Z + tolerance);
                 double maxSquareDistance = tolerance * tolerance;
 
                 MeshVertex closest = null;
                 double closestSquareDistance = double.MaxValue;
 
-                for (long di = -1; di <= 1; di++)
-                    for (long dj = -1; dj <= 1; dj++)
-                        for (long dk = -1; dk <= 1; dk++)
+                for (long i = i0; i <= i1; i++)
+                    for (long j = j0; j <= j1; j++)
+                        for (long k = k0; k <= k1; k++)
                         {
-                            if (!_cells.TryGetValue((i + di, j + dj, k + dk), out List<MeshVertex> cell))
+                            if (!_cells.TryGetValue((i, j, k), out List<MeshVertex> cell))
                                 continue;
 
                             for (int n = 0; n < cell.Count; n++)
@@ -243,16 +248,23 @@ namespace GPC.Geometry.Meshes
             return volume.Id;
         }
 
+        /// <summary>
+        /// Add a vertex, unless there is already a vertex closer than <paramref name="tol"/>
+        /// </summary>
+        /// <returns>The id of the new vertex, or of the closest existing one</returns>
+        /// <remarks>The vertices are searched with the same spatial grid of <see cref="AddFaceMesh(MeshVertex[], double)"/>, always up to date
+        /// (before, the BVH was not updated after the addition, so the vertices added later were not found)</remarks>
         public int AddVertex(MeshVertex vertex, double tol = GeometryBase.Tolerance)
         {
-            var neighbours = FindNeighbours(vertex.Point, tol);
-            if (neighbours.Count > 0)
-            {
-                // TODO: return closest one
-                return neighbours[0];
-            }
+            VertexGrid grid = GetVertexGrid(tol);
+            MeshVertex existing = grid.FindClosest(vertex.Point, tol);
+            if (existing != null)
+                return existing.Id;
 
             _vertices.Add(vertex);
+            grid.Add(vertex);
+            grid.Version = _vertices.Version;
+            VertexBVH = null;
             return vertex.Id;
         }
 
@@ -267,95 +279,92 @@ namespace GPC.Geometry.Meshes
         /// <returns></returns>
         public double GetEdgeLength(MeshEdge edge)
         {
-            var vertex1 = _vertices.Where(i => i.Id == edge.A).DefaultIfEmpty(null).FirstOrDefault();
-            var vertex2 = _vertices.Where(i => i.Id == edge.B).DefaultIfEmpty(null).FirstOrDefault();
-
-            if (vertex1 == null)
+            if (!_vertices.Contains(edge.A))
                 throw new ArgumentException($"Edge vertex:{edge.A} not found");
 
-            if (vertex2 == null)
+            if (!_vertices.Contains(edge.B))
                 throw new ArgumentException($"Edge vertex:{edge.B} not found");
 
-            return vertex1.Point.DistanceTo(vertex2.Point);
+            return _vertices.GetElementById(edge.A).Point.DistanceTo(_vertices.GetElementById(edge.B).Point);
         }
 
+        /// <returns>The area of the face: half the length of its Newell vector (the area of a planar face; for a non planar quadrilateral
+        /// the area of its projection on the mean plane)</returns>
+        /// <param name="tolerance">Not used (kept for compatibility: the area was computed by a <see cref="Polygon3d"/>)</param>
         public double GetFaceArea(MeshFace face, double tolerance = GeometryBase.Tolerance)
         {
-            var vertex1 = _vertices.GetElementById(face.A);
-            var vertex2 = _vertices.GetElementById(face.B);
-            var vertex3 = _vertices.GetElementById(face.C);
-
-            if (vertex1 == null)
-                throw new ArgumentException($"Face vertex:{face.A} not found");
-
-            if (vertex2 == null)
-                throw new ArgumentException($"Face vertex:{face.B} not found");
-
-            if (vertex3 == null)
-                throw new ArgumentException($"Face vertex:{face.C} not found");
-
-
-            Polygon3d p = new Polygon3d()
-            {
-                vertex1.Point,
-                vertex2.Point,
-                vertex3.Point
-            };
-
-            if (face.IsQuad)
-            {
-                var vertex4 = _vertices.GetElementById(face.D);
-                if (vertex4 == null)
-                    throw new ArgumentException($"Face vertex:{face.D} not found");
-                p.Add(vertex4.Point);
-            }
-
-            return Math.Abs(p.GetSignedArea(tolerance));
+            Point3d[] p = GetCheckedFacePoints(face);
+            NewellVector(p, out double nx, out double ny, out double nz);
+            return Math.Sqrt(nx * nx + ny * ny + nz * nz) / 2.0;
         }
 
+        /// <returns>The centroid of the face: the mean of the vertices for a triangle, the centroid of the area for a quadrilateral
+        /// (the two triangles A B C and A C D weighted by their signed areas)</returns>
+        /// <param name="tolerance">Not used (kept for compatibility: the centroid was computed by a <see cref="Polygon3d"/>)</param>
         public Point3d GetFaceCentroid(MeshFace face, double tolerance = GeometryBase.Tolerance)
         {
-            var vertex1 = _vertices.GetElementById(face.A);
-            var vertex2 = _vertices.GetElementById(face.B);
-            var vertex3 = _vertices.GetElementById(face.C);
+            Point3d[] p = GetCheckedFacePoints(face);
+            if (p.Length == 3)
+                return new Point3d((p[0].X + p[1].X + p[2].X) / 3.0, (p[0].Y + p[1].Y + p[2].Y) / 3.0, (p[0].Z + p[1].Z + p[2].Z) / 3.0);
 
-            if (vertex1 == null)
-                throw new ArgumentException($"Face vertex:{face.A} not found");
+            NewellVector(p, out double nx, out double ny, out double nz);
+            double w1 = SignedTriangleArea(p[0], p[1], p[2], nx, ny, nz);
+            double w2 = SignedTriangleArea(p[0], p[2], p[3], nx, ny, nz);
+            double w = w1 + w2;
+            if (!(Math.Abs(w) > 0))
+                return new Point3d((p[0].X + p[1].X + p[2].X + p[3].X) / 4.0, (p[0].Y + p[1].Y + p[2].Y + p[3].Y) / 4.0, (p[0].Z + p[1].Z + p[2].Z + p[3].Z) / 4.0);
 
-            if (vertex2 == null)
-                throw new ArgumentException($"Face vertex:{face.B} not found");
+            return new Point3d((w1 * (p[0].X + p[1].X + p[2].X) + w2 * (p[0].X + p[2].X + p[3].X)) / (3.0 * w),
+                               (w1 * (p[0].Y + p[1].Y + p[2].Y) + w2 * (p[0].Y + p[2].Y + p[3].Y)) / (3.0 * w),
+                               (w1 * (p[0].Z + p[1].Z + p[2].Z) + w2 * (p[0].Z + p[2].Z + p[3].Z)) / (3.0 * w));
+        }
 
-            if (vertex3 == null)
-                throw new ArgumentException($"Face vertex:{face.C} not found");
-
-
-            Polygon3d poly = new Polygon3d()
+        /// <exception cref="ArgumentException">If a vertex of the face is not in the mesh</exception>
+        private Point3d[] GetCheckedFacePoints(MeshFace face)
+        {
+            int[] nodes = face.GetNodes();
+            var points = new Point3d[nodes.Length];
+            for (int i = 0; i < nodes.Length; i++)
             {
-                vertex1.Point,
-                vertex2.Point,
-                vertex3.Point
-            };
-
-            if (face.IsQuad)
-            {
-                var vertex4 = _vertices.GetElementById(face.D);
-                if (vertex4 == null)
-                    throw new ArgumentException($"Face vertex:{face.D} not found");
-                poly.Add(vertex4.Point, tolerance);
-                return poly.GetCentroid();
+                if (!_vertices.Contains(nodes[i]))
+                    throw new ArgumentException($"Face vertex:{nodes[i]} not found");
+                points[i] = _vertices.GetElementById(nodes[i]).Point;
             }
-            else if (face.IsTriangle)
-            {
-                return poly.GetCenter(); // se è triangolo centroide == centro
-            }
+            return points;
+        }
 
-            return poly.GetCentroid();
+        /// <summary>
+        /// Newell vector of the polygon: normal to the polygon, long twice its area
+        /// </summary>
+        private static void NewellVector(Point3d[] p, out double nx, out double ny, out double nz)
+        {
+            nx = ny = nz = 0;
+            for (int i = 0; i < p.Length; i++)
+            {
+                Point3d a = p[i], b = p[(i + 1) % p.Length];
+                nx += (a.Y - b.Y) * (a.Z + b.Z);
+                ny += (a.Z - b.Z) * (a.X + b.X);
+                nz += (a.X - b.X) * (a.Y + b.Y);
+            }
+        }
+
+        /// <returns>Twice the area of the triangle, signed with respect to the direction (nx, ny, nz) (not normalized: only the sign and the ratios matter)</returns>
+        private static double SignedTriangleArea(Point3d a, Point3d b, Point3d c, double nx, double ny, double nz)
+        {
+            double ux = b.X - a.X, uy = b.Y - a.Y, uz = b.Z - a.Z;
+            double vx = c.X - a.X, vy = c.Y - a.Y, vz = c.Z - a.Z;
+            return (uy * vz - uz * vy) * nx + (uz * vx - ux * vz) * ny + (ux * vy - uy * vx) * nz;
         }
 
         public Point3d[] GetFacePoints(MeshFace face)
         {
-            MeshVertex[] vertices = GetFaceVertices(face);
-            return vertices.Select(i => i.Point).ToArray();
+            var points = new Point3d[face.IsQuad ? 4 : 3];
+            points[0] = _vertices.GetElementById(face.A).Point;
+            points[1] = _vertices.GetElementById(face.B).Point;
+            points[2] = _vertices.GetElementById(face.C).Point;
+            if (face.IsQuad)
+                points[3] = _vertices.GetElementById(face.D).Point;
+            return points;
         }
 
         public Point3d[] GetEdgePoints(MeshEdge edge)
@@ -576,10 +585,21 @@ namespace GPC.Geometry.Meshes
         /// <param name="ids">The nodes ids array</param>
         /// <returns>True if the face already exists</returns>
         /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <remarks>The faces with the same nodes, in any order, are searched (before, a new face without id was searched by id: always false).
+        /// This is an O(n) operation</remarks>
         public bool FaceExists(int[] ids)
         {
-            MeshFace face = new MeshFace(ids);
-            return _faces.Contains(face);
+            return _faces.Any(f => SameNodes(f.GetNodes(), ids));
+        }
+
+        /// <returns>True if the two arrays have the same nodes, in any order</returns>
+        private static bool SameNodes(int[] a, int[] b)
+        {
+            if (a.Length != b.Length)
+                return false;
+
+            var nodes = new HashSet<int>(a);
+            return nodes.SetEquals(b);
         }
 
         /// <summary>
@@ -636,9 +656,11 @@ namespace GPC.Geometry.Meshes
         /// <param name="ids">The nodes ids array</param>
         /// <returns>True if the volume already exists</returns>
         /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <remarks>The volumes with the same nodes, in any order, are searched (before, a new volume without id was searched by id: always false).
+        /// This is an O(n) operation</remarks>
         public bool VolumeExists(int[] ids)
         {
-            return _volumes.Contains(new MeshVolume(ids));
+            return _volumes.Any(v => SameNodes(v.GetNodes(), ids));
         }
 
         /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
@@ -648,9 +670,11 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <remarks>The edges between the two nodes, in any direction, are searched (before, a new edge without id was searched by id: always false).
+        /// This is an O(n) operation</remarks>
         public bool EdgeExists(int a, int b)
         {
-            return _edges.Contains(new MeshEdge(a, b));
+            return _edges.Any(e => (e.A == a && e.B == b) || (e.A == b && e.B == a));
         }
 
         /// <param name="meshVertex"></param>
@@ -1013,8 +1037,6 @@ namespace GPC.Geometry.Meshes
 
         public void JoinMesh(Mesh meshToJoin, out Dictionary<int, int> vertexIdMap, out Dictionary<int, int> facesIdMap, out Dictionary<int, int> volumesIdMap)
         {
-            UpdateVertexBVH();
-
             vertexIdMap = new Dictionary<int, int>();
             facesIdMap = new Dictionary<int, int>();
             volumesIdMap = new Dictionary<int, int>();
@@ -1074,8 +1096,8 @@ namespace GPC.Geometry.Meshes
                 copy.Vertices.Add(_vertices[i]);
             }
 
-            // Save added edges here
-            var addedEdges = new HashSet<int>();
+            // Save added edges here (by their nodes: two different edges can have the same hash code)
+            var addedEdges = new HashSet<long>(LongKeyComparer.Instance);
             // List of the face normals for each of the new edges
             var normals = new Dictionary<int, List<Vector3d>>();
             // map connecting original edges with extruded ones
@@ -1123,11 +1145,8 @@ namespace GPC.Geometry.Meshes
 
                     for (int k = 0; k < edges.Length; ++k)
                     {
-                        if (!addedEdges.Contains(edges[k].GetHashCode()))
-                        {
-                            addedEdges.Add(edges[k].GetHashCode());
+                        if (addedEdges.Add(EdgeKey(edges[k].A, edges[k].B)))
                             copy._edges.Add(edges[k]);
-                        }
                     }
 
                     copy.Volumes.Add(new MeshVolume(
@@ -1159,11 +1178,8 @@ namespace GPC.Geometry.Meshes
 
                     for (int k = 0; k < edges.Length; ++k)
                     {
-                        if (!addedEdges.Contains(edges[k].GetHashCode()))
-                        {
-                            addedEdges.Add(edges[k].GetHashCode());
+                        if (addedEdges.Add(EdgeKey(edges[k].A, edges[k].B)))
                             copy._edges.Add(edges[k]);
-                        }
                     }
 
                     copy.Volumes.Add(new MeshVolume(
@@ -1411,352 +1427,285 @@ namespace GPC.Geometry.Meshes
 
         #region Mesh Transformation
 
+        /// <summary>
+        /// Uniform refinement: every triangle is divided in four triangles and every quadrilateral in four quadrilaterals
+        /// (midpoints of the edges, shared by the adjacent faces, and center of the quadrilateral). The tags of the faces are kept, the edges are updated
+        /// </summary>
+        /// <param name="tolerance">Not used: the midpoints are shared through the edges (before, the points were merged by rounding their coordinates,
+        /// which could leave two different points on a shared edge)</param>
         public void Refine(double tolerance = GeometryBase.Tolerance)
         {
-            Mesh mesh = RefineMesh(this, tolerance);
+            MeshFace[] faces = _faces.ToArray();
+            var midpoints = new Dictionary<long, int>(LongKeyComparer.Instance);
 
-            _vertices.Clear();
-            _edges.Clear();
-            _faces.Clear();
-            _volumes.Clear();
-
-            _vertices.AddRange(mesh.Vertices.ToArray());
-            _edges.AddRange(mesh.Edges.ToArray());
-            _faces.AddRange(mesh.Faces.ToArray());
-            _volumes.AddRange(mesh.Volumes.ToArray());
-        }
-
-        public void Cut(Line2d curve, double tolerance = GeometryBase.Tolerance)
-        {
-            Mesh mesh = CutMesh(this, curve, tolerance);
-            _vertices = mesh.Vertices;
-            _edges = mesh.Edges;
-            _faces = mesh.Faces;
-            _volumes = mesh.Volumes;
-        }
-
-        public static Mesh RefineMesh(Mesh mesh, double tolerance = GeometryBase.Tolerance)
-        {
-            Dictionary<Point3d, int> oldMap = new Dictionary<Point3d, int>();
-            Dictionary<Point3d, int> newMap = new Dictionary<Point3d, int>();
-
-            Mesh newMesh = (Mesh)mesh.Clone();
-            for (int i = 0; i < newMesh.VerticesCount; ++i)
+            int Midpoint(int a, int b)
             {
-                MapAdd(newMesh.Vertices[i].Point, i, ref oldMap, tolerance);
+                long key = EdgeKey(a, b);
+                if (midpoints.TryGetValue(key, out int id))
+                    return id;
+
+                Point3d p = _vertices.GetElementById(a).Point, q = _vertices.GetElementById(b).Point;
+                id = _vertices.Add(new MeshVertex(new Point3d((p.X + q.X) / 2.0, (p.Y + q.Y) / 2.0, (p.Z + q.Z) / 2.0)));
+                midpoints[key] = id;
+                return id;
             }
-            newMesh.Faces.Clear();
 
-            for (int f = 0; f < mesh.Faces.Count; f++)
+            var result = new List<MeshFace>(4 * faces.Length);
+            foreach (MeshFace face in faces)
             {
-                var face = mesh.Faces.ElementAt(f);
-
                 if (face.IsTriangle)
                 {
-                    Line3d ab = new Line3d(mesh.Vertices.GetElementById(face.A).Point, mesh.Vertices.GetElementById(face.B).Point);
-                    Line3d bc = new Line3d(mesh.Vertices.GetElementById(face.B).Point, mesh.Vertices.GetElementById(face.C).Point);
-                    Line3d ca = new Line3d(mesh.Vertices.GetElementById(face.C).Point, mesh.Vertices.GetElementById(face.A).Point);
-
-                    Point3d p1 = ab.Mid;
-                    Point3d p2 = bc.Mid;
-                    Point3d p3 = ca.Mid;
-
-                    var p1j = MapGet(p1, ref newMap, tolerance);
-                    if (p1j == -1)
-                    {
-                        p1j = newMesh.Vertices.Add(new MeshVertex(p1));
-                        MapAdd(p1, p1j, ref newMap, tolerance);
-                    }
-                    var p2j = MapGet(p2, ref newMap, tolerance);
-                    if (p2j == -1)
-                    {
-                        p2j = newMesh.Vertices.Add(new MeshVertex(p2));
-                        MapAdd(p2, p2j, ref newMap, tolerance);
-                    }
-                    var p3j = MapGet(p3, ref newMap, tolerance);
-                    if (p3j == -1)
-                    {
-                        p3j = newMesh.Vertices.Add(new MeshVertex(p3));
-                        MapAdd(p3, p3j, ref newMap, tolerance);
-                    }
-
-                    MeshFace faceBuffer1 = new MeshFace(new int[] { face.A, p1j, p3j });
-                    MeshFace faceBuffer2 = new MeshFace(new int[] { p1j, p2j, p3j });
-                    MeshFace faceBuffer3 = new MeshFace(new int[] { face.B, p2j, p1j });
-                    MeshFace faceBuffer4 = new MeshFace(new int[] { face.C, p3j, p2j });
-                    newMesh.Faces.Add(faceBuffer1);
-                    newMesh.Faces.Add(faceBuffer2);
-                    newMesh.Faces.Add(faceBuffer3);
-                    newMesh.Faces.Add(faceBuffer4);
+                    int p1 = Midpoint(face.A, face.B), p2 = Midpoint(face.B, face.C), p3 = Midpoint(face.C, face.A);
+                    result.Add(new MeshFace(new[] { face.A, p1, p3 }, face.Tag));
+                    result.Add(new MeshFace(new[] { p1, p2, p3 }, face.Tag));
+                    result.Add(new MeshFace(new[] { face.B, p2, p1 }, face.Tag));
+                    result.Add(new MeshFace(new[] { face.C, p3, p2 }, face.Tag));
                 }
                 else
                 {
-                    Line3d ab = new Line3d(mesh.Vertices.GetElementById(face.A).Point, mesh.Vertices.GetElementById(face.B).Point);
-                    Line3d bc = new Line3d(mesh.Vertices.GetElementById(face.B).Point, mesh.Vertices.GetElementById(face.C).Point);
-                    Line3d cd = new Line3d(mesh.Vertices.GetElementById(face.C).Point, mesh.Vertices.GetElementById(face.D).Point);
-                    Line3d da = new Line3d(mesh.Vertices.GetElementById(face.D).Point, mesh.Vertices.GetElementById(face.A).Point);
+                    int p1 = Midpoint(face.A, face.B), p2 = Midpoint(face.B, face.C), p3 = Midpoint(face.C, face.D), p4 = Midpoint(face.D, face.A);
+                    Point3d m1 = _vertices.GetElementById(p1).Point, m2 = _vertices.GetElementById(p2).Point;
+                    Point3d m3 = _vertices.GetElementById(p3).Point, m4 = _vertices.GetElementById(p4).Point;
+                    int p5 = _vertices.Add(new MeshVertex(new Point3d((m1.X + m2.X + m3.X + m4.X) / 4.0, (m1.Y + m2.Y + m3.Y + m4.Y) / 4.0, (m1.Z + m2.Z + m3.Z + m4.Z) / 4.0)));
 
-                    Point3d p1 = ab.Mid;
-                    Point3d p2 = bc.Mid;
-                    Point3d p3 = cd.Mid;
-                    Point3d p4 = da.Mid;
-
-                    Polygon3d poly = new Polygon3d(new Point3d[] { p1, p2, p3, p4 });
-
-                    Point3d p5 = poly.GetCenter();
-
-                    var p1j = MapGet(p1, ref newMap, tolerance);
-                    if (p1j == -1)
-                    {
-                        p1j = newMesh.Vertices.Add(new MeshVertex(p1));
-                        MapAdd(p1, p1j, ref newMap, tolerance);
-                    }
-                    var p2j = MapGet(p2, ref newMap, tolerance);
-                    if (p2j == -1)
-                    {
-                        p2j = newMesh.Vertices.Add(new MeshVertex(p2));
-                        MapAdd(p2, p2j, ref newMap, tolerance);
-                    }
-                    var p3j = MapGet(p3, ref newMap, tolerance);
-                    if (p3j == -1)
-                    {
-                        p3j = newMesh.Vertices.Add(new MeshVertex(p3));
-                        MapAdd(p3, p3j, ref newMap, tolerance);
-                    }
-                    var p4j = MapGet(p4, ref newMap, tolerance);
-                    if (p4j == -1)
-                    {
-                        p4j = newMesh.Vertices.Add(new MeshVertex(p4));
-                        MapAdd(p4, p4j, ref newMap, tolerance);
-                    }
-
-                    var p5j = newMesh.Vertices.Add(new MeshVertex(p5));
-                    MapAdd(p5, p5j, ref newMap, tolerance);
-
-                    MeshFace faceBuffer1 = new MeshFace(new int[] { face.A, p1j, p5j, p4j });
-                    MeshFace faceBuffer2 = new MeshFace(new int[] { p1j, face.B, p2j, p5j });
-                    MeshFace faceBuffer3 = new MeshFace(new int[] { p5j, p2j, face.C, p3j });
-                    MeshFace faceBuffer4 = new MeshFace(new int[] { p4j, p5j, p3j, face.D });
-                    newMesh.Faces.Add(faceBuffer1);
-                    newMesh.Faces.Add(faceBuffer2);
-                    newMesh.Faces.Add(faceBuffer3);
-                    newMesh.Faces.Add(faceBuffer4);
+                    result.Add(new MeshFace(new[] { face.A, p1, p5, p4 }, face.Tag));
+                    result.Add(new MeshFace(new[] { p1, face.B, p2, p5 }, face.Tag));
+                    result.Add(new MeshFace(new[] { p5, p2, face.C, p3 }, face.Tag));
+                    result.Add(new MeshFace(new[] { p4, p5, p3, face.D }, face.Tag));
                 }
             }
 
-            return newMesh;
+            UpdateEdges(faces, result, midpoints);
+
+            _faces.Clear();
+            foreach (MeshFace face in result)
+                _faces.Add(face);
+
+            FaceBVH = null;
+            VertexBVH = null;
         }
 
-        private static void MapAdd(Point3d vert, int index, ref Dictionary<Point3d, int> map, double tolerance)
+        /// <summary>
+        /// Cut the faces of the mesh with the infinite line through <paramref name="curve"/> (in the XY plane): every face crossed by the line
+        /// is divided in the parts on the two sides, so every face lies on one side of the line.
+        /// <para>A triangle gives triangles. A quadrilateral cut through two opposite edges gives two quadrilaterals, through a vertex a triangle
+        /// and a quadrilateral, through two adjacent edges a triangle and a pentagon, divided in a triangle and a quadrilateral.</para>
+        /// <para>The new vertices are on the cut edges (Z interpolated), shared by the faces around the edge. The vertices closer than
+        /// <paramref name="tolerance"/> to the line are on it (the edges through them are not cut). The faces not cut, the vertices and the tags are kept;
+        /// the edges of the mesh are updated.</para>
+        /// </summary>
+        public void Cut(Line2d curve, double tolerance = GeometryBase.Tolerance)
         {
-            int cifreSignificative = GetCifre(tolerance);
+            double dx = curve.End.X - curve.Start.X, dy = curve.End.Y - curve.Start.Y;
+            double length = Math.Sqrt(dx * dx + dy * dy);
+            if (!(length > 0))
+                return;
 
-            Point3d buffer = new Point3d(Math.Round(vert.X, cifreSignificative), Math.Round(vert.Y, cifreSignificative), Math.Round(vert.Z, cifreSignificative));
-            if (!map.ContainsKey(buffer))
-                map.Add(buffer, index);
-        }
+            dx /= length;
+            dy /= length;
+            double x0 = curve.Start.X, y0 = curve.Start.Y;
 
-        private static int MapGet(Point3d vert, ref Dictionary<Point3d, int> map, double tolerance)
-        {
-            int cifreSignificative = GetCifre(tolerance);
-
-            Point3d buffer = new Point3d(Math.Round(vert.X, cifreSignificative), Math.Round(vert.Y, cifreSignificative), Math.Round(vert.Z, cifreSignificative));
-
-            if (map.ContainsKey(buffer))
+            // signed distance of the vertices from the line, 0 if closer than the tolerance
+            var distances = new Dictionary<int, double>(_vertices.Count);
+            double Distance(int id)
             {
-                return map[buffer];
+                if (!distances.TryGetValue(id, out double distance))
+                {
+                    Point3d p = _vertices.GetElementById(id).Point;
+                    distance = dx * (p.Y - y0) - dy * (p.X - x0);
+                    if (Math.Abs(distance) <= tolerance)
+                        distance = 0;
+                    distances[id] = distance;
+                }
+                return distance;
             }
-            return -1;
+
+            // new vertex on the cut edge, computed once for the faces around the edge
+            var cutPoints = new Dictionary<long, int>(LongKeyComparer.Instance);
+            int CutPoint(int a, int b)
+            {
+                long key = a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
+                if (cutPoints.TryGetValue(key, out int id))
+                    return id;
+
+                int first = Math.Min(a, b), second = Math.Max(a, b);
+                Point3d p = _vertices.GetElementById(first).Point, q = _vertices.GetElementById(second).Point;
+                double t = Distance(first) / (Distance(first) - Distance(second));
+                id = _vertices.Add(new MeshVertex(new Point3d(p.X + t * (q.X - p.X), p.Y + t * (q.Y - p.Y), p.Z + t * (q.Z - p.Z))));
+                distances[id] = 0;
+                cutPoints[key] = id;
+                return id;
+            }
+
+            MeshFace[] faces = _faces.ToArray();
+            int nextFaceId = faces.Length > 0 ? faces.Max(f => f.Id) + 1 : 0;
+            var result = new List<MeshFace>(faces.Length + 16);
+            var positive = new List<int>(5);
+            var negative = new List<int>(5);
+
+            foreach (MeshFace face in faces)
+            {
+                int[] nodes = face.GetNodes();
+                bool above = false, below = false;
+                foreach (int node in nodes)
+                {
+                    double distance = Distance(node);
+                    above |= distance > 0;
+                    below |= distance < 0;
+                }
+
+                if (!above || !below)
+                {
+                    result.Add(face);
+                    continue;
+                }
+
+                positive.Clear();
+                negative.Clear();
+                for (int k = 0; k < nodes.Length; k++)
+                {
+                    int a = nodes[k], b = nodes[(k + 1) % nodes.Length];
+                    double da = Distance(a), db = Distance(b);
+                    if (da >= 0)
+                        positive.Add(a);
+                    if (da <= 0)
+                        negative.Add(a);
+                    if ((da > 0 && db < 0) || (da < 0 && db > 0))
+                    {
+                        int m = CutPoint(a, b);
+                        positive.Add(m);
+                        negative.Add(m);
+                    }
+                }
+
+                AddCutPart(positive, face.Tag, result, ref nextFaceId);
+                AddCutPart(negative, face.Tag, result, ref nextFaceId);
+            }
+
+            UpdateEdges(faces, result, cutPoints);
+
+            _faces.Clear();
+            foreach (MeshFace face in result)
+                _faces.Add(face);
+
+            FaceBVH = null;
+            VertexBVH = null;
         }
 
-        private static int GetCifre(double tolerance)
+        private static long EdgeKey(int a, int b)
         {
-            int cifreSignificative = 4;
-            if (tolerance >= 1)
-                cifreSignificative = 0;
-            else if (tolerance >= 0.1)
-                cifreSignificative = 1;
-            else if (tolerance >= 0.01)
-                cifreSignificative = 2;
-            else if (tolerance >= 0.001)
-                cifreSignificative = 3;
-            else if (tolerance >= 0.0001)
-                cifreSignificative = 4;
-            else if (tolerance >= 0.00001)
-                cifreSignificative = 5;
-            else if (tolerance >= 0.000001)
-                cifreSignificative = 6;
-
-            return cifreSignificative;
+            return a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
         }
 
-        private Mesh CutMesh(Mesh mesh, Line2d curve, double tolerance = GeometryBase.Tolerance)
+        /// <summary>
+        /// Update the edges after the faces have been divided: the edges divided by a new point (<paramref name="splitPoints"/>: edge key -> point)
+        /// are replaced by their two halves; if the edges were the ones of the faces, the new edges of the faces are added too
+        /// (the edges not of the faces, e.g. lines, are kept). The duplicated edges are removed
+        /// </summary>
+        private void UpdateEdges(MeshFace[] oldFaces, List<MeshFace> newFaces, Dictionary<long, int> splitPoints)
         {
-            Dictionary<Point3d, int> oldMap = new Dictionary<Point3d, int>();
-            Dictionary<Point3d, int> newMap = new Dictionary<Point3d, int>();
+            if (_edges.Count == 0)
+                return;
 
+            var faceEdges = new HashSet<long>(LongKeyComparer.Instance);
+            foreach (MeshFace face in oldFaces)
+            {
+                int[] nodes = face.GetNodes();
+                for (int k = 0; k < nodes.Length; k++)
+                    faceEdges.Add(EdgeKey(nodes[k], nodes[(k + 1) % nodes.Length]));
+            }
+
+            MeshEdge[] edges = _edges.ToArray();
+            var edgeKeys = new HashSet<long>(edges.Select(e => EdgeKey(e.A, e.B)), LongKeyComparer.Instance);
+            bool edgesOfTheFaces = faceEdges.IsSubsetOf(edgeKeys);
+
+            _edges.Clear();
+            var added = new HashSet<long>(LongKeyComparer.Instance);
+            foreach (MeshEdge edge in edges)
+            {
+                long key = EdgeKey(edge.A, edge.B);
+                if (splitPoints.TryGetValue(key, out int m))
+                {
+                    if (added.Add(EdgeKey(edge.A, m)))
+                        _edges.Add(new MeshEdge(edge.A, m));
+                    if (added.Add(EdgeKey(m, edge.B)))
+                        _edges.Add(new MeshEdge(m, edge.B));
+                }
+                else if (added.Add(key))
+                {
+                    _edges.Add(edge);
+                }
+            }
+
+            if (edgesOfTheFaces)
+            {
+                foreach (MeshFace face in newFaces)
+                {
+                    int[] nodes = face.GetNodes();
+                    for (int k = 0; k < nodes.Length; k++)
+                    {
+                        if (added.Add(EdgeKey(nodes[k], nodes[(k + 1) % nodes.Length])))
+                            _edges.Add(new MeshEdge(nodes[k], nodes[(k + 1) % nodes.Length]));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add a part of a cut face: 3 or 4 vertices as they are, 5 vertices (a quadrilateral cut through adjacent edges) as a triangle and
+        /// a quadrilateral, choosing the division with the best shapes
+        /// </summary>
+        private void AddCutPart(List<int> nodes, object tag, List<MeshFace> faces, ref int nextFaceId)
+        {
+            if (nodes.Count == 3 || nodes.Count == 4)
+            {
+                faces.Add(new MeshFace(nodes.ToArray(), tag) { Id = nextFaceId++ });
+                return;
+            }
+
+            // pentagon: triangle (i, i+1, i+2) and quadrilateral (i+2, i+3, i+4, i)
+            var points = nodes.Select(n => _vertices.GetElementById(n).Point).ToArray();
+            double orientation = 0;
+            for (int k = 0; k < 5; k++)
+                orientation += points[k].X * points[(k + 1) % 5].Y - points[(k + 1) % 5].X * points[k].Y;
+
+            int best = -1;
+            double bestQuality = double.MinValue;
+            for (int i = 0; i < 5; i++)
+            {
+                int[] quad = { (i + 2) % 5, (i + 3) % 5, (i + 4) % 5, i };
+                double quality = double.MaxValue;
+                for (int k = 0; k < 4; k++)
+                    quality = Math.Min(quality, Math.Sign(orientation) * CornerSine(points[quad[(k + 3) % 4]], points[quad[k]], points[quad[(k + 1) % 4]]));
+                int[] triangle = { i, (i + 1) % 5, (i + 2) % 5 };
+                for (int k = 0; k < 3; k++)
+                    quality = Math.Min(quality, Math.Sign(orientation) * CornerSine(points[triangle[(k + 2) % 3]], points[triangle[k]], points[triangle[(k + 1) % 3]]));
+
+                if (quality > bestQuality)
+                {
+                    bestQuality = quality;
+                    best = i;
+                }
+            }
+
+            faces.Add(new MeshFace(new[] { nodes[best], nodes[(best + 1) % 5], nodes[(best + 2) % 5] }, tag) { Id = nextFaceId++ });
+            faces.Add(new MeshFace(new[] { nodes[(best + 2) % 5], nodes[(best + 3) % 5], nodes[(best + 4) % 5], nodes[best] }, tag) { Id = nextFaceId++ });
+        }
+
+        /// <returns>Sine of the angle in <paramref name="vertex"/> from the edge to <paramref name="next"/> to the edge to <paramref name="previous"/> (XY plane)</returns>
+        private static double CornerSine(Point3d previous, Point3d vertex, Point3d next)
+        {
+            double e1x = next.X - vertex.X, e1y = next.Y - vertex.Y, e2x = previous.X - vertex.X, e2y = previous.Y - vertex.Y;
+            double lengths = Math.Sqrt((e1x * e1x + e1y * e1y) * (e2x * e2x + e2y * e2y));
+            return lengths > 0 ? (e1x * e2y - e1y * e2x) / lengths : 0;
+        }
+
+        /// <returns>A refined copy of the mesh (see <see cref="Refine"/>)</returns>
+        public static Mesh RefineMesh(Mesh mesh, double tolerance = GeometryBase.Tolerance)
+        {
             Mesh newMesh = (Mesh)mesh.Clone();
-            for (int i = 0; i < newMesh.VerticesCount; ++i)
-            {
-                MapAdd(newMesh.Vertices[i].Point, i, ref oldMap, tolerance);
-            }
-            newMesh.Faces.Clear();
-
-            for (int f = 0; f < mesh.Faces.Count; ++f)
-            {
-                MeshFace face = mesh.Faces[f];
-
-                if (face.IsQuad)
-                {
-                    // A quad crossed by the curve is split in two triangles (A, B, C) and (A, C, D) and then cut, the other quads are kept
-                    bool isCut = TryCutEdge(face.A, face.B, out _) || TryCutEdge(face.B, face.C, out _) ||
-                                 TryCutEdge(face.C, face.D, out _) || TryCutEdge(face.D, face.A, out _);
-                    if (!isCut)
-                    {
-                        // the curve along a diagonal divides the quad without cutting its edges
-                        if (IsOnCurve(face.A) && IsOnCurve(face.C))
-                        {
-                            AddFace(face.A, face.B, face.C);
-                            AddFace(face.A, face.C, face.D);
-                        }
-                        else if (IsOnCurve(face.B) && IsOnCurve(face.D))
-                        {
-                            AddFace(face.A, face.B, face.D);
-                            AddFace(face.B, face.C, face.D);
-                        }
-                        else
-                        {
-                            newMesh.Faces.Add(face);
-                        }
-                        continue;
-                    }
-
-                    CutTriangle(face.A, face.B, face.C, null);
-                    CutTriangle(face.A, face.C, face.D, null);
-                }
-                else
-                {
-                    CutTriangle(face.A, face.B, face.C, face);
-                }
-            }
-
+            newMesh.Refine(tolerance);
             return newMesh;
-
-            // Intersection of the edge (i1, i2) with the curve, only if it is inside the edge and it is not an existing vertex
-            bool TryCutEdge(int i1, int i2, out Point3d point)
-            {
-                point = null;
-                var edge = new Line2d(mesh.Vertices.GetElementById(i1).Point, mesh.Vertices.GetElementById(i2).Point);
-
-                if (edge.GetIntersectionWithInfiniteLine(curve, out Point2d inter, tolerance) &&
-                    edge.IsPointOnLine(inter, tolerance) &&
-                    MapGet(inter, ref oldMap, tolerance) == -1)
-                {
-                    point = inter;
-                    return true;
-                }
-
-                return false;
-            }
-
-            // True if the vertex lies on the infinite line of the curve (XY plane)
-            bool IsOnCurve(int id)
-            {
-                Point3d p = mesh.Vertices.GetElementById(id).Point;
-                double dx = curve.End.X - curve.Start.X;
-                double dy = curve.End.Y - curve.Start.Y;
-                double length = Math.Sqrt(dx * dx + dy * dy);
-                if (length == 0)
-                    return false;
-                double cross = dx * (p.Y - curve.Start.Y) - dy * (p.X - curve.Start.X);
-                return Math.Abs(cross) / length < tolerance;
-            }
-
-            // Id of the vertex at the given point, added to the new mesh if not already present
-            int GetOrAddVertex(Point3d point)
-            {
-                var j = MapGet(point, ref newMap, tolerance);
-                if (j == -1)
-                {
-                    j = newMesh.Vertices.Add(new MeshVertex(point));
-                    MapAdd(point, j, ref newMap, tolerance);
-                }
-                return j;
-            }
-
-            void AddFace(params int[] nodes)
-            {
-                newMesh.Faces.Add(new MeshFace(nodes));
-            }
-
-            // Cut the triangle (a, b, c). originalFace is added unchanged if the triangle is not cut (null: a new face is created)
-            void CutTriangle(int a, int b, int c, MeshFace originalFace)
-            {
-                bool abCut = TryCutEdge(a, b, out Point3d ptAB);
-                bool bcCut = TryCutEdge(b, c, out Point3d ptBC);
-                bool caCut = TryCutEdge(c, a, out Point3d ptCA);
-
-                int cutCount = (abCut ? 1 : 0) + (bcCut ? 1 : 0) + (caCut ? 1 : 0);
-
-                if (cutCount == 1)
-                {
-                    // the curve passes through the vertex opposite to the cut edge: two triangles
-                    if (abCut)
-                    {
-                        int j = GetOrAddVertex(ptAB);
-                        AddFace(a, j, c);
-                        AddFace(j, b, c);
-                    }
-                    else if (bcCut)
-                    {
-                        int j = GetOrAddVertex(ptBC);
-                        AddFace(b, j, a);
-                        AddFace(j, c, a);
-                    }
-                    else
-                    {
-                        int j = GetOrAddVertex(ptCA);
-                        AddFace(c, j, b);
-                        AddFace(j, a, b);
-                    }
-                }
-                else if (cutCount == 2)
-                {
-                    // two edges cut: one triangle and one quadrilateral split in two triangles
-                    if (!abCut)
-                    {
-                        int j = GetOrAddVertex(ptBC);
-                        int k = GetOrAddVertex(ptCA);
-                        AddFace(j, c, k);
-                        AddFace(k, a, j);
-                        AddFace(a, b, j);
-                    }
-                    else if (!bcCut)
-                    {
-                        int j = GetOrAddVertex(ptCA);
-                        int k = GetOrAddVertex(ptAB);
-                        AddFace(j, a, k);
-                        AddFace(k, b, j);
-                        AddFace(b, c, j);
-                    }
-                    else
-                    {
-                        int j = GetOrAddVertex(ptAB);
-                        int k = GetOrAddVertex(ptBC);
-                        AddFace(j, b, k);
-                        AddFace(k, c, j);
-                        AddFace(c, a, j);
-                    }
-                }
-                else
-                {
-                    // not cut (or degenerate case with three cuts): the triangle is kept
-                    if (originalFace != null)
-                        newMesh.Faces.Add(originalFace);
-                    else
-                        AddFace(a, b, c);
-                }
-            }
         }
 
         public void Clean(double edgeTolerance = GeometryBase.Tolerance, double areaTolerance = GeometryBase.Tolerance)

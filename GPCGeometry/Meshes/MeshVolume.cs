@@ -251,7 +251,7 @@ namespace GPC.Geometry.Meshes
             {
                 return Equals(face);
             }
-            return Equals(obj);
+            return false; // it was Equals(obj): infinite recursion for an object of another type
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

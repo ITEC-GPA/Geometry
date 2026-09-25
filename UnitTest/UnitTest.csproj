@@ -86,12 +86,15 @@
     <Compile Include="Geometry\Polygon3dTest.cs" />
     <Compile Include="Geometry\ReviewFixesTest.cs" />
     <Compile Include="Geometry\OptimizationTest.cs" />
+    <Compile Include="Geometry\GeometryReviewTest.cs" />
     <Compile Include="Geometry\SerializationTest.cs" />
     <Compile Include="Geometry\Shape2dTest.cs" />
     <Compile Include="Geometry\ShapeTest.cs" />
     <Compile Include="Geometry\Vector2dTest.cs" />
     <Compile Include="Geometry\Vector3dTest.cs" />
     <Compile Include="Mesh\ConstrainedDelaunayTest.cs" />
+    <Compile Include="Mesh\QuadMeshTest.cs" />
+    <Compile Include="Mesh\MeshCutTest.cs" />
     <Compile Include="Mesh\DelaunayMeshTestGeneric.cs" />
     <Compile Include="Mesh\GenericMeshTest.cs" />
     <Compile Include="Mesh\GMeshTestGeneric.cs" />

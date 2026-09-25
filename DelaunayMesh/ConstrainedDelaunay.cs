@@ -14,6 +14,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
     /// from its triangle, splits the segment in its midpoint instead.</para>
     /// The coordinates are normalized (bounding box centered in the origin and with size 1), so the tolerances do not depend
     /// on the units and on the position of the shape. The input vertices keep their original coordinates in the mesh.
+    /// <para>For the quadrilateral meshes (<see cref="Quadrangulate"/>) the points inside are the nodes of a lattice of rectangles
+    /// (see <see cref="Lattice"/>) instead of the circumcenters, then the triangles are recombined by <see cref="QuadRecombination"/>.</para>
     /// </summary>
     internal sealed class ConstrainedDelaunay
     {
@@ -38,6 +40,33 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// </summary>
         private const double SizeFactor = 0.72;
 
+        /// <summary>
+        /// Lines of the lattice used for the quadrilateral meshes, in the normalized coordinates rotated by the angle of the lattice
+        /// (u = x cos + y sin, v = -x sin + y cos). The lines pass through the boundary edges parallel to the lattice and their spacing
+        /// is at most the mesh size, so the shapes made of edges parallel to the axes (rectangles, T, L, I, box sections) are divided
+        /// in rectangles exactly
+        /// </summary>
+        private sealed class Lattice
+        {
+            public double Cos = 1.0;
+            public double Sin;
+            public double[] U = new double[0];
+            public double[] V = new double[0];
+
+            public double ToU(double x, double y) => x * Cos + y * Sin;
+            public double ToV(double x, double y) => -x * Sin + y * Cos;
+            public double ToX(double u, double v) => u * Cos - v * Sin;
+            public double ToY(double u, double v) => u * Sin + v * Cos;
+        }
+
+        private const double AngleTolerance = 1E-7;     // radians: edges with the same direction (lattice angle)
+        private const double AlignedTolerance = 1E-6;   // |sin| of the angle between an edge and the lattice: the edge is parallel to the lattice
+        private const double LineMerge = 0.05;          // relative to the mesh size: an extreme of the shape closer than this to a line of an edge is merged (and division points closer than this to the ends are skipped)
+        private const double EdgeLineMerge = 1E-3;      // relative to the mesh size: lines of two edges closer than this are merged (thin parts keep their lines)
+        private const double AlignedClearance = 0.1;    // relative to the mesh size: minimum distance of a lattice point from the boundary segments parallel to the lattice
+        private const double Clearance = 0.45;          // relative to the mesh size: minimum distance of a lattice point from the other boundary segments
+        private const double LatticeMinAngle = 20.0;    // degrees: minimum angle of the triangles not made of regular points (grading near the small edges)
+
         #endregion
 
         #region Variables
@@ -47,14 +76,17 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         private readonly List<double> _originalX = new List<double>();  // original coordinates
         private readonly List<double> _originalY = new List<double>();
         private readonly List<int> _tags = new List<int>();             // index of the boundary points, -1 for the points added by the refinement
+        private readonly List<bool> _latticePoints = new List<bool>();  // points inside the shape placed on the lattice
         private readonly List<Triangle> _vertexTriangle = new List<Triangle>();
         private readonly List<Triangle> _triangles = new List<Triangle>();
-        private readonly HashSet<long> _segments = new HashSet<long>(); // boundary segments (constrained edges)
+        private readonly HashSet<long> _segments = new HashSet<long>(LongKeyComparer.Instance); // boundary segments (constrained edges)
 
         private double _centerX;
         private double _centerY;
         private double _scale;
         private Triangle _lastTriangle;
+        private Lattice _lattice;                                       // not null for the quadrilateral meshes
+        private HashSet<int> _regularPoints;                            // lattice points and boundary points only on edges parallel to the lattice
 
         private Queue<KeyValuePair<Triangle, int>> _refineQueue;       // not null during the refinement
 
@@ -75,6 +107,59 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// <exception cref="InvalidOperationException">If the triangulation fails (e.g. boundary that intersects itself)</exception>
         public static Mesh Triangulate(Shape shape, double meshSize, bool refine, double minAngle = 0)
         {
+            var triangulation = new ConstrainedDelaunay();
+            triangulation.Build(GetLoops(shape), meshSize, refine, minAngle, false);
+            return triangulation.ToMesh();
+        }
+
+        /// <summary>
+        /// Mesh of quadrilaterals as square as possible: the points inside are the nodes of a lattice of rectangles (at most as large as
+        /// the mesh size) and the triangles are recombined in pairs (see <see cref="QuadRecombination"/>)
+        /// </summary>
+        /// <param name="shape">The shape: fill, holes and childs (shapes inside the holes)</param>
+        /// <param name="meshSize">Maximum length of the edges of the elements. Infinite or not positive: only the vertices of the shape are used
+        /// (unless <paramref name="allQuads"/>)</param>
+        /// <param name="refine">If false the interior is not refined: only the points on the boundary are used</param>
+        /// <param name="allQuads">If true the mesh is made only of quadrilaterals: the triangles left by the recombination are eliminated by
+        /// channels of quadrilaterals divided in two (see <see cref="QuadRecombination.EliminateTriangles"/>); if it is not possible, every
+        /// quadrilateral is divided in four and every triangle in three quadrilaterals. If false, the triangles that can not form a good
+        /// quadrilateral remain (usually few, along the curved or slanted boundaries)</param>
+        /// <returns>The mesh of quadrilaterals and triangles, counterclockwise, in the plane of the shape</returns>
+        public static Mesh Quadrangulate(Shape shape, double meshSize, bool refine, bool allQuads)
+        {
+            List<List<double[]>> loops = GetLoops(shape);
+
+            var triangulation = new ConstrainedDelaunay();
+            triangulation.Build(loops, meshSize, refine, 0, true);
+
+            QuadRecombination recombination = triangulation.ToRecombination();
+            recombination.Recombine();
+
+            if (allQuads)
+            {
+                if (recombination.EliminateTriangles())
+                {
+                    recombination.Smooth();
+                    if (recombination.WorstElementQuality() > 0.05)
+                        return recombination.ToMesh();
+                }
+
+                // fallback: the subdivision always gives convex quadrilaterals
+                recombination = triangulation.ToRecombination();
+                recombination.Recombine();
+                recombination.Subdivide();
+            }
+
+            recombination.Smooth();
+            return recombination.ToMesh();
+        }
+
+        #endregion
+
+        #region Input
+
+        private static List<List<double[]>> GetLoops(Shape shape)
+        {
             if (shape is null)
                 throw new ArgumentNullException(nameof(shape));
 
@@ -84,14 +169,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             if (loops.Count == 0 || loops[0].Count < 3)
                 throw new ArgumentException("The shape must have a fill with at least three distinct points");
 
-            var triangulation = new ConstrainedDelaunay();
-            triangulation.Build(loops, meshSize, refine, minAngle);
-            return triangulation.ToMesh();
+            return loops;
         }
-
-        #endregion
-
-        #region Input
 
         private static void CollectLoops(Shape shape, List<List<double[]>> loops)
         {
@@ -143,7 +222,7 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Build
 
-        private void Build(List<List<double[]>> loops, double meshSize, bool refine, double minAngle)
+        private void Build(List<List<double[]>> loops, double meshSize, bool refine, double minAngle, bool lattice)
         {
             // Normalization
             double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
@@ -167,6 +246,9 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
             double size = meshSize > 0 && !double.IsInfinity(meshSize) && !double.IsNaN(meshSize) ? meshSize / _scale : double.PositiveInfinity;
 
+            if (lattice && !double.IsInfinity(size))
+                _lattice = BuildLattice(loops, size);
+
             // Super triangle
             AddVertex(-SuperTriangleSize, -SuperTriangleSize, double.NaN, double.NaN, -1);
             AddVertex(SuperTriangleSize, -SuperTriangleSize, double.NaN, double.NaN, -1);
@@ -186,13 +268,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
                     AddBoundaryVertex(vertices, a[0], a[1], ref tag);
 
-                    double length = Math.Sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])) / _scale;
-                    int divisions = double.IsInfinity(size) ? 1 : Math.Max(1, (int)Math.Ceiling(length / size - 1E-9));
-                    for (int k = 1; k < divisions; k++)
-                    {
-                        double t = (double)k / divisions;
+                    foreach (double t in Divisions(a, b, size))
                         AddBoundaryVertex(vertices, a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), ref tag);
-                    }
                 }
                 loopVertices.Add(vertices);
             }
@@ -207,7 +284,54 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             ClassifyTriangles();
 
             if (refine && !double.IsInfinity(size))
-                Refine(size, minAngle);
+            {
+                // with the lattice only the size is checked: the angles of the rectangles are right
+                if (_lattice != null)
+                {
+                    List<int> layer = InsertBoundaryLayer(loopVertices, size);
+                    InsertLatticePoints(size, layer);
+                    _regularPoints = RegularPoints();
+                }
+                Refine(size, _lattice is null ? minAngle : LatticeMinAngle);
+            }
+        }
+
+        /// <summary>
+        /// Division of the boundary edge a-b: the edges parallel to the lattice are divided by the lattice lines, the others in equal parts
+        /// </summary>
+        /// <returns>The parameters (between 0 and 1, increasing) of the division points</returns>
+        private List<double> Divisions(double[] a, double[] b, double size)
+        {
+            var parameters = new List<double>();
+            if (double.IsInfinity(size))
+                return parameters;
+
+            double ax = (a[0] - _centerX) / _scale, ay = (a[1] - _centerY) / _scale;
+            double bx = (b[0] - _centerX) / _scale, by = (b[1] - _centerY) / _scale;
+            double length = Math.Sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
+
+            if (_lattice != null && IsParallelToLattice(ax, ay, bx, by, out bool alongU))
+            {
+                double start = alongU ? _lattice.ToU(ax, ay) : _lattice.ToV(ax, ay);
+                double delta = (alongU ? _lattice.ToU(bx, by) : _lattice.ToV(bx, by)) - start;
+                double margin = LineMerge * size / length;
+
+                foreach (double line in alongU ? _lattice.U : _lattice.V)
+                {
+                    double t = (line - start) / delta;
+                    if (t > margin && t < 1.0 - margin)
+                        parameters.Add(t);
+                }
+
+                parameters.Sort();
+                return parameters;
+            }
+
+            int divisions = Math.Max(1, (int)Math.Ceiling(length / size - 1E-9));
+            for (int k = 1; k < divisions; k++)
+                parameters.Add((double)k / divisions);
+
+            return parameters;
         }
 
         private void AddBoundaryVertex(List<int> vertices, double x, double y, ref int tag)
@@ -232,6 +356,7 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             _originalX.Add(double.IsNaN(originalX) ? x * _scale + _centerX : originalX);
             _originalY.Add(double.IsNaN(originalY) ? y * _scale + _centerY : originalY);
             _tags.Add(tag);
+            _latticePoints.Add(false);
             _vertexTriangle.Add(null);
             return _x.Count - 1;
         }
@@ -1044,6 +1169,10 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             if (double.IsInfinity(maxRatio))
                 return false;
 
+            // lattice: the rectangles (points of the lattice and of the boundary edges parallel to it) can be long, their angles are right
+            if (_regularPoints != null && _regularPoints.Contains(t.V[0]) && _regularPoints.Contains(t.V[1]) && _regularPoints.Contains(t.V[2]))
+                return false;
+
             // shortest edge and the vertex opposite to it (the smallest angle)
             int shortest = 0;
             double shortestLength = double.MaxValue;
@@ -1123,6 +1252,476 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #endregion
 
+        #region Lattice (quadrilateral meshes)
+
+        /// <summary>
+        /// Lattice aligned with the prevailing direction of the boundary edges (the global axes if they are as good), with lines through the
+        /// edges parallel to it and spacing not greater than the mesh size
+        /// </summary>
+        private Lattice BuildLattice(List<List<double[]>> loops, double size)
+        {
+            double angle = LatticeAngle(loops);
+            var lattice = new Lattice { Cos = Math.Cos(angle), Sin = Math.Sin(angle) };
+            _lattice = lattice;
+
+            // positions of the lines: value and "it is a boundary edge" (the extremes of the shape have a lower priority when merged)
+            var uLines = new List<KeyValuePair<double, bool>>();
+            var vLines = new List<KeyValuePair<double, bool>>();
+            double uMin = double.MaxValue, uMax = double.MinValue, vMin = double.MaxValue, vMax = double.MinValue;
+
+            foreach (var loop in loops)
+            {
+                for (int i = 0; i < loop.Count; i++)
+                {
+                    double ax = (loop[i][0] - _centerX) / _scale, ay = (loop[i][1] - _centerY) / _scale;
+                    double[] next = loop[(i + 1) % loop.Count];
+                    double bx = (next[0] - _centerX) / _scale, by = (next[1] - _centerY) / _scale;
+
+                    double ua = lattice.ToU(ax, ay), va = lattice.ToV(ax, ay);
+                    uMin = Math.Min(uMin, ua);
+                    uMax = Math.Max(uMax, ua);
+                    vMin = Math.Min(vMin, va);
+                    vMax = Math.Max(vMax, va);
+
+                    if (IsParallelToLattice(ax, ay, bx, by, out bool alongU))
+                    {
+                        if (alongU)
+                            vLines.Add(new KeyValuePair<double, bool>((va + lattice.ToV(bx, by)) / 2.0, true));
+                        else
+                            uLines.Add(new KeyValuePair<double, bool>((ua + lattice.ToU(bx, by)) / 2.0, true));
+                    }
+                }
+            }
+
+            uLines.Add(new KeyValuePair<double, bool>(uMin, false));
+            uLines.Add(new KeyValuePair<double, bool>(uMax, false));
+            vLines.Add(new KeyValuePair<double, bool>(vMin, false));
+            vLines.Add(new KeyValuePair<double, bool>(vMax, false));
+
+            lattice.U = LatticeLines(uLines, size);
+            lattice.V = LatticeLines(vLines, size);
+            return lattice;
+        }
+
+        /// <summary>
+        /// The direction (modulo 90 degrees) with the greatest total length of the boundary edges; the global axes if they have at least half of it
+        /// or if no direction prevails (less than a quarter of the perimeter, e.g. a circle)
+        /// </summary>
+        private static double LatticeAngle(List<List<double[]>> loops)
+        {
+            var directions = new List<KeyValuePair<double, double>>(); // angle in [0, 90) degrees (radians), length
+            foreach (var loop in loops)
+            {
+                for (int i = 0; i < loop.Count; i++)
+                {
+                    double[] a = loop[i], b = loop[(i + 1) % loop.Count];
+                    double dx = b[0] - a[0], dy = b[1] - a[1];
+                    double length = Math.Sqrt(dx * dx + dy * dy);
+                    if (!(length > 0))
+                        continue;
+
+                    double angle = Math.Atan2(dy, dx);
+                    angle -= Math.Floor(angle / (Math.PI / 2.0)) * (Math.PI / 2.0);
+                    if (angle > Math.PI / 2.0 - AngleTolerance)
+                        angle = 0;
+                    directions.Add(new KeyValuePair<double, double>(angle, length));
+                }
+            }
+
+            directions.Sort((p, q) => p.Key.CompareTo(q.Key));
+
+            double bestAngle = 0, bestWeight = 0, axesWeight = 0, perimeter = 0;
+            foreach (KeyValuePair<double, double> direction in directions)
+                perimeter += direction.Value;
+
+            int start = 0;
+            while (start < directions.Count)
+            {
+                int end = start;
+                double weight = directions[start].Value;
+                double sum = directions[start].Key * directions[start].Value;
+                while (end + 1 < directions.Count && directions[end + 1].Key - directions[end].Key <= AngleTolerance)
+                {
+                    end++;
+                    weight += directions[end].Value;
+                    sum += directions[end].Key * directions[end].Value;
+                }
+
+                double angle = sum / weight;
+                if (angle <= AngleTolerance)
+                    axesWeight = weight;
+                if (weight > bestWeight)
+                {
+                    bestWeight = weight;
+                    bestAngle = angle;
+                }
+
+                start = end + 1;
+            }
+
+            return axesWeight >= 0.5 * bestWeight || bestWeight < 0.25 * perimeter ? 0.0 : bestAngle;
+        }
+
+        /// <summary>
+        /// Lines through the given positions (an extreme of the shape is merged with a line of an edge closer than <see cref="LineMerge"/>,
+        /// two lines of edges only if closer than <see cref="EdgeLineMerge"/>), each interval divided in equal parts not larger than the size
+        /// </summary>
+        private static double[] LatticeLines(List<KeyValuePair<double, bool>> positions, double size)
+        {
+            positions.Sort((p, q) => p.Key.CompareTo(q.Key));
+
+            var merged = new List<double>();
+            int i = 0;
+            while (i < positions.Count)
+            {
+                double value = positions[i].Key;
+                bool edge = positions[i].Value;
+                int j = i;
+                while (j + 1 < positions.Count)
+                {
+                    double distance = positions[j + 1].Key - value;
+                    bool bothEdges = edge && positions[j + 1].Value;
+                    if (distance > (bothEdges ? EdgeLineMerge : LineMerge) * size)
+                        break;
+
+                    j++;
+                    if (!edge && positions[j].Value)
+                    {
+                        value = positions[j].Key;
+                        edge = true;
+                    }
+                }
+
+                merged.Add(value);
+                i = j + 1;
+            }
+
+            var lines = new List<double>();
+            for (int k = 0; k < merged.Count; k++)
+            {
+                lines.Add(merged[k]);
+                if (k + 1 == merged.Count)
+                    break;
+
+                double gap = merged[k + 1] - merged[k];
+                int divisions = Math.Max(1, (int)Math.Ceiling(gap / size - 1E-9));
+                for (int m = 1; m < divisions; m++)
+                    lines.Add(merged[k] + gap * m / divisions);
+            }
+
+            return lines.ToArray();
+        }
+
+        /// <param name="alongU">True if the segment is parallel to the u axis (v constant)</param>
+        /// <returns>True if the segment a-b (normalized coordinates) is parallel to one of the axes of the lattice</returns>
+        private bool IsParallelToLattice(double ax, double ay, double bx, double by, out bool alongU)
+        {
+            double du = _lattice.ToU(bx, by) - _lattice.ToU(ax, ay);
+            double dv = _lattice.ToV(bx, by) - _lattice.ToV(ax, ay);
+            double length = Math.Sqrt(du * du + dv * dv);
+
+            alongU = Math.Abs(dv) <= Math.Abs(du);
+            return length > 0 && Math.Min(Math.Abs(du), Math.Abs(dv)) <= AlignedTolerance * length;
+        }
+
+        /// <summary>
+        /// Boundary segments in a grid of cells as large as the mesh size: each segment { a, b, 1 if parallel to the lattice } is in the cells within <paramref name="reach"/>
+        /// </summary>
+        private Dictionary<long, List<int[]>> SegmentCells(double size, double reach)
+        {
+            var cells = new Dictionary<long, List<int[]>>(LongKeyComparer.Instance);
+            foreach (long key in _segments)
+            {
+                int a = (int)(key >> 32), b = (int)(key & 0xFFFFFFFF);
+                var segment = new[] { a, b, IsParallelToLattice(_x[a], _y[a], _x[b], _y[b], out _) ? 1 : 0 };
+
+                long i0 = CellIndex(Math.Min(_x[a], _x[b]) - reach, size), i1 = CellIndex(Math.Max(_x[a], _x[b]) + reach, size);
+                long j0 = CellIndex(Math.Min(_y[a], _y[b]) - reach, size), j1 = CellIndex(Math.Max(_y[a], _y[b]) + reach, size);
+                for (long i = i0; i <= i1; i++)
+                {
+                    for (long j = j0; j <= j1; j++)
+                    {
+                        long cell = CellKey(i, j);
+                        if (!cells.TryGetValue(cell, out List<int[]> list))
+                            cells[cell] = list = new List<int[]>();
+                        list.Add(segment);
+                    }
+                }
+            }
+            return cells;
+        }
+
+        /// <summary>
+        /// Layer of points parallel to the boundary edges not parallel to the lattice (curves, slanted edges): every boundary point is offset
+        /// inside by the local spacing of the boundary points, so the elements along the boundary are quadrilaterals. Where the shape is thin
+        /// (less than 2.2 times the spacing) the point is in the middle of the thickness (e.g. a tube is divided in two rows of quadrilaterals)
+        /// </summary>
+        /// <returns>The points of the layer</returns>
+        private List<int> InsertBoundaryLayer(List<List<int>> loopVertices, double size)
+        {
+            var layer = new List<int>();
+            Dictionary<long, List<int[]>> cells = SegmentCells(size, 2.5 * size);
+            var layerCells = new Dictionary<long, List<int>>(LongKeyComparer.Instance);
+
+            foreach (List<int> vertices in loopVertices)
+            {
+                int n = vertices.Count;
+                for (int i = 0; i < n; i++)
+                {
+                    int previous = vertices[(i + n - 1) % n], v = vertices[i], next = vertices[(i + 1) % n];
+                    bool previousAligned = IsParallelToLattice(_x[previous], _y[previous], _x[v], _y[v], out _);
+                    bool nextAligned = IsParallelToLattice(_x[v], _y[v], _x[next], _y[next], out _);
+                    if (previousAligned && nextAligned)
+                        continue;
+
+                    double l1 = Distance(previous, v), l2 = Distance(v, next);
+                    if (!(l1 > 0) || !(l2 > 0))
+                        continue;
+
+                    // smooth boundary only (turn not greater than 45 degrees): the bisector of the normals
+                    double e1x = (_x[v] - _x[previous]) / l1, e1y = (_y[v] - _y[previous]) / l1;
+                    double e2x = (_x[next] - _x[v]) / l2, e2y = (_y[next] - _y[v]) / l2;
+                    if (e1x * e2x + e1y * e2y < Math.Cos(Math.PI / 4.0))
+                        continue;
+
+                    double nx = -(e1y + e2y), ny = e1x + e2x;
+                    double norm = Math.Sqrt(nx * nx + ny * ny);
+                    nx /= norm;
+                    ny /= norm;
+
+                    double spacing = Math.Min(size, (l1 + l2) / 2.0);
+                    Triangle inside = Locate(_x[v] + 0.1 * spacing * nx, _y[v] + 0.1 * spacing * ny, null);
+                    if (inside is null || !inside.Inside)
+                    {
+                        nx = -nx;
+                        ny = -ny;
+                        inside = Locate(_x[v] + 0.1 * spacing * nx, _y[v] + 0.1 * spacing * ny, null);
+                        if (inside is null || !inside.Inside)
+                            continue;
+                    }
+
+                    if (!cells.TryGetValue(CellKey(CellIndex(_x[v], size), CellIndex(_y[v], size)), out List<int[]> near))
+                        continue;
+
+                    double thickness = RayDistance(v, nx, ny, near, 2.2 * spacing);
+                    double depth = thickness >= 2.2 * spacing ? spacing : thickness >= 1.4 * spacing ? thickness / 2.0 : 0;
+                    if (depth == 0)
+                        continue;
+
+                    double x = _x[v] + depth * nx, y = _y[v] + depth * ny;
+                    if (!cells.TryGetValue(CellKey(CellIndex(x, size), CellIndex(y, size)), out List<int[]> around))
+                        continue;
+
+                    bool tooClose = false;
+                    foreach (int[] segment in around)
+                    {
+                        if (DistanceToSegment(x, y, segment[0], segment[1]) < 0.45 * depth)
+                        {
+                            tooClose = true;
+                            break;
+                        }
+                    }
+
+                    long cell = CellKey(CellIndex(x, size), CellIndex(y, size));
+                    for (long ci = -1; ci <= 1 && !tooClose; ci++)
+                    {
+                        for (long cj = -1; cj <= 1 && !tooClose; cj++)
+                        {
+                            if (!layerCells.TryGetValue(CellKey(CellIndex(x, size) + ci, CellIndex(y, size) + cj), out List<int> points))
+                                continue;
+                            foreach (int p in points)
+                            {
+                                double dx = _x[p] - x, dy = _y[p] - y;
+                                if (dx * dx + dy * dy < 0.25 * spacing * spacing)
+                                {
+                                    tooClose = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (tooClose)
+                        continue;
+
+                    Triangle t = Locate(x, y, inside);
+                    if (t is null || !t.Inside)
+                        continue;
+
+                    int count = _x.Count;
+                    int point = InsertPoint(x, y, double.NaN, double.NaN, -1, t);
+                    if (_x.Count == count)
+                        continue;
+
+                    layer.Add(point);
+                    if (!layerCells.TryGetValue(cell, out List<int> list))
+                        layerCells[cell] = list = new List<int>();
+                    list.Add(point);
+                }
+            }
+
+            return layer;
+        }
+
+        /// <returns>Distance from the vertex along the direction to the first boundary segment (not through the vertex), at most <paramref name="maxDistance"/></returns>
+        private double RayDistance(int vertex, double dx, double dy, List<int[]> segments, double maxDistance)
+        {
+            double best = maxDistance;
+            foreach (int[] segment in segments)
+            {
+                int a = segment[0], b = segment[1];
+                if (a == vertex || b == vertex)
+                    continue;
+
+                double sx = _x[b] - _x[a], sy = _y[b] - _y[a];
+                double denominator = dx * sy - dy * sx;
+                if (Math.Abs(denominator) < 1E-14)
+                    continue;
+
+                double wx = _x[a] - _x[vertex], wy = _y[a] - _y[vertex];
+                double t = (wx * sy - wy * sx) / denominator;   // along the ray
+                double s = (wx * dy - wy * dx) / denominator;   // along the segment
+                if (t > 0 && s >= 0 && s <= 1 && t < best)
+                    best = t;
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// Insert the nodes of the lattice inside the shape, far enough from the boundary segments not on the lattice lines and from the boundary layer
+        /// </summary>
+        private void InsertLatticePoints(double size, List<int> layer)
+        {
+            Dictionary<long, List<int[]>> cells = SegmentCells(size, Clearance * size);
+
+            var layerCells = new Dictionary<long, List<int>>(LongKeyComparer.Instance);
+            foreach (int p in layer)
+            {
+                long cell = CellKey(CellIndex(_x[p], size), CellIndex(_y[p], size));
+                if (!layerCells.TryGetValue(cell, out List<int> list))
+                    layerCells[cell] = list = new List<int>();
+                list.Add(p);
+            }
+
+            foreach (double u in _lattice.U)
+            {
+                foreach (double v in _lattice.V)
+                {
+                    double x = _lattice.ToX(u, v), y = _lattice.ToY(u, v);
+                    if (Math.Abs(x) > 0.5 + LocateTolerance || Math.Abs(y) > 0.5 + LocateTolerance)
+                        continue;
+
+                    if (cells.TryGetValue(CellKey(CellIndex(x, size), CellIndex(y, size)), out List<int[]> near) && IsTooClose(x, y, near, size))
+                        continue;
+
+                    if (IsNearLayer(x, y, layerCells, size))
+                        continue;
+
+                    Triangle t = Locate(x, y, null);
+                    if (t is null || !t.Inside)
+                        continue;
+
+                    int count = _x.Count;
+                    int p = InsertPoint(x, y, double.NaN, double.NaN, -1, t);
+                    if (_x.Count > count)
+                        _latticePoints[p] = true;
+                }
+            }
+        }
+
+        /// <returns>The points of the lattice and the boundary points whose boundary segments are all parallel to the lattice</returns>
+        private HashSet<int> RegularPoints()
+        {
+            var regular = new HashSet<int>();
+            for (int i = 0; i < _latticePoints.Count; i++)
+            {
+                if (_latticePoints[i])
+                    regular.Add(i);
+            }
+
+            var irregular = new HashSet<int>();
+            foreach (long key in _segments)
+            {
+                int a = (int)(key >> 32), b = (int)(key & 0xFFFFFFFF);
+                HashSet<int> set = IsParallelToLattice(_x[a], _y[a], _x[b], _y[b], out _) ? regular : irregular;
+                set.Add(a);
+                set.Add(b);
+            }
+
+            regular.ExceptWith(irregular);
+            return regular;
+        }
+
+        /// <returns>True if the point is closer than 0.6 times the mesh size to a point of the boundary layer</returns>
+        private bool IsNearLayer(double x, double y, Dictionary<long, List<int>> layerCells, double size)
+        {
+            long i0 = CellIndex(x, size), j0 = CellIndex(y, size);
+            double limit = 0.6 * size;
+            for (long i = i0 - 1; i <= i0 + 1; i++)
+            {
+                for (long j = j0 - 1; j <= j0 + 1; j++)
+                {
+                    if (!layerCells.TryGetValue(CellKey(i, j), out List<int> points))
+                        continue;
+                    foreach (int p in points)
+                    {
+                        double dx = _x[p] - x, dy = _y[p] - y;
+                        if (dx * dx + dy * dy < limit * limit)
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool IsTooClose(double x, double y, List<int[]> segments, double size)
+        {
+            foreach (int[] segment in segments)
+            {
+                double distance = DistanceToSegment(x, y, segment[0], segment[1]);
+                if (distance < (segment[2] == 1 ? AlignedClearance : Clearance) * size)
+                    return true;
+            }
+            return false;
+        }
+
+        private double DistanceToSegment(double x, double y, int a, int b)
+        {
+            double dx = _x[b] - _x[a], dy = _y[b] - _y[a];
+            double squareLength = dx * dx + dy * dy;
+            double t = squareLength > 0 ? ((x - _x[a]) * dx + (y - _y[a]) * dy) / squareLength : 0;
+            t = Math.Max(0, Math.Min(1, t));
+            double px = _x[a] + t * dx - x, py = _y[a] + t * dy - y;
+            return Math.Sqrt(px * px + py * py);
+        }
+
+        private static long CellIndex(double value, double size)
+        {
+            return (long)Math.Floor(value / size);
+        }
+
+        private static long CellKey(long i, long j)
+        {
+            return (i << 32) ^ (j & 0xFFFFFFFF);
+        }
+
+        /// <summary>
+        /// The triangles inside the shape, for the recombination in quadrilaterals
+        /// </summary>
+        private QuadRecombination ToRecombination()
+        {
+            var triangles = new List<int[]>();
+            foreach (Triangle t in _triangles)
+            {
+                if (t.Inside)
+                    triangles.Add(new[] { t.V[0], t.V[1], t.V[2] });
+            }
+
+            return new QuadRecombination(_x, _y, _originalX, _originalY, _tags, _latticePoints, triangles, _segments, _scale, _centerX, _centerY);
+        }
+
+        #endregion
+
         #region Diagnostics
 
         /// <summary>
@@ -1177,7 +1776,7 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             int vertexId = 0;
             int faceId = 0;
             int edgeId = 0;
-            var edges = new HashSet<long>();
+            var edges = new HashSet<long>(LongKeyComparer.Instance);
 
             foreach (Triangle t in _triangles)
             {

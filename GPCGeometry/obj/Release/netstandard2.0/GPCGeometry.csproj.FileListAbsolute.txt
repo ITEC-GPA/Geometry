@@ -21,3 +21,6 @@ C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstand
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\GPCGeometry\obj\Release\netstandard2.0\GPCGeometry.sourcelink.json
+C:\Users\g.pacini\AppData\Local\Temp\dm-out\GPCGeometry.deps.json
+C:\Users\g.pacini\AppData\Local\Temp\dm-out\GPCGeometry.dll
+C:\Users\g.pacini\AppData\Local\Temp\dm-out\GPCGeometry.pdb

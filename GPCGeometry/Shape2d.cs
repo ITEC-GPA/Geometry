@@ -345,16 +345,19 @@ namespace GPC.Geometry
 		/// <param name="code"></param>
 		/// <param name="factor"></param>
 		/// <returns></returns>
-		private static Shape2d[] Boolean(Shape2d[] a, Shape2d[] b, ClipType code, int factor = 1000)
+		/// <param name="factor">Scale of the coordinates; not positive (default): automatic, see <see cref="ClipperScale"/></param>
+		private static Shape2d[] Boolean(Shape2d[] a, Shape2d[] b, ClipType code, int factor = 0)
 		{
+			double scale = factor > 0 ? factor : ClipperScale.Factor(ClipperScale.MaxAbsCoordinate(a, b));
+
 			Clipper clipper = new Clipper();
 			for (int i = 0; i < a.Length; i++)
 			{
-				AddToPath(a[i], factor, clipper, PolyType.ptSubject);
+				AddToPath(a[i], scale, clipper, PolyType.ptSubject);
 			}
 			for (int i = 0; i < b.Length; i++)
 			{
-				AddToPath(b[i], factor, clipper, PolyType.ptClip);
+				AddToPath(b[i], scale, clipper, PolyType.ptClip);
 			}
 
 			PolyTree polyTree = new PolyTree();
@@ -369,13 +372,27 @@ namespace GPC.Geometry
 					List<Shape2d> result = new List<Shape2d>();
 					for (int i = 0; i < polyTree.Childs.Count; i++)
 					{
-						result.Add(GetShapeFromPolyNode(polyTree.Childs[i], factor));
+						AddShapesFromPolyNode(polyTree.Childs[i], scale, result);
 					}
 					return result.ToArray();
 				}
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// The shape of the outer polygon node and, as separate shapes, the islands inside its holes (before, they were lost)
+		/// </summary>
+		private static void AddShapesFromPolyNode(PolyNode outer, double factor, List<Shape2d> result)
+		{
+			result.Add(GetShapeFromPolyNode(outer, factor));
+			for (int i = 0; i < outer.ChildCount; i++)
+			{
+				PolyNode hole = outer.Childs[i];
+				for (int j = 0; j < hole.ChildCount; j++)
+					AddShapesFromPolyNode(hole.Childs[j], factor, result);
+			}
 		}
 
 		/// <summary>

@@ -90,23 +90,27 @@ namespace GPC.Geometry
             }
         }
 
+        /// <remarks>The items are enumerated once (before, Count() and ElementAt(i) at every step: O(n^2), and a lazy enumerable created new objects every time)</remarks>
         public int[] AddRange(IEnumerable<T> items)
         {
-            int[] ids = new int[items.Count()];
-            for (int i = 0; i < items.Count(); ++i)
+            IList<T> list = items as IList<T> ?? items.ToList();
+            int[] ids = new int[list.Count];
+            for (int i = 0; i < list.Count; ++i)
             {
-                ids[i] = Add(items.ElementAt(i));
+                ids[i] = Add(list[i]);
             }
             return ids;
         }
 
         public int[] AddRange(IEnumerable<T> items, IEnumerable<int> indices)
         {
-            int[] ids = new int[items.Count()];
-            for (int i = 0; i < items.Count(); ++i)
+            IList<T> list = items as IList<T> ?? items.ToList();
+            IList<int> idList = indices as IList<int> ?? indices.ToList();
+            int[] ids = new int[list.Count];
+            for (int i = 0; i < list.Count; ++i)
             {
-                items.ElementAt(i).Id = indices.ElementAt(i);
-                ids[i] = Add(items.ElementAt(i));
+                list[i].Id = idList[i];
+                ids[i] = Add(list[i]);
             }
             return ids;
         }
@@ -132,11 +136,11 @@ namespace GPC.Geometry
         {
             get
             {
-                return _collection.ElementAt(index);
+                return _collection[index];
             }
             set
             {
-                var oldId = _collection.ElementAt(index).Id;
+                var oldId = _collection[index].Id;
                 if (value.Id != oldId)
                 {
                     _ids.Remove(oldId);
@@ -161,7 +165,7 @@ namespace GPC.Geometry
         /// Get element using its id
         public virtual T GetElementById(int id)
         {
-            return _collection.ElementAt(_ids[id]);
+            return _collection[_ids[id]];
         }
 
         /// Lock and get element using its id

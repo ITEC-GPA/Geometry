@@ -96,21 +96,18 @@ namespace GPC.Geometry
 		}
 
 		public Polygon3d(Polygon3d polygon)
-			: this()
 		{
-			for (int i = 0; i < polygon.Count; i++)
-			{
-				AddWithoutChecks(new Point3d(polygon[i]));
-			}
+			// one allocation (AddWithoutChecks copied the array at every point)
+			_points = new Point3d[polygon.Count];
+			for (int i = 0; i < _points.Length; i++)
+				_points[i] = new Point3d(polygon[i]);
 		}
 
 		public Polygon3d(Polygon2d polygon)
-			: this()
 		{
-			for (int i = 0; i < polygon.Count; i++)
-			{
-				AddWithoutChecks(new Point3d(polygon[i]));
-			}
+			_points = new Point3d[polygon.Count];
+			for (int i = 0; i < _points.Length; i++)
+				_points[i] = new Point3d(polygon[i]);
 		}
 
 		public Polygon3d(Polygon2d polygon, double tolerance = GeometryBase.Tolerance)
@@ -1740,7 +1737,7 @@ namespace GPC.Geometry
 
 		public IEnumerator<Point3d> GetEnumerator()
 		{
-			return _points.ToList().GetEnumerator();
+			return ((IEnumerable<Point3d>)_points).GetEnumerator(); // the array is replaced (not changed) when points are added or removed
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -1813,20 +1810,23 @@ namespace GPC.Geometry
 		/// <param name="code"></param>
 		/// <param name="factor"></param>
 		/// <returns></returns>
-		private static Polygon3d[] Boolean(Polygon3d[] a, Polygon3d[] b, ClipType code, int factor = 1000)
+		/// <param name="factor">Scale of the coordinates; not positive (default): automatic, see <see cref="ClipperScale"/></param>
+		private static Polygon3d[] Boolean(Polygon3d[] a, Polygon3d[] b, ClipType code, int factor = 0)
 		{
+			double scale = factor > 0 ? factor : ClipperScale.Factor(Math.Max(ClipperScale.MaxAbsCoordinate(a), ClipperScale.MaxAbsCoordinate(b)));
+
 			Clipper clipper = new Clipper();
 
 			for (int i = 0; i < a.Length; i++)
 			{
 				Polygon3d polygon = a[i];
-				AddToPath(polygon, factor, clipper, PolyType.ptSubject);
+				AddToPath(polygon, scale, clipper, PolyType.ptSubject);
 			}
 
 			for (int i = 0; i < b.Length; i++)
 			{
 				Polygon3d polygon = b[i];
-				AddToPath(polygon, factor, clipper, PolyType.ptClip);
+				AddToPath(polygon, scale, clipper, PolyType.ptClip);
 			}
 
 			PolyTree polyTree = new PolyTree();
@@ -1843,7 +1843,7 @@ namespace GPC.Geometry
 					{
 						PolyNode node = polyTree.Childs[i];
 						List<Polygon3d> result = new List<Polygon3d>();
-						GetPolygonsFromPolyNode(node, factor, ref result);
+						GetPolygonsFromPolyNode(node, scale, ref result);
 						bufferResult.AddRange(result);
 					}
 					return bufferResult.ToArray();
@@ -1878,7 +1878,7 @@ namespace GPC.Geometry
 
 			for (int v = 0; v < polygon.Count; v++)
 			{
-				result.Add(new IntPoint((long)(polygon[v].X * factor), (long)(polygon[v].Y * factor)));
+				result.Add(new IntPoint(ClipperScale.Scale(polygon[v].X, factor), ClipperScale.Scale(polygon[v].Y, factor)));
 			}
 			return result;
 		}

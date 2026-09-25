@@ -23,7 +23,7 @@ namespace Meshes
 
         private static Mesh Generate(Shape2d shape, double meshSize, bool initialMeshOnly = false, double minAngle = 0)
         {
-            var options = new DelaunayMesh.DelaunayGenerateOptions { MeshSize = meshSize, InitialMeshOnly = initialMeshOnly, MinAngle = minAngle };
+            var options = new DelaunayMesh.DelaunayGenerateOptions { MeshSize = meshSize, InitialMeshOnly = initialMeshOnly, MinAngle = minAngle, Recombine = false };
             Assert.IsTrue(DelaunayMesh.Generate(shape, options, out Mesh mesh, out DelaunayMesh.DelaunayGenerateMeshStatus status));
             Assert.IsNull(status);
             return mesh;
