@@ -3,33 +3,64 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// A point in the space. Two points are equal if their distance is not bigger than the combined tolerance sqrt(2) * <see cref="GeometryBase.Tolerance"/>
+    /// (see <see cref="Equals(Point3d, double)"/>; <see cref="Point2d"/> uses <see cref="GeometryBase.Tolerance"/>)
+    /// </summary>
     [Serializable]
     public sealed class Point3d : GeometryBase, ISerializable, IEquatable<Point3d>, ICloneable
     {
         #region Variables
 
+        /// <summary>
+        /// The X coordinate
+        /// </summary>
         private double _x;
+        /// <summary>
+        /// The Y coordinate
+        /// </summary>
         private double _y;
+        /// <summary>
+        /// The Z coordinate
+        /// </summary>
         private double _z;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// A new point at the origin (0, 0, 0)
+        /// </summary>
         public static Point3d Origin => new Point3d(0, 0, 0);
 
+        /// <summary>
+        /// The X coordinate
+        /// </summary>
         public double X { get => _x; set { _x = value; } }
 
+        /// <summary>
+        /// The Y coordinate
+        /// </summary>
         public double Y { get => _y; set { _y = value; } }
 
+        /// <summary>
+        /// The Z coordinate
+        /// </summary>
         public double Z { get => _z; set { _z = value; } }
 
+        /// <summary>
+        /// The coordinates as a new array { X, Y, Z }
+        /// </summary>
         public double[] Coordinates => new double[] { _x, _y, _z };
 
         #endregion
 
         #region Public Constructors
 
+        /// <summary>
+        /// Creates a point at the origin
+        /// </summary>
         public Point3d()
             : base()
         {
@@ -38,6 +69,12 @@ namespace GPC.Geometry
             _z = 0.0;
         }
 
+        /// <summary>
+        /// Creates a point
+        /// </summary>
+        /// <param name="x">The X coordinate</param>
+        /// <param name="y">The Y coordinate</param>
+        /// <param name="z">The Z coordinate</param>
         public Point3d(double x, double y, double z)
             : base()
         {
@@ -46,16 +83,29 @@ namespace GPC.Geometry
             _z = z;
         }
 
+        /// <summary>
+        /// Creates a copy of a point (with a new <see cref="BaseObject.Guid"/>)
+        /// </summary>
+        /// <param name="p">The point to copy</param>
         public Point3d(Point3d p)
             : this(p._x, p._y, p._z)
         {
         }
 
+        /// <summary>
+        /// Creates the point of the XY plane (Z = 0)
+        /// </summary>
+        /// <param name="p">The point of the plane</param>
         public Point3d(Point2d p)
             : this(p.X, p.Y, 0)
         {
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the coordinates (the saved <see cref="BaseObject.Guid"/> is not read)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private Point3d(SerializationInfo info, StreamingContext context)
         {
             _x = info.GetDouble("X");
@@ -103,42 +153,46 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Scale the point respect to the origin 
+        /// A copy of the point scaled respect to the origin (the point is not changed)
         /// </summary>
         /// <param name="factor">Scale factor</param>
+        /// <returns>The point (X * factor, Y * factor, Z * factor)</returns>
         public Point3d Scale(double factor)
         {
             return new Point3d(X * factor, Y * factor, Z * factor);
         }
 
         /// <summary>
-        /// Scale the point respect to the origin
+        /// A copy of the point scaled respect to the origin with a factor for every axis (the point is not changed)
         /// </summary>
-        /// <param name="factorX">Scale factor</param>
-        /// <param name="factorY">Scale factor</param>
-        /// <param name="factorZ">Scale factor</param>
+        /// <param name="factorX">Scale factor along X</param>
+        /// <param name="factorY">Scale factor along Y</param>
+        /// <param name="factorZ">Scale factor along Z</param>
+        /// <returns>The scaled point</returns>
         public Point3d Scale(double factorX, double factorY, double factorZ)
         {
             return new Point3d(X * factorX, Y * factorY, Z * factorZ);
         }
 
         /// <summary>
-        /// Scale the point respect to <paramref name="center"/>
+        /// A copy of the point scaled respect to <paramref name="center"/> with a factor for every axis (the point is not changed)
         /// </summary>
         /// <param name="center">Center of scale</param>
-        /// <param name="factorX">Scale factor</param>
-        /// <param name="factorY">Scale factor</param>
-        /// <param name="factorZ">Scale factor</param>
+        /// <param name="factorX">Scale factor along X</param>
+        /// <param name="factorY">Scale factor along Y</param>
+        /// <param name="factorZ">Scale factor along Z</param>
+        /// <returns>The scaled point</returns>
         public Point3d Scale(Point3d center, double factorX, double factorY, double factorZ)
         {
             return new Point3d(center.X + (X - center.X) * factorX, center.Y + (Y - center.Y) * factorY, center.Z + (Z - center.Z) * factorZ);
         }
 
         /// <summary>
-        /// Scale the point respect to <paramref name="center"/>
+        /// A copy of the point scaled respect to <paramref name="center"/> (the point is not changed)
         /// </summary>
         /// <param name="center">Center of scale</param>
         /// <param name="factor">Scale factor</param>
+        /// <returns>The scaled point</returns>
         public Point3d Scale(Point3d center, double factor)
         {
             return Scale(center, factor, factor, factor);
@@ -151,7 +205,7 @@ namespace GPC.Geometry
         /// <param name="b">The 'b' parameter of the equation</param>
         /// <param name="c">The 'c' parameter of the equation</param>
         /// <param name="d">The 'd' parameter of the equation</param>
-        /// <returns></returns>
+        /// <returns>A new point, symmetric of this one respect to the plane</returns>
         public Point3d Mirror(double a, double b, double c, double d)
         {
             double k = (-a * _x - b * _y - c * _z - d) / (a * a + b * b + c * c);
@@ -175,10 +229,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Calculate the square distance with <paramref name="point"/>
+        /// Calculate the square of the distance with <paramref name="point"/>
         /// </summary>
         /// <param name="point">The input point</param>
-        /// <returns>The distance</returns>
+        /// <returns>The square of the distance (faster than <see cref="DistanceTo"/> for the comparisons)</returns>
         public double SquareDistanceTo(Point3d point)
         {
             double dx = point._x - _x;
@@ -188,10 +242,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Calculate the vector with <paramref name="point"/>
+        /// The vector from this point to <paramref name="point"/>
         /// </summary>
-        /// <param name="point">The input point</param>
-        /// <returns>The vector</returns>
+        /// <param name="point">The end point</param>
+        /// <returns>The vector <paramref name="point"/> - this</returns>
         public Vector3d VectorTo(Point3d point)
         {
             return new Vector3d(point - this);
@@ -247,14 +301,15 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Calculate whether this point lies on an semi-infinite ray.
+        /// Calculate whether this point lies on a semi-infinite ray
         /// </summary>
         /// <param name="SemiRay">Semi infinite line (ray), which begins at first point and is infinite in the direction of the end point.</param>
-        /// <param name="sinAlpha">Angular distance useful for finding the vertex with the smallest angle to the ray.
-        /// The goal is to look for an angle as close to 0 as possible, so the sine of the angle is returned, for θ≈0 we have that sinθ≈θ.
-        /// Also, for angles close to 0, sine is more accurate than cosine.</param>
-        /// <param name="tolerance"></param>
-        /// <returns></returns>
+        /// <param name="sinAlpha">Angular distance useful for finding the vertex with the smallest angle to the ray: the sine of the angle between the
+        /// ray and the direction from its start to the point (for θ≈0 sinθ≈θ, and for angles close to 0 the sine is more accurate than the cosine);
+        /// <see cref="double.MaxValue"/> if the point is behind the start, 0 if it is at the start or at the end point</param>
+        /// <param name="tolerance">The tolerance on the distance from the ray</param>
+        /// <returns>True if the point is at an end of <paramref name="SemiRay"/>, or on its side of the start (angle below 30°) and not farther than
+        /// <paramref name="tolerance"/> from the line</returns>
         public bool IsOnSemiInfiniteRay(in Line3d SemiRay, out double sinAlpha, double tolerance = GeometryBase.Tolerance)
         {
             if (DistanceTo(SemiRay.Start) < tolerance || DistanceTo(SemiRay.End) < tolerance)
@@ -291,56 +346,122 @@ namespace GPC.Geometry
 
         #region Operators overrides
 
+        /// <summary>
+        /// The sum of the coordinates of two points
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The second point</param>
+        /// <returns>A new point</returns>
         public static Point3d operator +(Point3d a, Point3d b)
         {
             return new Point3d(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         }
 
+        /// <summary>
+        /// The point translated by a vector
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="vector">The translation</param>
+        /// <returns>A new point</returns>
         public static Point3d operator +(Point3d point, Vector3d vector)
         {
             return new Point3d(point.X + vector.X, point.Y + vector.Y, point.Z + vector.Z);
         }
 
+        /// <summary>
+        /// The difference of the coordinates of two points
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The point to subtract</param>
+        /// <returns>A new point</returns>
         public static Point3d operator -(Point3d a, Point3d b)
         {
             return new Point3d(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         }
 
+        /// <summary>
+        /// The point translated by the opposite of a vector
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="vector">The vector to subtract</param>
+        /// <returns>A new point</returns>
         public static Point3d operator -(Point3d point, Vector3d vector)
         {
             return new Point3d(point.X - vector.X, point.Y - vector.Y, point.Z - vector.Z);
         }
 
+        /// <summary>
+        /// The scalar product of the position vectors of two points
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The second point</param>
+        /// <returns>a.X * b.X + a.Y * b.Y + a.Z * b.Z</returns>
         public static double operator *(Point3d a, Point3d b)
         {
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
         }
 
+        /// <summary>
+        /// The coordinates multiplied by a number
+        /// </summary>
+        /// <param name="a">The point</param>
+        /// <param name="b">The factor</param>
+        /// <returns>A new point</returns>
         public static Point3d operator *(Point3d a, double b)
         {
             return new Point3d(a.X * b, a.Y * b, a.Z * b);
         }
 
+        /// <summary>
+        /// The coordinates multiplied by a number
+        /// </summary>
+        /// <param name="a">The factor</param>
+        /// <param name="b">The point</param>
+        /// <returns>A new point</returns>
         public static Point3d operator *(double a, Point3d b)
         {
             return b * a;
         }
 
+        /// <summary>
+        /// The scalar product of the position vector of a point and a vector
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="vector">The vector</param>
+        /// <returns>point.X * vector.X + point.Y * vector.Y + point.Z * vector.Z</returns>
         public static double operator *(Point3d point, Vector3d vector)
         {
             return point.X * vector.X + point.Y * vector.Y + point.Z * vector.Z;
         }
 
+        /// <summary>
+        /// The coordinates divided by a number
+        /// </summary>
+        /// <param name="a">The point</param>
+        /// <param name="b">The divisor</param>
+        /// <returns>A new point</returns>
         public static Point3d operator /(Point3d a, double b)
         {
             return a * (1 / b);
         }
 
+        /// <summary>
+        /// The cross product of the position vectors of two points
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The second point</param>
+        /// <returns>A new point with the coordinates of a × b</returns>
         public static Point3d operator ^(Point3d a, Point3d b)
         {
             return new Point3d(a.Y * b.Z - a.Z * b.Y, -(a.X * b.Z - a.Z * b.X), a.X * b.Y - a.Y * b.X);
         }
 
+        /// <summary>
+        /// Equality within the tolerance: true if the points are the same object, both null or equal (<see cref="Equals(Point3d)"/>)
+        /// </summary>
+        /// <param name="point1">The first point</param>
+        /// <param name="point2">The second point</param>
+        /// <returns>True if the points are equal</returns>
         public static bool operator ==(Point3d point1, Point3d point2)
         {
             if (ReferenceEquals(point1, point2))
@@ -352,16 +473,30 @@ namespace GPC.Geometry
             return point1.Equals(point2);
         }
 
+        /// <summary>
+        /// Inequality within the tolerance (see the equality operator)
+        /// </summary>
+        /// <param name="point1">The first point</param>
+        /// <param name="point2">The second point</param>
+        /// <returns>True if the points are different</returns>
         public static bool operator !=(Point3d point1, Point3d point2)
         {
             return !(point1 == point2);
         }
 
+        /// <summary>
+        /// The position vector of the point
+        /// </summary>
+        /// <param name="point">The point</param>
         public static implicit operator Vector3d(Point3d point)
         {
             return new Vector3d(point.X, point.Y, point.Z);
         }
 
+        /// <summary>
+        /// The projection of the point on the XY plane (Z is dropped)
+        /// </summary>
+        /// <param name="point">The point</param>
         public static implicit operator Point2d(Point3d point)
         {
             return new Point2d(point.X, point.Y);
@@ -371,6 +506,11 @@ namespace GPC.Geometry
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Serializes the point: the <see cref="BaseObject.Guid"/> and the coordinates
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -380,9 +520,11 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Check if two points are equals by means of the <paramref name="tolerance"/>
+		/// Check if two points are equal by means of the <paramref name="tolerance"/>
 		/// </summary>
-		/// <returns>True if the distance between point and other is less than the combined tolerance of the two points, i.e. sqrt(2) * <paramref name="tolerance"/></returns>
+		/// <param name="other">The point to compare</param>
+		/// <param name="tolerance">The tolerance of each point</param>
+		/// <returns>True if the distance between the points is not bigger than the combined tolerance of the two points, sqrt(2) * <paramref name="tolerance"/></returns>
 		public bool Equals(Point3d other, double tolerance = GeometryBase.Tolerance)
         {
             if (other is null)
@@ -397,19 +539,31 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Check if two points are equals by means of the <see cref="GeometryBase.Tolerance"/>
+		/// Check if two points are equal by means of the <see cref="GeometryBase.Tolerance"/>
 		/// </summary>
-		/// <returns>True if the distance between point and other is less than <see cref="GeometryBase.Tolerance"/></returns>
+		/// <param name="other">The point to compare</param>
+		/// <returns>True if the distance between the points is not bigger than sqrt(2) * <see cref="GeometryBase.Tolerance"/> (see
+		/// <see cref="Equals(Point3d, double)"/>)</returns>
 		public bool Equals(Point3d other)
         {
             return Equals(other, GeometryBase.Tolerance);
         }
 
+        /// <summary>
+        /// Equality within the tolerance with another object (see <see cref="Equals(Point3d)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal point</returns>
         public override bool Equals(object obj)
         {
             return Equals(obj as Point3d);
         }
 
+        /// <summary>
+        /// The hash code of the exact coordinates. Two points equal within the tolerance can have different hash codes: to find the points near a
+        /// given one use a spatial search, not a hash set or a dictionary
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -423,12 +577,21 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// The coordinates separated by the list separator of the current culture (the format read by <see cref="TryParse"/>)
+        /// </summary>
+        /// <returns>"X; Y; Z" (with the separator of the culture)</returns>
         public override string ToString()
         {
             string separator = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             return $"{_x}{separator} {_y}{separator} {_z}";
         }
 
+        /// <summary>
+        /// Equality within the tolerance with another geometry
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal point</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Point3d point)

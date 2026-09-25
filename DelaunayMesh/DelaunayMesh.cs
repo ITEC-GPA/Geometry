@@ -13,17 +13,28 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
     {
         #region Properties
 
+        /// <summary>
+        /// The options used to generate the mesh (null if the mesh was not generated with options)
+        /// </summary>
         public DelaunayGenerateOptions DelaunayMeshOptions => (DelaunayGenerateOptions)_options;
 
         #endregion
 
         #region Constructors
 
+        /// <summary>
+        /// Creates an empty mesh
+        /// </summary>
         public DelaunayMesh()
             : base()
         {
         }
 
+        /// <summary>
+        /// Deserialization constructor (see <see cref="Mesh"/>)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private DelaunayMesh(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -80,6 +91,14 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// Generate the meshes of shapes, one for each shape (see <see cref="Generate(Shape2d, DelaunayGenerateOptions, out Mesh, out DelaunayGenerateMeshStatus)"/>)
+        /// </summary>
+        /// <param name="shapes">The shapes in the XY plane</param>
+        /// <param name="delaunayGenerateOptions">The options (null: default options)</param>
+        /// <param name="meshes">The meshes, in the order of the shapes; if a mesh fails, the meshes generated before it</param>
+        /// <param name="generateMeshStatus">Null if all the meshes are generated, otherwise the error of the first shape that failed</param>
+        /// <returns>True if all the meshes are generated (the generation stops at the first failure)</returns>
         public static bool Generate(IEnumerable<Shape2d> shapes, DelaunayGenerateOptions delaunayGenerateOptions, out List<Mesh> meshes, out DelaunayGenerateMeshStatus generateMeshStatus)
         {
             meshes = new List<Mesh>();
@@ -96,6 +115,9 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return true;
         }
 
+        /// <summary>
+        /// The options of <see cref="Generate(Shape2d, DelaunayGenerateOptions, out Mesh, out DelaunayGenerateMeshStatus)"/>
+        /// </summary>
         [Serializable]
         public sealed class DelaunayGenerateOptions : GenerateOptions, ICloneable
         {
@@ -116,6 +138,9 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             /// </summary>
             public bool RecombineAll;
 
+            /// <summary>
+            /// The default options: no size limit (only the vertices of the shape), quadrilaterals and triangles, no refinement, no minimum angle
+            /// </summary>
             public DelaunayGenerateOptions()
             {
                 MeshSize = 1E+22;
@@ -126,6 +151,10 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 RecombineAll = false;
             }
 
+            /// <summary>
+            /// Creates a copy of the options
+            /// </summary>
+            /// <returns>The copy</returns>
             public override object Clone()
             {
                 DelaunayGenerateOptions clone = new DelaunayGenerateOptions
@@ -142,9 +171,15 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// The error of a failed generation
+        /// </summary>
         [Serializable]
         public sealed class DelaunayGenerateMeshStatus : GenerateMeshStatus
         {
+            /// <summary>
+            /// Creates an empty status
+            /// </summary>
             public DelaunayGenerateMeshStatus()
                 : base()
             {

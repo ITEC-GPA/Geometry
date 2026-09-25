@@ -10,21 +10,36 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry.Meshes.GMesh
 {
+    /// <summary>
+    /// Mesh of planar shapes generated with Gmsh (OpenCASCADE kernel): triangles or quadrilaterals (recombination), with points, lines,
+    /// polygons and shapes embedded in the surfaces and optional transfinite meshes. Gmsh has a global state: the generations are serialized
+    /// </summary>
     public sealed class GMesh : Mesh
     {
         #region Properties
 
+        /// <summary>
+        /// The options used to generate the mesh (null if the mesh was not generated with options)
+        /// </summary>
         public GMeshGenerateOptions GMeshOptions => (GMeshGenerateOptions)_options;
 
         #endregion
 
         #region Constructors
 
+        /// <summary>
+        /// Creates an empty mesh
+        /// </summary>
         public GMesh()
             : base()
         {
         }
 
+        /// <summary>
+        /// Deserialization constructor (see <see cref="Mesh"/>)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private GMesh(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -35,12 +50,13 @@ namespace GPC.Geometry.Meshes.GMesh
         #region Generate mesh functions
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes, one mesh for each shape, without embedded geometries
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
         /// <param name="shapes">Geometry to mesh</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
-        /// <param name="generateMeshStatus"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
+        /// <param name="generateMeshStatus">The errors, the warnings and the additional information of the generation</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
         {
@@ -49,14 +65,15 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with embedded geometries and their mesh sizes
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
-        /// <param name="shapes"></param>
+        /// <param name="shapes">Geometry to mesh</param>
         /// <param name="embeddedGeometries">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
-        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry. Keys must be contained in <paramref name="embeddedGeometries"/></param>
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
+        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry. Keys must be contained in <paramref name="embeddedGeometries"/></param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, Dictionary<Shape, GeometryBase[]> embeddedGeometries, GMeshGenerateOptions options,
             out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus, Dictionary<GeometryBase, double> embeddedGeomMeshSize = null)
@@ -65,13 +82,14 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with embedded geometries
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
-        /// <param name="shapes"></param>
+        /// <param name="shapes">Geometry to mesh</param>
         /// <param name="embeddedGeometries">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, Dictionary<Shape, GeometryBase[]> embeddedGeometries, GMeshGenerateOptions options,
             out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
@@ -80,7 +98,8 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with Gmsh, one mesh for each shape: the shapes are built with OpenCASCADE, the embedded geometries
+        /// (points, lines, polygons, shapes) are embedded in the surfaces, then the surfaces are meshed with the options
         /// </summary>
         /// <param name="shapesInput">Geometry to mesh</param>
         /// <param name="embeddedGeometriesInput">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
@@ -89,9 +108,11 @@ namespace GPC.Geometry.Meshes.GMesh
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
-        /// <remarks>The default geometry tolerance is 10E-4. If the user want to use a custom tolerance, he have to scale by a number lower than 1 the geometry 
-        /// and then rescale with the reciprocal la mesh.</remarks>
-        /// <remarks>Gmsh has a global state: the calls are serialized (lock) and Gmsh is always finalized, also when an exception is thrown
+        /// <exception cref="ArgumentNullException">If <paramref name="options"/> or <paramref name="shapesInput"/> is null</exception>
+        /// <exception cref="ArgumentException">If the mesh sizes are not finite and positive (0 &lt;= minimum &lt;= maximum)</exception>
+        /// <remarks>The geometric tolerance of the points is <see cref="GeometryBase.Tolerance"/> (1E-4) times <see cref="GMeshGenerateOptions.GeometryBaseScaleFactor"/>:
+        /// for a smaller tolerance scale the geometry by a number lower than 1 and then rescale the mesh with the reciprocal.
+        /// Gmsh has a global state: the calls are serialized (lock) and Gmsh is always finalized, also when an exception is thrown
         /// or the generation fails (before, many error paths returned without Gmsh.Finalize and the next call found the old model)</remarks>
         public static bool Generate(IEnumerable<Shape> shapesInput, Dictionary<Shape, GeometryBase[]> embeddedGeometriesInput, Dictionary<GeometryBase,
             double> embeddedGeomMeshSize, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
@@ -133,8 +154,23 @@ namespace GPC.Geometry.Meshes.GMesh
         /// </summary>
         private static readonly object GmshSync = new object();
 
+        /// <summary>
+        /// Tell if a value is finite and positive
+        /// </summary>
+        /// <param name="value">The value</param>
+        /// <returns>True if the value is positive and not infinite (false for NaN)</returns>
         private static bool IsFinitePositive(double value) => value > 0 && !double.IsInfinity(value);
 
+        /// <summary>
+        /// The generation, with Gmsh initialized and locked (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
+        /// </summary>
+        /// <param name="shapesInput">Geometry to mesh</param>
+        /// <param name="embeddedGeometriesInput">The geometries embedded in each shape</param>
+        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry</param>
+        /// <param name="options">Generate mesh options</param>
+        /// <param name="meshes">The meshes generated</param>
+        /// <param name="generateMeshStatus">The errors, the warnings and the additional information of the generation</param>
+        /// <returns>True if the mesh is generate without error, false otherwise</returns>
         private static bool GenerateCore(IList<Shape> shapesInput, Dictionary<Shape, GeometryBase[]> embeddedGeometriesInput, Dictionary<GeometryBase,
             double> embeddedGeomMeshSize, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
         {
@@ -2738,6 +2774,13 @@ namespace GPC.Geometry.Meshes.GMesh
         /// are fragmented with the point (Mesh.Embed does not accept points in curves). The fragmented surfaces get new sides (the transfinite
         /// is set again) and lose their embedded entities (they are embedded again)
         /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="pointTag">The tag of the point</param>
+        /// <param name="surfaceTags">The surfaces</param>
+        /// <param name="boundaries">The boundaries of the surfaces (updated after the fragment)</param>
+        /// <param name="occw">The OpenCASCADE entities</param>
+        /// <param name="options">The options (transfinite)</param>
+        /// <param name="toleranceIntersection">The tolerance on the distance of the point from the sides</param>
         /// <returns>The tag of the point after the fragment</returns>
         private static int MakeVertexOnSides(Point3d point, int pointTag, List<int> surfaceTags, SurfaceBoundaries boundaries, OpenCascadeWrapper occw, GMeshGenerateOptions options,
             double toleranceIntersection)
@@ -2745,7 +2788,18 @@ namespace GPC.Geometry.Meshes.GMesh
             return MakeVertexOnSides(point, pointTag, surfaceTags, boundaries, occw, options, toleranceIntersection, out _);
         }
 
+        /// <summary>
+        /// Makes <paramref name="point"/> a vertex of the sides of <paramref name="surfaceTags"/> where it is (see the overload without <paramref name="onSide"/>)
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="pointTag">The tag of the point</param>
+        /// <param name="surfaceTags">The surfaces</param>
+        /// <param name="boundaries">The boundaries of the surfaces (updated after the fragment)</param>
+        /// <param name="occw">The OpenCASCADE entities</param>
+        /// <param name="options">The options (transfinite)</param>
+        /// <param name="toleranceIntersection">The tolerance on the distance of the point from the sides</param>
         /// <param name="onSide">True if the point was on a side (it is now a vertex of the surfaces: it must not be embedded)</param>
+        /// <returns>The tag of the point after the fragment</returns>
         private static int MakeVertexOnSides(Point3d point, int pointTag, List<int> surfaceTags, SurfaceBoundaries boundaries, OpenCascadeWrapper occw, GMeshGenerateOptions options,
             double toleranceIntersection, out bool onSide)
         {
@@ -2862,13 +2916,25 @@ namespace GPC.Geometry.Meshes.GMesh
 
         /// <summary>
         /// The boundaries of the surfaces, read from Gmsh once, and the entities embedded in the surfaces. When a surface is fragmented to add a
-        /// vertex on a side (see <see cref="MakeVertexOnSides"/>), its sides are read again and its embedded entities are embedded again
+        /// vertex on a side (see <see cref="MakeVertexOnSides(Point3d, int, List{int}, SurfaceBoundaries, OpenCascadeWrapper, GMeshGenerateOptions, double, out bool)"/>), its sides are read again and its embedded entities are embedded again
         /// </summary>
         private sealed class SurfaceBoundaries
         {
+            /// <summary>
+            /// The curves of the boundary of each surface
+            /// </summary>
             private readonly Dictionary<int, int[]> _curves = new Dictionary<int, int[]>();
+            /// <summary>
+            /// The end points of each curve
+            /// </summary>
             private readonly Dictionary<int, (int, int)> _curveEnds = new Dictionary<int, (int, int)>();
+            /// <summary>
+            /// The segment between the ends of each curve
+            /// </summary>
             private readonly Dictionary<int, Line3d> _curveLines = new Dictionary<int, Line3d>();
+            /// <summary>
+            /// The entities embedded in each surface
+            /// </summary>
             private readonly Dictionary<int, List<(int dim, int tag)>> _embedded = new Dictionary<int, List<(int dim, int tag)>>();
 
             /// <summary>
@@ -2944,6 +3010,11 @@ namespace GPC.Geometry.Meshes.GMesh
                 }
             }
 
+            /// <summary>
+            /// The curves of the boundary of a surface (read from Gmsh the first time)
+            /// </summary>
+            /// <param name="surfaceTag">The tag of the surface</param>
+            /// <returns>The tags of the curves (positive)</returns>
             public int[] Curves(int surfaceTag)
             {
                 if (!_curves.TryGetValue(surfaceTag, out int[] curves))
@@ -2956,6 +3027,11 @@ namespace GPC.Geometry.Meshes.GMesh
                 return curves;
             }
 
+            /// <summary>
+            /// The end points of a curve (read from Gmsh the first time)
+            /// </summary>
+            /// <param name="curveTag">The tag of the curve</param>
+            /// <returns>The tags of the two end points; (-1, -1) if the curve has not two ends</returns>
             public (int, int) CurveEnds(int curveTag)
             {
                 if (!_curveEnds.TryGetValue(curveTag, out (int, int) ends))
@@ -3103,10 +3179,24 @@ namespace GPC.Geometry.Meshes.GMesh
         /// </summary>
         private sealed class ReferenceComparer<T> : IEqualityComparer<T> where T : class
         {
+            /// <summary>
+            /// The shared instance (the comparer has no state)
+            /// </summary>
             public static readonly ReferenceComparer<T> Instance = new ReferenceComparer<T>();
 
+            /// <summary>
+            /// Equality by reference
+            /// </summary>
+            /// <param name="x">The first object</param>
+            /// <param name="y">The second object</param>
+            /// <returns>True if they are the same instance</returns>
             public bool Equals(T x, T y) => ReferenceEquals(x, y);
 
+            /// <summary>
+            /// The hash code of the instance (not of its content)
+            /// </summary>
+            /// <param name="obj">The object</param>
+            /// <returns>The hash code</returns>
             public int GetHashCode(T obj) => RuntimeHelpers.GetHashCode(obj);
         }
 
@@ -3115,14 +3205,35 @@ namespace GPC.Geometry.Meshes.GMesh
         /// </summary>
         private struct GMeshElementParameters
         {
+            /// <summary>
+            /// The name of the element type
+            /// </summary>
             public string ElementName;
+            /// <summary>
+            /// The Gmsh element type
+            /// </summary>
             public int ElementType;
+            /// <summary>
+            /// The number of nodes
+            /// </summary>
             public int NodesNumber;
+            /// <summary>
+            /// The number of primary (corner) nodes
+            /// </summary>
             public int PrimaryNodesNumber;
+            /// <summary>
+            /// The dimension of the element
+            /// </summary>
             public int Dimension;
+            /// <summary>
+            /// The order of the element
+            /// </summary>
             public int Order;
         }
 
+        /// <summary>
+        /// The options of the generation with Gmsh (most of them are Gmsh options, see the Gmsh reference manual)
+        /// </summary>
         [Serializable]
         public sealed class GMeshGenerateOptions : GenerateOptions, ICloneable
         {
@@ -3292,61 +3403,98 @@ namespace GPC.Geometry.Meshes.GMesh
             #endregion
 
             #region Public enums
+            /// <summary>
+            /// The 2D mesh algorithms of Gmsh (option Mesh.Algorithm)
+            /// </summary>
             public enum MeshAlgorithm
             {
+                /// <summary>MeshAdapt (1)</summary>
                 MeshAdapt = 1,
+                /// <summary>Automatic (2)</summary>
                 Automatic = 2,
+                /// <summary>Initial mesh only (3): only the points of the boundary</summary>
                 InitialMeshOnly = 3,
+                /// <summary>Delaunay (5)</summary>
                 Delaunay = 5,
+                /// <summary>Frontal-Delaunay (6)</summary>
                 [Description("Frontal-Delaunay")]
                 FrontalDelaunay = 6,
+                /// <summary>BAMG (7)</summary>
                 BAMG = 7,
+                /// <summary>Frontal-Delaunay for quads (8)</summary>
                 [Description("Frontal-Delaunay for Quads")]
                 FrontalDelaunayForQuads = 8,
+                /// <summary>Packing of parallelograms (9); with Gmsh 4.15.2 Frontal-Delaunay for quads is used instead (native crash with embedded surfaces)</summary>
                 [Description("Packing of Parallelograms")]
                 PackingOfParallelograms = 9,
+                /// <summary>Quasi-structured quad (11)</summary>
                 [Description("Quasi-structured Quad")]
                 QuasiStructuredQuad = 11,
             }
 
+            /// <summary>
+            /// The recombination algorithms of Gmsh (option Mesh.RecombinationAlgorithm)
+            /// </summary>
             public enum RecombinationMeshAlgorithm
             {
+                /// <summary>Simple (0)</summary>
                 Simple = 0,
+                /// <summary>Blossom (1)</summary>
                 Blossom = 1,
+                /// <summary>Simple full-quad (2)</summary>
                 [Description("Simple Full-Quad")]
                 SimpleFullQuad = 2,
+                /// <summary>Blossom full-quad (3)</summary>
                 [Description("Blossom Full-Quad")]
                 BlossomFullQuad = 3,
             }
 
+            /// <summary>
+            /// The distributions of the nodes of the transfinite curves
+            /// </summary>
             public enum TransfiniteType
             {
-                [Description("Progression")]            // geometrical progression with power coef (ogni curva ha il numero delle suddivisioni della precedente moltiplicato per coef)
+                /// <summary>Geometrical progression: every segment is the previous one multiplied by the factor</summary>
+                [Description("Progression")]
                 Progression = 0,
-                [Description("Bump")]                   // refinement toward both extremities of the curve
+                /// <summary>Refinement toward both extremities of the curve</summary>
+                [Description("Bump")]
                 Bump = 1,
             }
 
+            /// <summary>
+            /// The optimization methods of Gmsh (Gmsh.Model.Mesh.Optimize)
+            /// </summary>
             public enum MeshOptimize
             {
+                /// <summary>The default optimizer of the tetrahedra</summary>
                 [Description("")]
                 Tetrahedral = 0,
+                /// <summary>Netgen optimizer</summary>
                 [Description("Netgen")]
                 Netgen = 1,
+                /// <summary>Optimization of the high order elements</summary>
                 [Description("HighOrder")]
                 HighOrder = 2,
+                /// <summary>Elastic optimization of the high order elements</summary>
                 [Description("HighOrderElastic")]
                 HighOrderElastic = 3,
+                /// <summary>Fast curving of the high order elements</summary>
                 [Description("HighOrderFastCurving")]
                 HighOrderFastCurving = 4,
+                /// <summary>Relocation of the 2D nodes</summary>
                 [Description("Relocate2D")]
                 Relocate2D = 5,
+                /// <summary>Relocation of the 3D nodes</summary>
                 [Description("Relocate3D")]
                 Relocate3D = 6,
             }
 
             #endregion
 
+            /// <summary>
+            /// The default options: Frontal-Delaunay for quads with Simple Full-Quad recombination, no size limit, transfinite curves, healing of the shapes
+            /// </summary>
             public GMeshGenerateOptions()
             {
                 // Mesh
@@ -3392,6 +3540,10 @@ namespace GPC.Geometry.Meshes.GMesh
 
             }
 
+            /// <summary>
+            /// Creates a copy of the options
+            /// </summary>
+            /// <returns>The copy</returns>
             public override object Clone()
             {
                 GMeshGenerateOptions clone = new GMeshGenerateOptions
@@ -3438,57 +3590,134 @@ namespace GPC.Geometry.Meshes.GMesh
             }
         }
 
+        /// <summary>
+        /// The result of the generation with Gmsh: errors, warnings, times and the vertices of the embedded geometries
+        /// </summary>
         [Serializable]
         public sealed class GMeshGenerateMeshStatus : GenerateMeshStatus
         {
+            /// <summary>
+            /// The description of the total time of the generation
+            /// </summary>
             public const string TotalTime = "Total time";
+            /// <summary>
+            /// Error message: the transfinite constraint failed
+            /// </summary>
             public const string FailedToTransfinite = "GmshException: Failed to set transfinite";
+            /// <summary>
+            /// Error message: the shape can not be created
+            /// </summary>
             public const string FailedToCreateTheShape = "Failed to create the shape";
+            /// <summary>
+            /// Error message: a line can not be embedded
+            /// </summary>
             public const string FailedToEmbedTheLine = "Failed to embed the line";
+            /// <summary>
+            /// Error message: a point can not be embedded
+            /// </summary>
             public const string FailedToEmbedThePoint = "Failed to embed the point";
+            /// <summary>
+            /// Error message: a polygon can not be embedded
+            /// </summary>
             public const string FailedToEmbedThePolygon = "Failed to embed the polygon";
+            /// <summary>
+            /// Error message: a shape can not be embedded
+            /// </summary>
             public const string FailedToEmbedTheShape = "Failed to embed the shape";
+            /// <summary>
+            /// Gmsh error: an edge of a curve can not be recovered
+            /// </summary>
             public const string UnableToRecover = "GmshException: Mesh.Generate Unable to recover the edge on curve";
+            /// <summary>
+            /// Gmsh error: identical points in the triangulation
+            /// </summary>
             public const string IdenticalPoints = "GmshException: Identical points in triangulation";
+            /// <summary>
+            /// Gmsh error: singular 3x3 matrix
+            /// </summary>
             public const string SingularMatrix = "GmshException: Singular matrix 3x3";
 
+            /// <summary>
+            /// For each mesh, the ids of its vertices on each embedded geometry
+            /// </summary>
             private readonly Dictionary<Mesh, Dictionary<GeometryBase, int[]>> _embeddedGeometriesVertexMap;
 
+            /// <summary>
+            /// The number of embedded points
+            /// </summary>
             private int _embeddedPoints;
+            /// <summary>
+            /// The number of embedded lines
+            /// </summary>
             private int _embeddedLines;
+            /// <summary>
+            /// The number of embedded polygons
+            /// </summary>
             private int _embeddedPolygons;
+            /// <summary>
+            /// The number of embedded shapes
+            /// </summary>
             private int _embeddedShapes;
 
+            /// <summary>
+            /// For each mesh, the ids of its vertices on each embedded geometry
+            /// </summary>
             public Dictionary<Mesh, Dictionary<GeometryBase, int[]>> EmbeddedGeometriesVertexMap => _embeddedGeometriesVertexMap;
 
+            /// <summary>
+            /// The number of embedded points
+            /// </summary>
             public int EmbeddedPoints { get => _embeddedPoints; set => _embeddedPoints = value; }
 
+            /// <summary>
+            /// The number of embedded lines
+            /// </summary>
             public int EmbeddedLines { get => _embeddedLines; set => _embeddedLines = value; }
 
+            /// <summary>
+            /// The number of embedded polygons
+            /// </summary>
             public int EmbeddedPolygons { get => _embeddedPolygons; set => _embeddedPolygons = value; }
 
+            /// <summary>
+            /// The number of embedded shapes
+            /// </summary>
             public int EmbeddedShapes { get => _embeddedShapes; set => _embeddedShapes = value; }
 
+            /// <summary>
+            /// Creates an empty status
+            /// </summary>
             public GMeshGenerateMeshStatus()
                 : base()
             {
                 _embeddedGeometriesVertexMap = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>();
             }
 
+            /// <summary>
+            /// Sets the vertices of the embedded geometries of a mesh
+            /// </summary>
+            /// <param name="mesh">The mesh</param>
+            /// <param name="embeddedGeometries">The ids of the vertices of the mesh on each embedded geometry</param>
             public void AddEmbeddedGeometries(Mesh mesh, Dictionary<GeometryBase, int[]> embeddedGeometries)
             {
                 _embeddedGeometriesVertexMap[mesh] = embeddedGeometries;
             }
         }
 
+        /// <summary>
+        /// The OpenCASCADE entities created through Gmsh: the points are created once and reused (map point -> tag)
+        /// </summary>
         private sealed class OpenCascadeWrapper
         {
+            /// <summary>
+            /// The tags of the points already created
+            /// </summary>
             private Dictionary<Point3d, int> _pointTag;
 
             // (the map line -> tag was only written, and AddLineAndSync(int, int) read the bounding box of every line to build its key: removed)
 
             /// <summary>
-            /// This Class use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling any of its methods
+            /// This Class use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling any of its methods
             /// </summary>
             public OpenCascadeWrapper()
             {
@@ -3500,7 +3729,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             /// <param name="point">Point to Add</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPoint(Point3d point)
             {
                 if (_pointTag.TryGetValue(point, out int tag))
@@ -3515,7 +3744,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             /// <param name="point">Point to Add</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPointAndSync(Point3d point)
             {
                 if (_pointTag.TryGetValue(point, out int tag))
@@ -3532,7 +3761,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <param name="point">Point to Add</param>
             /// <param name="tolerance">Tolerance</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPoint(Point3d point, double tolerance)
             {
                 int tag = GetPointTag(point, tolerance);
@@ -3552,7 +3781,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <param name="point">Point to Add</param>
             /// <param name="tolerance">Tolerance</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPointAndSync(Point3d point, double tolerance)
             {
                 int tag = GetPointTag(point, tolerance);
@@ -3688,7 +3917,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// Rebuild the objects tag associations inside OpenCascadeWrapper
             /// </summary>
             /// <param name="surfaceTag">If is set, rebuilt only the points of the selected surface (the input is the surfaceTag). Otherwise rebuilt all the points of the model</param>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize( char[], bool)"/> needs to be called before calling this method.
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method.
             /// The coordinates of the OCC points are read once (before, once for every point of the map: n * m calls to Gmsh, and ElementAt on the dictionary)</remarks>
             public void RebuildObjectTags(int surfaceTag = -1)
             {
@@ -3731,7 +3960,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <summary>
             /// Rebuild the objects tag associations inside OpenCascadeWrapper and check if each point exist
             /// </summary>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method.
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method.
             /// A point exists if the closest OCC point is within the tolerance of <see cref="GetPointTag(Point3d, double)"/>, otherwise it is added again.
             /// Before, the tolerance was computed from the distance of the last OCC point of the list (not the closest one), with the square root of a
             /// distance used as distance</remarks>

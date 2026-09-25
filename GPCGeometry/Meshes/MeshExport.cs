@@ -1,10 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static System.FormattableString;
 
 namespace GPC.Geometry.Meshes
 {
+    /// <summary>
+    /// Export of meshes to the MSH format of Gmsh (versions 1 and 2.2, ASCII)
+    /// </summary>
     /// <remarks>The numbers are written with the invariant culture (before, the version 1 used the culture of the thread: decimal comma with the
     /// Italian culture; the version 2 changed the culture of the thread and did not restore it after an exception).
     /// The physical tag of the elements is the position of the mesh in the list, computed once for every mesh (before, meshes.IndexOf(mesh)
@@ -12,10 +15,11 @@ namespace GPC.Geometry.Meshes
     public static class MeshExport
     {
         /// <summary>
-        /// Export mesh in MSH format version 1
+        /// Export meshes in MSH format version 1: the vertices and the faces of all the meshes, with the ids of the meshes (the ids must be
+        /// unique among all the meshes); the physical and elementary tag of a face is the position of its mesh in the list + 1
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="meshes"></param>
+        /// <param name="path">The path of the file to write (overwritten)</param>
+        /// <param name="meshes">The meshes</param>
         public static void ExportToMshFormatv1(string path, List<Mesh> meshes)
         {
             using (StreamWriter writetext = new StreamWriter(path))
@@ -50,10 +54,11 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Export mesh in MSH format version 2
+        /// Export meshes in MSH format version 2.2: the vertices, the faces and the volumes of all the meshes, with the ids of the meshes (the ids
+        /// must be unique among all the meshes); the tags of an element are the position of its mesh in the list + 1
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="meshes"></param>
+        /// <param name="path">The path of the file to write (overwritten)</param>
+        /// <param name="meshes">The meshes</param>
         public static void ExportToMshFormatv2(string path, List<Mesh> meshes)
         {
             using (StreamWriter writetext = new StreamWriter(path))
@@ -119,10 +124,10 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Export mesh in MSH format version 2
+        /// Export a mesh in MSH format version 2.2: the vertices and the faces (the volumes are not written), with tags 1
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="mesh"></param>
+        /// <param name="path">The path of the file to write (overwritten)</param>
+        /// <param name="mesh">The mesh</param>
         public static void ExportToMshFormatv2(string path, Mesh mesh)
         {
             using (StreamWriter writetext = new StreamWriter(path))

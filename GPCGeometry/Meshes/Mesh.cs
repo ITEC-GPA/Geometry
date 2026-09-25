@@ -7,27 +7,61 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry.Meshes
 {
+    /// <summary>
+    /// A mesh: vertices, edges, faces (triangles and quadrangles) and volumes (prisms), each in a collection with unique ids.
+    /// The edges, the faces and the volumes refer to the vertices by id
+    /// </summary>
     [Serializable]
     public class Mesh : MeshBase, ISerializable, ICloneable, IEquatable<Mesh>
     {
         #region Variables
 
+        /// <summary>
+        /// The lock shared by all the meshes for the concurrent operations
+        /// </summary>
         protected static object syncRoot = new object(); // Usato per sincronizzare le operazion concorrenti
 
+        /// <summary>
+        /// The vertices
+        /// </summary>
         protected MeshBaseCollection<MeshVertex> _vertices;
+        /// <summary>
+        /// The faces
+        /// </summary>
         protected MeshBaseCollection<MeshFace> _faces;
+        /// <summary>
+        /// The edges
+        /// </summary>
         protected MeshBaseCollection<MeshEdge> _edges;
+        /// <summary>
+        /// The volumes
+        /// </summary>
         protected MeshBaseCollection<MeshVolume> _volumes;
 
+        /// <summary>
+        /// The options used to generate the mesh (null if the mesh was not generated with options)
+        /// </summary>
         protected GenerateOptions _options;
 
+        /// <summary>
+        /// The spatial index of the vertices used by AddFaceMesh and AddVertex (rebuilt when the vertices are changed by other methods)
+        /// </summary>
         [NonSerialized]
         private VertexGrid _vertexGrid; // spatial index of the vertices used by AddFaceMesh
 
+        /// <summary>
+        /// The keys of the edges, used by AddFaceMesh to not add an edge twice
+        /// </summary>
         [NonSerialized]
         private HashSet<long> _edgeKeys; // keys of the edges, used by AddFaceMesh to not add an edge twice
+        /// <summary>
+        /// The edge collection of <see cref="_edgeKeys"/>: the keys are rebuilt if the collection is replaced
+        /// </summary>
         [NonSerialized]
         private MeshBaseCollection<MeshEdge> _edgeKeysCollection;
+        /// <summary>
+        /// The version of the edge collection of <see cref="_edgeKeys"/>: the keys are rebuilt if the edges are changed by other methods
+        /// </summary>
         [NonSerialized]
         private int _edgeKeysVersion;
 
@@ -35,31 +69,67 @@ namespace GPC.Geometry.Meshes
 
         #region Properties
 
+        /// <summary>
+        /// The vertices of the mesh
+        /// </summary>
         public MeshBaseCollection<MeshVertex> Vertices => _vertices;
 
+        /// <summary>
+        /// The faces of the mesh
+        /// </summary>
         public MeshBaseCollection<MeshFace> Faces => _faces;
 
+        /// <summary>
+        /// The edges of the mesh
+        /// </summary>
         public MeshBaseCollection<MeshEdge> Edges => _edges;
 
+        /// <summary>
+        /// The volumes of the mesh
+        /// </summary>
         public MeshBaseCollection<MeshVolume> Volumes => _volumes;
 
+        /// <summary>
+        /// The number of vertices
+        /// </summary>
         public int VerticesCount => _vertices.Count;
 
+        /// <summary>
+        /// The number of faces
+        /// </summary>
         public int FacesCount => _faces.Count;
 
+        /// <summary>
+        /// The number of edges
+        /// </summary>
         public int EdgesCount => _edges.Count;
 
+        /// <summary>
+        /// The number of volumes
+        /// </summary>
         public int VolumesCount => _volumes.Count;
 
+        /// <summary>
+        /// The options used to generate the mesh
+        /// </summary>
         public GenerateOptions Options => _options;
 
+        /// <summary>
+        /// The hierarchy of spheres of the vertices, built on demand by the searches (null when it is not up to date)
+        /// </summary>
         public SphereBVH VertexBVH = null;
+        /// <summary>
+        /// The hierarchy of spheres of the faces, built on demand by the searches (null when it is not up to date)
+        /// </summary>
         public SphereBVH FaceBVH = null;
 
         #endregion
 
         #region Public Constructors
 
+        /// <summary>
+        /// Creates an empty mesh
+        /// </summary>
         public Mesh()
         {
             _vertices = new MeshBaseCollection<MeshVertex>();
@@ -68,6 +138,11 @@ namespace GPC.Geometry.Meshes
             _volumes = new MeshBaseCollection<MeshVolume>();
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the id and the collections of vertices, faces, edges and volumes
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         protected Mesh(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             _vertices = (MeshBaseCollection<MeshVertex>)info.GetValue("Vertices", typeof(MeshBaseCollection<MeshVertex>));
@@ -81,10 +156,9 @@ namespace GPC.Geometry.Meshes
         #region Setter
 
         /// <summary>
-        /// Add a face to the mesh
+        /// Add a face to the mesh (see <see cref="AddFaceMesh(MeshVertex[], double)"/>, with the default tolerance)
         /// </summary>
-        /// <param name="points">Points that will be converted in MeshVertex</param>
-        /// <remarks>This is an O(n) operation</remarks>
+        /// <param name="points">Points that will be converted in MeshVertex (3 or 4)</param>
         public void AddFaceMesh(Point3d[] points)
         {
             MeshVertex[] vertices = new MeshVertex[points.Length];
@@ -95,8 +169,11 @@ namespace GPC.Geometry.Meshes
 
         /// <summary>
         /// Add a face to the mesh. A vertex closer than <paramref name="tolerance"/> to an existing vertex of the mesh is merged with it
-        /// (vertices of the same face are never merged together)
+        /// (vertices of the same face are never merged together); the new vertices are copies of the given ones
         /// </summary>
+        /// <param name="vertices">The vertices of the face (3 or 4), in order</param>
+        /// <param name="tolerance">The distance within which a vertex is merged with an existing one</param>
+        /// <returns>The id of the new face</returns>
         /// <remarks>The existing vertices are searched with a spatial grid updated face by face, so adding n faces is O(n).
         /// An edge shared with a face already in the mesh is not added again (before, every inner edge was added twice)</remarks>
         public int AddFaceMesh(MeshVertex[] vertices, double tolerance = GeometryBase.Tolerance)
@@ -140,12 +217,21 @@ namespace GPC.Geometry.Meshes
             return face.Id;
         }
 
+        /// <summary>
+        /// Adds the edge between two vertices, if it is not already in the mesh (in either direction)
+        /// </summary>
+        /// <param name="edgeKeys">The keys of the existing edges</param>
+        /// <param name="a">The id of the first vertex</param>
+        /// <param name="b">The id of the second vertex</param>
         private void AddEdgeOnce(HashSet<long> edgeKeys, int a, int b)
         {
             if (edgeKeys.Add(EdgeKey(a, b)))
                 _edges.Add(new MeshEdge(a, b));
         }
 
+        /// <summary>
+        /// The keys of the edges (see <see cref="EdgeKey"/>)
+        /// </summary>
         /// <returns>The keys of the edges, rebuilt only if the edges have been changed by other methods</returns>
         private HashSet<long> GetEdgeKeys()
         {
@@ -161,6 +247,10 @@ namespace GPC.Geometry.Meshes
             return _edgeKeys;
         }
 
+        /// <summary>
+        /// The spatial grid of the vertices
+        /// </summary>
+        /// <param name="tolerance">The tolerance of the searches</param>
         /// <returns>The spatial grid of the vertices, rebuilt only if the vertices have been changed by other methods or if <paramref name="tolerance"/> needs bigger cells</returns>
         private VertexGrid GetVertexGrid(double tolerance)
         {
@@ -182,14 +272,34 @@ namespace GPC.Geometry.Meshes
         /// </summary>
         private sealed class VertexGrid
         {
+            /// <summary>
+            /// The smallest size of a cell (used for a zero tolerance)
+            /// </summary>
             public const double MinCellSize = 1E-9;
 
+            /// <summary>
+            /// The vertices of each cell, by the indices of the cell along X, Y, Z
+            /// </summary>
             private readonly Dictionary<(long, long, long), List<MeshVertex>> _cells = new Dictionary<(long, long, long), List<MeshVertex>>();
 
+            /// <summary>
+            /// The side of the cubic cells
+            /// </summary>
             public readonly double CellSize;
+            /// <summary>
+            /// The vertex collection of the grid
+            /// </summary>
             public readonly MeshBaseCollection<MeshVertex> Collection;
+            /// <summary>
+            /// The version of <see cref="Collection"/> indexed by the grid
+            /// </summary>
             public int Version;
 
+            /// <summary>
+            /// Creates the grid of the vertices of a collection
+            /// </summary>
+            /// <param name="vertices">The vertices</param>
+            /// <param name="cellSize">The side of the cells</param>
             public VertexGrid(MeshBaseCollection<MeshVertex> vertices, double cellSize)
             {
                 CellSize = cellSize;
@@ -199,11 +309,20 @@ namespace GPC.Geometry.Meshes
                 Version = vertices.Version;
             }
 
+            /// <summary>
+            /// The index of the cell of a coordinate
+            /// </summary>
+            /// <param name="coordinate">The coordinate</param>
+            /// <returns>The index along the axis</returns>
             private long Cell(double coordinate)
             {
                 return (long)Math.Floor(coordinate / CellSize);
             }
 
+            /// <summary>
+            /// Adds a vertex to its cell
+            /// </summary>
+            /// <param name="vertex">The vertex</param>
             public void Add(MeshVertex vertex)
             {
                 var key = (Cell(vertex.Point.X), Cell(vertex.Point.Y), Cell(vertex.Point.Z));
@@ -215,6 +334,11 @@ namespace GPC.Geometry.Meshes
                 cell.Add(vertex);
             }
 
+            /// <summary>
+            /// The closest vertex to a point
+            /// </summary>
+            /// <param name="point">The point</param>
+            /// <param name="tolerance">The largest distance</param>
             /// <returns>The vertex closest to <paramref name="point"/> within <paramref name="tolerance"/> (distance lower or equal), null if there is none</returns>
             /// <remarks>Only the cells crossed by the box of side 2 * <paramref name="tolerance"/> around the point are searched (before, always 27 cells)</remarks>
             public MeshVertex FindClosest(Point3d point, double tolerance)
@@ -254,6 +378,14 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// Sets the ids of the vertices (of the caller's instances) and adds the face (see <see cref="AddFaceMesh(MeshVertex[], double)"/>):
+        /// the new vertices keep the given ids, the merged ones take the id of the existing vertex
+        /// </summary>
+        /// <param name="vertices">The vertices of the face (3 or 4), in order</param>
+        /// <param name="verticesIds">The ids of the vertices</param>
+        /// <param name="tolerance">The distance within which a vertex is merged with an existing one</param>
+        /// <returns>The id of the new face</returns>
         public int AddFaceMesh(MeshVertex[] vertices, int[] verticesIds, double tolerance = GeometryBase.Tolerance)
         {
             for (int i = 0; i < vertices.Length; i++)
@@ -261,6 +393,12 @@ namespace GPC.Geometry.Meshes
             return AddFaceMesh(vertices, tolerance);
         }
 
+        /// <summary>
+        /// Adds a volume: all its vertices are added (the instances, never merged with the existing ones) with the edges of the two bases and the
+        /// lateral ones (not checked for duplicates)
+        /// </summary>
+        /// <param name="vertices">The vertices: the first base, then the second one in the same order (6 or 8)</param>
+        /// <returns>The id of the new volume</returns>
         public int AddVolumeMesh(MeshVertex[] vertices)
         {
             int[] ids = _vertices.AddRange(vertices);
@@ -280,8 +418,10 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Add a vertex, unless there is already a vertex closer than <paramref name="tol"/>
+        /// Add a vertex (the instance), unless there is already a vertex closer than <paramref name="tol"/>
         /// </summary>
+        /// <param name="vertex">The vertex to add</param>
+        /// <param name="tol">The distance within which the vertex is merged with an existing one</param>
         /// <returns>The id of the new vertex, or of the closest existing one</returns>
         /// <remarks>The vertices are searched with the same spatial grid of <see cref="AddFaceMesh(MeshVertex[], double)"/>, always up to date
         /// (before, the BVH was not updated after the addition, so the vertices added later were not found)</remarks>
@@ -306,8 +446,9 @@ namespace GPC.Geometry.Meshes
         /// <summary>
         /// The length of the edge
         /// </summary>
-        /// <param name="edge"></param>
-        /// <returns></returns>
+        /// <param name="edge">The edge</param>
+        /// <returns>The distance of its vertices</returns>
+        /// <exception cref="ArgumentException">If a vertex of the edge is not in the mesh</exception>
         public double GetEdgeLength(MeshEdge edge)
         {
             if (!_vertices.Contains(edge.A))
@@ -319,9 +460,14 @@ namespace GPC.Geometry.Meshes
             return _vertices.GetElementById(edge.A).Point.DistanceTo(_vertices.GetElementById(edge.B).Point);
         }
 
+        /// <summary>
+        /// The area of a face
+        /// </summary>
+        /// <param name="face">The face</param>
         /// <returns>The area of the face: half the length of its Newell vector (the area of a planar face; for a non planar quadrilateral
         /// the area of its projection on the mean plane)</returns>
         /// <param name="tolerance">Not used (kept for compatibility: the area was computed by a <see cref="Polygon3d"/>)</param>
+        /// <exception cref="ArgumentException">If a vertex of the face is not in the mesh</exception>
         public double GetFaceArea(MeshFace face, double tolerance = GeometryBase.Tolerance)
         {
             Point3d[] p = GetCheckedFacePoints(face);
@@ -329,9 +475,14 @@ namespace GPC.Geometry.Meshes
             return Math.Sqrt(nx * nx + ny * ny + nz * nz) / 2.0;
         }
 
+        /// <summary>
+        /// The centroid of a face
+        /// </summary>
+        /// <param name="face">The face</param>
         /// <returns>The centroid of the face: the mean of the vertices for a triangle, the centroid of the area for a quadrilateral
         /// (the two triangles A B C and A C D weighted by their signed areas)</returns>
         /// <param name="tolerance">Not used (kept for compatibility: the centroid was computed by a <see cref="Polygon3d"/>)</param>
+        /// <exception cref="ArgumentException">If a vertex of the face is not in the mesh</exception>
         public Point3d GetFaceCentroid(MeshFace face, double tolerance = GeometryBase.Tolerance)
         {
             Point3d[] p = GetCheckedFacePoints(face);
@@ -350,6 +501,11 @@ namespace GPC.Geometry.Meshes
                                (w1 * (p[0].Z + p[1].Z + p[2].Z) + w2 * (p[0].Z + p[2].Z + p[3].Z)) / (3.0 * w));
         }
 
+        /// <summary>
+        /// The positions of the vertices of a face, checking that they are in the mesh
+        /// </summary>
+        /// <param name="face">The face</param>
+        /// <returns>The points of the vertices (the instances of the mesh)</returns>
         /// <exception cref="ArgumentException">If a vertex of the face is not in the mesh</exception>
         private Point3d[] GetCheckedFacePoints(MeshFace face)
         {
@@ -367,6 +523,10 @@ namespace GPC.Geometry.Meshes
         /// <summary>
         /// Newell vector of the polygon: normal to the polygon, long twice its area
         /// </summary>
+        /// <param name="p">The vertices of the polygon</param>
+        /// <param name="nx">The X component</param>
+        /// <param name="ny">The Y component</param>
+        /// <param name="nz">The Z component</param>
         private static void NewellVector(Point3d[] p, out double nx, out double ny, out double nz)
         {
             nx = ny = nz = 0;
@@ -379,6 +539,15 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// The signed area of a triangle respect to a direction
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <param name="c">The third vertex</param>
+        /// <param name="nx">The X component of the direction</param>
+        /// <param name="ny">The Y component of the direction</param>
+        /// <param name="nz">The Z component of the direction</param>
         /// <returns>Twice the area of the triangle, signed with respect to the direction (nx, ny, nz) (not normalized: only the sign and the ratios matter)</returns>
         private static double SignedTriangleArea(Point3d a, Point3d b, Point3d c, double nx, double ny, double nz)
         {
@@ -387,6 +556,12 @@ namespace GPC.Geometry.Meshes
             return (uy * vz - uz * vy) * nx + (uz * vx - ux * vz) * ny + (ux * vy - uy * vx) * nz;
         }
 
+        /// <summary>
+        /// The positions of the vertices of a face
+        /// </summary>
+        /// <param name="face">The face</param>
+        /// <returns>The points of the vertices (the instances of the mesh)</returns>
+        /// <exception cref="KeyNotFoundException">If a vertex of the face is not in the mesh</exception>
         public Point3d[] GetFacePoints(MeshFace face)
         {
             var points = new Point3d[face.IsQuad ? 4 : 3];
@@ -398,12 +573,22 @@ namespace GPC.Geometry.Meshes
             return points;
         }
 
+        /// <summary>
+        /// The positions of the vertices of an edge
+        /// </summary>
+        /// <param name="edge">The edge</param>
+        /// <returns>The points of the two vertices (the instances of the mesh)</returns>
         public Point3d[] GetEdgePoints(MeshEdge edge)
         {
             MeshVertex[] vertices = GetEdgeVertices(edge);
             return vertices.Select(i => i.Point).ToArray();
         }
 
+        /// <summary>
+        /// The positions of the vertices of a volume
+        /// </summary>
+        /// <param name="volume">The volume</param>
+        /// <returns>The points of the vertices (the instances of the mesh), in the order of the volume</returns>
         public Point3d[] GetVolumePoints(MeshVolume volume)
         {
             MeshVertex[] vertices = GetVolumeVertices(volume);
@@ -414,35 +599,56 @@ namespace GPC.Geometry.Meshes
 
         #region Getter: elements
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <summary>
+        /// The face with an id
+        /// </summary>
+        /// <param name="id">The id of the face</param>
+        /// <returns>The face</returns>
+        /// <exception cref="KeyNotFoundException">If no face has the id</exception>
         public MeshFace GetFace(int id)
         {
             return _faces.GetElementById(id);
         }
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <summary>
+        /// The vertex with an id
+        /// </summary>
+        /// <param name="id">The id of the vertex</param>
+        /// <returns>The vertex</returns>
+        /// <exception cref="KeyNotFoundException">If no vertex has the id</exception>
         public MeshVertex GetVertex(int id)
         {
             return _vertices.GetElementById(id);
         }
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <summary>
+        /// The edge with an id
+        /// </summary>
+        /// <param name="id">The id of the edge</param>
+        /// <returns>The edge</returns>
+        /// <exception cref="KeyNotFoundException">If no edge has the id</exception>
         public MeshEdge GetEdge(int id)
         {
             return _edges.GetElementById(id);
         }
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <summary>
+        /// The volume with an id
+        /// </summary>
+        /// <param name="id">The id of the volume</param>
+        /// <returns>The volume</returns>
+        /// <exception cref="KeyNotFoundException">If no volume has the id</exception>
         public MeshVolume GetVolume(int id)
         {
             return _volumes.GetElementById(id);
         }
 
         /// <summary>
-        /// Get the edges of a MeshFace
+        /// Get the edges of a MeshFace: the edges of the mesh with both the vertices in the face (also a diagonal of a quadrangle, if it is an edge).
+        /// This is an O(n) operation
         /// </summary>
-        /// <param name="face"></param>
-        /// <returns></returns>
+        /// <param name="face">The face</param>
+        /// <returns>The edges of the face</returns>
         public MeshEdge[] GetFaceEdges(MeshFace face)
         {
             int[] vertexIds = face.IsQuad ? new[] { face.A, face.B, face.C, face.D } : new[] { face.A, face.B, face.C };
@@ -452,8 +658,9 @@ namespace GPC.Geometry.Meshes
         /// <summary>
         /// Get the vertices of the given face
         /// </summary>
+        /// <param name="face">The face</param>
         /// <returns>The vertices array</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <exception cref="KeyNotFoundException">If a vertex of the face is not in the mesh</exception>
         public MeshVertex[] GetFaceVertices(MeshFace face)
         {
             MeshVertex[] vertices = new MeshVertex[face.IsQuad ? 4 : 3];
@@ -471,8 +678,9 @@ namespace GPC.Geometry.Meshes
         /// <summary>
         /// Get the vertices of the given edge
         /// </summary>
+        /// <param name="edge">The edge</param>
         /// <returns>The vertices array</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.GetElementById(int)"/>
+        /// <exception cref="KeyNotFoundException">If a vertex of the edge is not in the mesh</exception>
         public MeshVertex[] GetEdgeVertices(MeshEdge edge)
         {
             return new[]
@@ -482,6 +690,12 @@ namespace GPC.Geometry.Meshes
             };
         }
 
+        /// <summary>
+        /// Get the vertices of the given volume
+        /// </summary>
+        /// <param name="volume">The volume</param>
+        /// <returns>The vertices array, in the order of the volume</returns>
+        /// <exception cref="KeyNotFoundException">If a vertex of the volume is not in the mesh</exception>
         public MeshVertex[] GetVolumeVertices(MeshVolume volume)
         {
             var nodes = volume.GetNodes();
@@ -493,51 +707,91 @@ namespace GPC.Geometry.Meshes
             return vertices;
         }
 
+        /// <summary>
+        /// Enumerates the faces
+        /// </summary>
+        /// <returns>The enumerator of the faces</returns>
         public IEnumerator<MeshFace> GetFacesEnumerator()
         {
             return _faces.GetEnumerator();
         }
 
+        /// <summary>
+        /// Enumerates the vertices
+        /// </summary>
+        /// <returns>The enumerator of the vertices</returns>
         public IEnumerator<MeshVertex> GetVerticesEnumerator()
         {
             return _vertices.GetEnumerator();
         }
 
+        /// <summary>
+        /// Enumerates the edges
+        /// </summary>
+        /// <returns>The enumerator of the edges</returns>
         public IEnumerator<MeshEdge> GetEdgesEnumerator()
         {
             return _edges.GetEnumerator();
         }
 
+        /// <summary>
+        /// Enumerates the volumes
+        /// </summary>
+        /// <returns>The enumerator of the volumes</returns>
         public IEnumerator<MeshVolume> GetVolumesEnumerator()
         {
             return _volumes.GetEnumerator();
         }
 
+        /// <summary>
+        /// The faces (the instances of the mesh, in a new array)
+        /// </summary>
+        /// <returns>The faces</returns>
         public MeshFace[] GetFaces()
         {
             return _faces.ToArray();
         }
 
+        /// <summary>
+        /// The vertices (the instances of the mesh, in a new array)
+        /// </summary>
+        /// <returns>The vertices</returns>
         public MeshVertex[] GetVertices()
         {
             return _vertices.ToArray();
         }
 
+        /// <summary>
+        /// The edges (the instances of the mesh, in a new array)
+        /// </summary>
+        /// <returns>The edges</returns>
         public MeshEdge[] GetEdges()
         {
             return _edges.ToArray();
         }
 
+        /// <summary>
+        /// The volumes (the instances of the mesh, in a new array)
+        /// </summary>
+        /// <returns>The volumes</returns>
         public MeshVolume[] GetVolumes()
         {
             return _volumes.ToArray();
         }
 
+        /// <summary>
+        /// The ids of the vertices
+        /// </summary>
+        /// <returns>The ids, in the order of the collection</returns>
         public int[] GetVerticeIds()
         {
             return _vertices.Select(i => i.Id).ToArray();
         }
 
+        /// <summary>
+        /// The faces by id
+        /// </summary>
+        /// <returns>A new dictionary from the id to the face</returns>
         public Dictionary<int, MeshFace> GetFacesDictionary()
         {
             var res = new Dictionary<int, MeshFace>();
@@ -548,6 +802,10 @@ namespace GPC.Geometry.Meshes
             return res;
         }
 
+        /// <summary>
+        /// The vertices by id
+        /// </summary>
+        /// <returns>A new dictionary from the id to the vertex</returns>
         public Dictionary<int, MeshVertex> GetVerticesDictionary()
         {
             var res = new Dictionary<int, MeshVertex>();
@@ -558,6 +816,10 @@ namespace GPC.Geometry.Meshes
             return res;
         }
 
+        /// <summary>
+        /// The edges by id
+        /// </summary>
+        /// <returns>A new dictionary from the id to the edge</returns>
         public Dictionary<int, MeshEdge> GetEdgesDictionary()
         {
             var res = new Dictionary<int, MeshEdge>();
@@ -568,6 +830,11 @@ namespace GPC.Geometry.Meshes
             return res;
         }
 
+        /// <summary>
+        /// The edges of the mesh not shared by two faces with opposite directions: the boundary edges of a mesh with consistently oriented faces
+        /// (and the edges of no face)
+        /// </summary>
+        /// <returns>The naked edges</returns>
         public MeshEdge[] GetNakedEdges()
         {
             HashSet<(int, int)> edges = new HashSet<(int, int)>();
@@ -600,11 +867,10 @@ namespace GPC.Geometry.Meshes
         #region Interrogate
 
         /// <summary>
-        /// Tells if the given face already exists
+        /// Tells if the mesh has a face with the id of the given face
         /// </summary>
         /// <param name="face">The face to test</param>
         /// <returns>True if the face already exists</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
         public bool FaceExists(MeshFace face)
         {
             return _faces.Contains(face);
@@ -615,7 +881,6 @@ namespace GPC.Geometry.Meshes
         /// </summary>
         /// <param name="ids">The nodes ids array</param>
         /// <returns>True if the face already exists</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
         /// <remarks>The faces with the same nodes, in any order, are searched (before, a new face without id was searched by id: always false).
         /// This is an O(n) operation</remarks>
         public bool FaceExists(int[] ids)
@@ -623,6 +888,11 @@ namespace GPC.Geometry.Meshes
             return _faces.Any(f => SameNodes(f.GetNodes(), ids));
         }
 
+        /// <summary>
+        /// Tell if two arrays have the same nodes
+        /// </summary>
+        /// <param name="a">The first array</param>
+        /// <param name="b">The second array</param>
         /// <returns>True if the two arrays have the same nodes, in any order</returns>
         private static bool SameNodes(int[] a, int[] b)
         {
@@ -634,10 +904,11 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Return the area of the given face
+        /// Return the area of the given face: a triangle, or a quadrangle as the sum of the triangles A B C and A C D (not signed)
         /// </summary>
         /// <param name="face">The face</param>
         /// <returns>The face area</returns>
+        /// <exception cref="KeyNotFoundException">If a vertex of the face is not in the mesh</exception>
         public double FaceArea(MeshFace face)
         {
             // the face nodes are vertex Ids, not positions in the collection
@@ -660,9 +931,9 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Return the area of the given face
+        /// Return the area of the face with the given vertices (see <see cref="FaceArea(MeshFace)"/>)
         /// </summary>
-        /// <param name="ids">The nodes ids defining the face</param>
+        /// <param name="ids">The nodes ids defining the face (3 or 4)</param>
         /// <returns>The face area</returns>
         public double FaceArea(int[] ids)
         {
@@ -671,11 +942,10 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Tells if the given volume already exists
+        /// Tells if the mesh has a volume with the id of the given volume
         /// </summary>
         /// <param name="volume">The volume to test</param>
         /// <returns>True if the volume already exists</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
         public bool VolumeExists(MeshVolume volume)
         {
             return _volumes.Contains(volume);
@@ -686,7 +956,6 @@ namespace GPC.Geometry.Meshes
         /// </summary>
         /// <param name="ids">The nodes ids array</param>
         /// <returns>True if the volume already exists</returns>
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
         /// <remarks>The volumes with the same nodes, in any order, are searched (before, a new volume without id was searched by id: always false).
         /// This is an O(n) operation</remarks>
         public bool VolumeExists(int[] ids)
@@ -694,13 +963,22 @@ namespace GPC.Geometry.Meshes
             return _volumes.Any(v => SameNodes(v.GetNodes(), ids));
         }
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <summary>
+        /// Tells if the mesh has an edge with the id of the given edge
+        /// </summary>
+        /// <param name="edge">The edge to test</param>
+        /// <returns>True if the edge already exists</returns>
         public bool EdgeExists(MeshEdge edge)
         {
             return _edges.Contains(edge);
         }
 
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <summary>
+        /// Tells if the mesh has an edge between two vertices
+        /// </summary>
+        /// <param name="a">The id of the first vertex</param>
+        /// <param name="b">The id of the second vertex</param>
+        /// <returns>True if the edge already exists</returns>
         /// <remarks>The edges between the two nodes, in any direction, are searched (before, a new edge without id was searched by id: always false).
         /// This is an O(n) operation</remarks>
         public bool EdgeExists(int a, int b)
@@ -708,21 +986,25 @@ namespace GPC.Geometry.Meshes
             return _edges.Any(e => (e.A == a && e.B == b) || (e.A == b && e.B == a));
         }
 
-        /// <param name="meshVertex"></param>
-        /// <inheritdoc cref="MeshBaseCollection{T}.Contains(T)"/>
+        /// <summary>
+        /// Tells if the mesh has a vertex with the id of the given vertex
+        /// </summary>
+        /// <param name="meshVertex">The vertex to test</param>
+        /// <returns>True if the vertex already exists</returns>
         public bool VertexExist(MeshVertex meshVertex)
         {
             return _vertices.Contains(meshVertex);
         }
 
         /// <summary>
-        /// Find the point of intersection between this mesh and a semi-infinite line.
+        /// Find the point of intersection between this mesh and a semi-infinite line: the vertices on the line, the crossed edges and the crossed
+        /// faces (for a quadrangle only its triangle A B C is checked)
         /// </summary>
         /// <param name="SemiRay">Semi infinite line (ray), which begins at first point and is infinite in the direction of the end point.</param>
-        /// <param name="stopAtFirstIntersection">When the first intersection solution is found it stops execution.
-        /// Use false if you want to do a search on all mesh elements, it can be useful for check.</param>
-        /// <param name="tolerance"></param>
-        /// <returns>List of points with element containing the point.</returns>
+        /// <param name="stopAtFirstIntersection">When the first intersection solution is found it stops execution (the vertices nearer to the line
+        /// are checked first). Use false if you want to do a search on all mesh elements, it can be useful for check.</param>
+        /// <param name="tolerance">The tolerance on the distances</param>
+        /// <returns>The intersection points with the element containing the point.</returns>
         public Dictionary<Point3d, MeshBase> GetIntersectionWihtSemiInfiniteRay(in Line3d SemiRay, in bool stopAtFirstIntersection = true, double tolerance = GeometryBase.Tolerance)
         {
             var intersections = new Dictionary<Point3d, MeshBase>();
@@ -824,20 +1106,20 @@ namespace GPC.Geometry.Meshes
         #region Edit 
 
         /// <summary>
-        /// Move mesh by a given vector
+        /// Move mesh by a given vector (the vertices in place)
         /// </summary>
-        /// <param name="displacement"></param>
+        /// <param name="displacement">The translation</param>
         public void Move(Vector3d displacement)
         {
             Move(displacement.X, displacement.Y, displacement.Z);
         }
 
         /// <summary>
-        /// Move mesh by an given increment
+        /// Move mesh by an given increment (the vertices in place); the spatial indices are reset
         /// </summary>
-        /// <param name="dX"></param>
-        /// <param name="dY"></param>
-        /// <param name="dz"></param>
+        /// <param name="dX">The translation along X</param>
+        /// <param name="dY">The translation along Y</param>
+        /// <param name="dz">The translation along Z</param>
         public void Move(double dX, double dY, double dz)
         {
             foreach (var v in _vertices)
@@ -849,12 +1131,20 @@ namespace GPC.Geometry.Meshes
             FaceBVH = null;
         }
 
+        /// <summary>
+        /// Adds the elements of another mesh (see <see cref="JoinMesh(Mesh, out Dictionary{int, int}, out Dictionary{int, int}, out Dictionary{int, int})"/>)
+        /// </summary>
+        /// <param name="meshToJoin">The mesh to add</param>
         public void JoinMesh(Mesh meshToJoin)
         {
             JoinMesh(meshToJoin, out _, out _, out _);
         }
 
-        /// <param name="meshToJoin"></param>
+        /// <summary>
+        /// The previous version of <see cref="JoinMesh(Mesh, out Dictionary{int, int}, out Dictionary{int, int}, out Dictionary{int, int})"/>: the
+        /// vertices, faces and volumes are merged when their hash codes are equal (exact coordinates, same nodes in the same order)
+        /// </summary>
+        /// <param name="meshToJoin">The mesh to add</param>
         /// <param name="vertexIdMap">Map between <see cref="MeshVertex"/>.Id of <paramref name="meshToJoin"/> and id of the same vertex in this mesh (Map old, new)</param>
         /// <param name="facesIdMap">Map between <see cref="MeshFace"/>.Id of <paramref name="meshToJoin"/> and id of the same faces in this mesh (Map old, new) </param>
         /// <param name="volumesIdMap">Map between <see cref="MeshVolume"/>.Id of <paramref name="meshToJoin"/> and id of the same volume in this mesh  (Map old, new)</param>
@@ -1066,6 +1356,14 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// Adds the elements of another mesh: a vertex closer than the default tolerance to an existing one is merged with it (see
+        /// <see cref="AddVertex(MeshVertex, double)"/>), the edges, faces and volumes with the same nodes of existing ones are not added again
+        /// </summary>
+        /// <param name="meshToJoin">The mesh to add (not changed)</param>
+        /// <param name="vertexIdMap">Map between the ids of the vertices of <paramref name="meshToJoin"/> and the ids of the same vertices in this mesh</param>
+        /// <param name="facesIdMap">Not filled (empty)</param>
+        /// <param name="volumesIdMap">Not filled (empty)</param>
         public void JoinMesh(Mesh meshToJoin, out Dictionary<int, int> vertexIdMap, out Dictionary<int, int> facesIdMap, out Dictionary<int, int> volumesIdMap)
         {
             vertexIdMap = new Dictionary<int, int>();
@@ -1112,10 +1410,11 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// Extrude the mesh along vertx normal
+        /// Extrude the faces of the mesh along the normals of the vertices (the mean of the normals of the faces at the vertex, times
+        /// <paramref name="length"/>): every face becomes a prism
         /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <param name="length">The length of the extrusion (the length of the mean of the unit normals)</param>
+        /// <returns>A new mesh with the prisms; its bottom vertices are the instances of this mesh</returns>
         public Mesh Extrude(double length)
         {
             // Create a new mesh
@@ -1252,8 +1551,11 @@ namespace GPC.Geometry.Meshes
 
         }
 
+        /// <summary>
+        /// Extrude every face of the mesh along a vector: every face becomes a prism; the extruded vertex of a vertex is shared by its faces
+        /// </summary>
         /// <param name="extrusion">The extrusion vector</param>
-        /// <returns>A new Mesh with all the <see cref="MeshFace"/> extruded to a <see cref="MeshVolume"/></returns>
+        /// <returns>A new Mesh with all the <see cref="MeshFace"/> extruded to a <see cref="MeshVolume"/>; its bottom vertices are the instances of this mesh</returns>
         public Mesh ExtrudeFaces(Vector3d extrusion)
         {
             Mesh mesh = new Mesh();
@@ -1324,6 +1626,9 @@ namespace GPC.Geometry.Meshes
 
         #region Clone
 
+        /// <summary>
+        /// Clone the mesh, with copies of its elements (see <see cref="Clone(bool)"/>)
+        /// </summary>
         /// <returns>The cloned mesh</returns>
         /// <remarks>The <see cref="MeshVertex"/> Id of the cloned mesh are the same of the original mesh</remarks>
         public object Clone()
@@ -1331,9 +1636,13 @@ namespace GPC.Geometry.Meshes
             return Clone(false);
         }
 
+        /// <summary>
+        /// Clone the mesh, with copies of its vertices, faces, edges, volumes and of the generation options
+        /// </summary>
         /// <param name="renumber">
         /// <para>If <see langword="false"/> the <see cref="MeshVertex"/>.Ids of the cloned mesh are the same of the original mesh</para>
-        /// <para>If <see langword="true"/> the <see cref="MeshVertex"/>.Ids of the cloned mesh will start from the maximum id of the original mesh</para>
+        /// <para>If <see langword="true"/> the ids of the cloned elements start from the maximum id of the original mesh + 1 (the tags of the
+        /// faces, edges and volumes are not copied)</para>
         /// </param>
         /// <returns>The cloned mesh</returns>
         public object Clone(bool renumber)
@@ -1525,6 +1834,8 @@ namespace GPC.Geometry.Meshes
         /// <paramref name="tolerance"/> to the line are on it (the edges through them are not cut). The faces not cut, the vertices and the tags are kept;
         /// the edges of the mesh are updated.</para>
         /// </summary>
+        /// <param name="curve">The segment that defines the line (nothing is done if its length is zero)</param>
+        /// <param name="tolerance">The distance within which a vertex is on the line</param>
         public void Cut(Line2d curve, double tolerance = GeometryBase.Tolerance)
         {
             double dx = curve.End.X - curve.Start.X, dy = curve.End.Y - curve.Start.Y;
@@ -1623,6 +1934,12 @@ namespace GPC.Geometry.Meshes
             VertexBVH = null;
         }
 
+        /// <summary>
+        /// The key of an edge, independent of its direction: the smaller id in the high 32 bits, the larger in the low ones
+        /// </summary>
+        /// <param name="a">The id of the first vertex</param>
+        /// <param name="b">The id of the second vertex</param>
+        /// <returns>The key</returns>
         private static long EdgeKey(int a, int b)
         {
             return a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
@@ -1633,6 +1950,9 @@ namespace GPC.Geometry.Meshes
         /// are replaced by their two halves; if the edges were the ones of the faces, the new edges of the faces are added too
         /// (the edges not of the faces, e.g. lines, are kept). The duplicated edges are removed
         /// </summary>
+        /// <param name="oldFaces">The faces before the division</param>
+        /// <param name="newFaces">The faces after the division</param>
+        /// <param name="splitPoints">The new points on the divided edges, by edge key</param>
         private void UpdateEdges(MeshFace[] oldFaces, List<MeshFace> newFaces, Dictionary<long, int> splitPoints)
         {
             if (_edges.Count == 0)
@@ -1686,6 +2006,10 @@ namespace GPC.Geometry.Meshes
         /// Add a part of a cut face: 3 or 4 vertices as they are, 5 vertices (a quadrilateral cut through adjacent edges) as a triangle and
         /// a quadrilateral, choosing the division with the best shapes
         /// </summary>
+        /// <param name="nodes">The vertices of the part, in order</param>
+        /// <param name="tag">The tag of the cut face</param>
+        /// <param name="faces">The list where the new faces are added</param>
+        /// <param name="nextFaceId">The id of the next new face (incremented)</param>
         private void AddCutPart(List<int> nodes, object tag, List<MeshFace> faces, ref int nextFaceId)
         {
             if (nodes.Count == 3 || nodes.Count == 4)
@@ -1723,6 +2047,12 @@ namespace GPC.Geometry.Meshes
             faces.Add(new MeshFace(new[] { nodes[(best + 2) % 5], nodes[(best + 3) % 5], nodes[(best + 4) % 5], nodes[best] }, tag) { Id = nextFaceId++ });
         }
 
+        /// <summary>
+        /// The sine of the angle of a corner, in the XY plane
+        /// </summary>
+        /// <param name="previous">The previous vertex</param>
+        /// <param name="vertex">The vertex of the corner</param>
+        /// <param name="next">The next vertex</param>
         /// <returns>Sine of the angle in <paramref name="vertex"/> from the edge to <paramref name="next"/> to the edge to <paramref name="previous"/> (XY plane)</returns>
         private static double CornerSine(Point3d previous, Point3d vertex, Point3d next)
         {
@@ -1731,6 +2061,11 @@ namespace GPC.Geometry.Meshes
             return lengths > 0 ? (e1x * e2y - e1y * e2x) / lengths : 0;
         }
 
+        /// <summary>
+        /// A refined copy of a mesh
+        /// </summary>
+        /// <param name="mesh">The mesh to refine (not changed)</param>
+        /// <param name="tolerance">Not used (see <see cref="Refine"/>)</param>
         /// <returns>A refined copy of the mesh (see <see cref="Refine"/>)</returns>
         public static Mesh RefineMesh(Mesh mesh, double tolerance = GeometryBase.Tolerance)
         {
@@ -1739,6 +2074,14 @@ namespace GPC.Geometry.Meshes
             return newMesh;
         }
 
+        /// <summary>
+        /// Cleans the mesh: the vertices closer than <paramref name="edgeTolerance"/> and the ends of the shortest edge (two for a quadrangle) of the
+        /// faces with area smaller than <paramref name="areaTolerance"/> are collapsed. Every group of collapsed vertices is replaced by a new vertex,
+        /// at the mean of the naked vertices of the group (at the mean of all the vertices if none is naked); the edges and the faces are updated,
+        /// the degenerate ones removed
+        /// </summary>
+        /// <param name="edgeTolerance">The distance within which the vertices are collapsed</param>
+        /// <param name="areaTolerance">The area under which a face is collapsed</param>
         public void Clean(double edgeTolerance = GeometryBase.Tolerance, double areaTolerance = GeometryBase.Tolerance)
         {
             var nakedEdges = GetNakedEdges();
@@ -1963,6 +2306,11 @@ namespace GPC.Geometry.Meshes
 
         #region Public method override - Equals - HashCode - Operators
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Mesh)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal mesh</returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj))
@@ -1974,6 +2322,11 @@ namespace GPC.Geometry.Meshes
             return Equals(obj as Mesh);
         }
 
+        /// <summary>
+        /// Equality of the vertices, faces, edges and volumes, in any order (each element equal to the one with the same id and content)
+        /// </summary>
+        /// <param name="other">The mesh to compare</param>
+        /// <returns>True if the meshes are equal</returns>
         public bool Equals(Mesh other)
         {
             if (ReferenceEquals(this, other))
@@ -1988,6 +2341,10 @@ namespace GPC.Geometry.Meshes
                                       && _volumes.ScrambledEquals(mesh._volumes);
         }
 
+        /// <summary>
+        /// The hash code of the elements, independent of their order
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -2002,6 +2359,11 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// Serializes the <see cref="BaseObject.Guid"/>, the id and the collections of the elements
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -2011,6 +2373,12 @@ namespace GPC.Geometry.Meshes
             info.AddValue("Volumes", _volumes, typeof(MeshBaseCollection<MeshVolume>));
         }
 
+        /// <summary>
+        /// Equality operator (see <see cref="Equals(Mesh)"/>); two null meshes are equal
+        /// </summary>
+        /// <param name="obj1">The first mesh</param>
+        /// <param name="obj2">The second mesh</param>
+        /// <returns>True if the meshes are equal</returns>
         public static bool operator ==(Mesh obj1, Mesh obj2)
         {
             if (ReferenceEquals(obj1, obj2))
@@ -2022,6 +2390,12 @@ namespace GPC.Geometry.Meshes
             return obj1.Equals(obj2);
         }
 
+        /// <summary>
+        /// Inequality operator (see <see cref="Equals(Mesh)"/>)
+        /// </summary>
+        /// <param name="obj1">The first mesh</param>
+        /// <param name="obj2">The second mesh</param>
+        /// <returns>True if the meshes are different</returns>
         public static bool operator !=(Mesh obj1, Mesh obj2)
         {
             return !(obj1 == obj2);
@@ -2031,6 +2405,9 @@ namespace GPC.Geometry.Meshes
 
         #region Nested classes
 
+        /// <summary>
+        /// The options of the generation of a mesh
+        /// </summary>
         [Serializable]
         public class GenerateOptions : ICloneable
         {
@@ -2049,6 +2426,9 @@ namespace GPC.Geometry.Meshes
             /// </summary>
             public bool Refine;
 
+            /// <summary>
+            /// The default options: size 1E+22 (no limit), recombination, no refinement
+            /// </summary>
             public GenerateOptions()
             {
                 MeshSize = 1E+22;
@@ -2056,6 +2436,10 @@ namespace GPC.Geometry.Meshes
                 Refine = false;
             }
 
+            /// <summary>
+            /// Creates a copy of the options
+            /// </summary>
+            /// <returns>The copy</returns>
             public virtual object Clone()
             {
                 GenerateOptions clone = new GenerateOptions
@@ -2069,28 +2453,64 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// The result of the generation of a mesh: warnings, exceptions with their messages, generated surfaces and execution times
+        /// </summary>
         [Serializable]
         public class GenerateMeshStatus
         {
+            /// <summary>
+            /// The messages of the exceptions (one for each exception)
+            /// </summary>
             protected List<string> _customErrorMessages;
+            /// <summary>
+            /// The warnings
+            /// </summary>
             protected List<string> _warnings;
+            /// <summary>
+            /// The exceptions
+            /// </summary>
             protected List<Exception> _exceptions;
 
+            /// <summary>
+            /// The number of generated surfaces
+            /// </summary>
             protected int _generatedSurfaces;
 
+            /// <summary>
+            /// The execution times of the phases, by description
+            /// </summary>
             private Dictionary<string, double> _executionTime;
 
+            /// <summary>
+            /// The warnings (the list of the status)
+            /// </summary>
             public List<string> Warnings => _warnings;
 
+            /// <summary>
+            /// The messages of the exceptions (the list of the status)
+            /// </summary>
             public List<string> CustomErrorMessages => _customErrorMessages;
 
+            /// <summary>
+            /// The exceptions (the list of the status)
+            /// </summary>
             public List<Exception> Exceptions => _exceptions;
 
+            /// <summary>
+            /// The number of generated surfaces
+            /// </summary>
             public int GeneratedSurfaces { get => _generatedSurfaces; set => _generatedSurfaces = value; }
 
+            /// <summary>
+            /// The execution times of the phases, by description
+            /// </summary>
             public Dictionary<string, double> ExecutionTime { get => _executionTime; set => _executionTime = value; }
 
 
+            /// <summary>
+            /// Creates an empty status
+            /// </summary>
             public GenerateMeshStatus()
             {
                 _customErrorMessages = new List<string>();
@@ -2099,37 +2519,68 @@ namespace GPC.Geometry.Meshes
                 _executionTime = new Dictionary<string, double>();
             }
 
+            /// <summary>
+            /// Adds an execution time
+            /// </summary>
+            /// <param name="message">The description of the phase (unique)</param>
+            /// <param name="value">The time</param>
+            /// <exception cref="ArgumentException">If the description is already present</exception>
             public void AddExecutionTimeMessage(string message, double value)
             {
                 _executionTime.Add(message, value);
             }
 
+            /// <summary>
+            /// Adds an exception with its message
+            /// </summary>
+            /// <param name="exception">The exception</param>
+            /// <param name="customErrorMessage">The message</param>
             public void AddException(Exception exception, string customErrorMessage)
             {
                 _exceptions.Add(exception);
                 _customErrorMessages.Add(customErrorMessage);
             }
 
+            /// <summary>
+            /// Adds a warning
+            /// </summary>
+            /// <param name="warning">The warning</param>
             public void AddWarning(string warning)
             {
                 _warnings.Add(warning);
             }
 
+            /// <summary>
+            /// The last exception
+            /// </summary>
+            /// <returns>The last exception; null if there are none</returns>
             public Exception GetLastException()
             {
                 return _exceptions.LastOrDefault();
             }
 
+            /// <summary>
+            /// The message of the last exception
+            /// </summary>
+            /// <returns>The message; null if there are none</returns>
             public string GetLastCustomErrorMessage()
             {
                 return _customErrorMessages.LastOrDefault();
             }
 
+            /// <summary>
+            /// The first exception
+            /// </summary>
+            /// <returns>The first exception; null if there are none</returns>
             public Exception GetFirstException()
             {
                 return _exceptions.FirstOrDefault();
             }
 
+            /// <summary>
+            /// The message of the first exception
+            /// </summary>
+            /// <returns>The message; null if there are none</returns>
             public string GetFirstCustomErrorMessage()
             {
                 return _customErrorMessages.FirstOrDefault();
@@ -2138,6 +2589,9 @@ namespace GPC.Geometry.Meshes
 
         #endregion
 
+        /// <summary>
+        /// Builds the hierarchy of spheres of the vertices (<see cref="VertexBVH"/>)
+        /// </summary>
         public void UpdateVertexBVH()
         {
             var ids = new List<int>();
@@ -2152,6 +2606,9 @@ namespace GPC.Geometry.Meshes
             VertexBVH = new SphereBVH(points, ids);
         }
 
+        /// <summary>
+        /// Builds the hierarchy of spheres of the faces (<see cref="FaceBVH"/>)
+        /// </summary>
         public void UpdateFaceBVH()
         {
             var ids = new List<int>();
@@ -2166,6 +2623,12 @@ namespace GPC.Geometry.Meshes
             FaceBVH = new SphereBVH(faces, ids);
         }
 
+        /// <summary>
+        /// The vertices near a point (the hierarchy of the vertices is built if it is not up to date)
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="range">The largest distance</param>
+        /// <returns>The ids of the vertices not farther than <paramref name="range"/></returns>
         public List<int> FindNeighbours(Point3d point, double range)
         {
             if (VertexBVH == null)
@@ -2176,6 +2639,14 @@ namespace GPC.Geometry.Meshes
             return VertexBVH.GetIntersections(point, range);
         }
 
+        /// <summary>
+        /// The face crossed by a ray nearest to its start, in the direction of the ray (for a quadrangle only its triangle A B C is checked;
+        /// the faces with aligned vertices are skipped)
+        /// </summary>
+        /// <param name="ray">The ray: its point and its direction</param>
+        /// <param name="face">The face; null if none is crossed</param>
+        /// <param name="intersectionPoint">The intersection point; null if no face is crossed</param>
+        /// <returns>True if a face is crossed</returns>
         public bool PickFace(Ray3d ray, out MeshFace face, out Point3d intersectionPoint)
         {
             face = null;

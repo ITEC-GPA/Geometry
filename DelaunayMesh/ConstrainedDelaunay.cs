@@ -21,18 +21,45 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
     {
         #region Types and constants
 
+        /// <summary>
+        /// A triangle of the triangulation, with its neighbours and the boundary flags of its edges
+        /// </summary>
         private sealed class Triangle
         {
-            public readonly int[] V = new int[3];           // vertices, counterclockwise
-            public readonly Triangle[] N = new Triangle[3];  // N[i]: neighbour across the edge opposite to V[i]
-            public readonly bool[] C = new bool[3];         // C[i]: the edge opposite to V[i] is a boundary segment
+            /// <summary>
+            /// The vertices, counterclockwise
+            /// </summary>
+            public readonly int[] V = new int[3];
+            /// <summary>
+            /// N[i]: the neighbour across the edge opposite to V[i] (null on the super triangle)
+            /// </summary>
+            public readonly Triangle[] N = new Triangle[3];
+            /// <summary>
+            /// C[i]: the edge opposite to V[i] is a boundary segment
+            /// </summary>
+            public readonly bool[] C = new bool[3];
+            /// <summary>
+            /// True if the triangle is inside the shape
+            /// </summary>
             public bool Inside;
-            public int Stamp;                                // changed at every modification, to discard the old entries of the refinement queue
+            /// <summary>
+            /// Changed at every modification, to discard the old entries of the refinement queue
+            /// </summary>
+            public int Stamp;
         }
 
-        private const double MergeTolerance = 1E-10;       // normalized distance under which two points are the same vertex
-        private const double LocateTolerance = 1E-13;      // normalized distance: a point on an edge (with rounding errors) is inside both triangles
-        private const double SuperTriangleSize = 20.0;     // the normalized shape is inside [-0.5, 0.5] x [-0.5, 0.5]
+        /// <summary>
+        /// Normalized distance under which two points are the same vertex
+        /// </summary>
+        private const double MergeTolerance = 1E-10;
+        /// <summary>
+        /// Normalized distance: a point on an edge (with rounding errors) is inside both triangles
+        /// </summary>
+        private const double LocateTolerance = 1E-13;
+        /// <summary>
+        /// The half size of the super triangle: the normalized shape is inside [-0.5, 0.5] x [-0.5, 0.5]
+        /// </summary>
+        private const double SuperTriangleSize = 20.0;
 
         /// <summary>
         /// A triangle is too large if its circumradius is greater than this factor by the mesh size: 1.25 / sqrt(3), i.e. an equilateral triangle
@@ -48,47 +75,153 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// </summary>
         private sealed class Lattice
         {
+            /// <summary>
+            /// The cosine of the angle of the lattice
+            /// </summary>
             public double Cos = 1.0;
+            /// <summary>
+            /// The sine of the angle of the lattice
+            /// </summary>
             public double Sin;
+            /// <summary>
+            /// The u coordinates of the lines u = constant, increasing
+            /// </summary>
             public double[] U = new double[0];
+            /// <summary>
+            /// The v coordinates of the lines v = constant, increasing
+            /// </summary>
             public double[] V = new double[0];
 
+            /// <summary>
+            /// The u coordinate of a point
+            /// </summary>
+            /// <param name="x">The normalized X</param>
+            /// <param name="y">The normalized Y</param>
+            /// <returns>x cos + y sin</returns>
             public double ToU(double x, double y) => x * Cos + y * Sin;
+            /// <summary>
+            /// The v coordinate of a point
+            /// </summary>
+            /// <param name="x">The normalized X</param>
+            /// <param name="y">The normalized Y</param>
+            /// <returns>-x sin + y cos</returns>
             public double ToV(double x, double y) => -x * Sin + y * Cos;
+            /// <summary>
+            /// The normalized X of a point of the lattice
+            /// </summary>
+            /// <param name="u">The u coordinate</param>
+            /// <param name="v">The v coordinate</param>
+            /// <returns>u cos - v sin</returns>
             public double ToX(double u, double v) => u * Cos - v * Sin;
+            /// <summary>
+            /// The normalized Y of a point of the lattice
+            /// </summary>
+            /// <param name="u">The u coordinate</param>
+            /// <param name="v">The v coordinate</param>
+            /// <returns>u sin + v cos</returns>
             public double ToY(double u, double v) => u * Sin + v * Cos;
         }
 
-        private const double AngleTolerance = 1E-7;     // radians: edges with the same direction (lattice angle)
-        private const double AlignedTolerance = 1E-6;   // |sin| of the angle between an edge and the lattice: the edge is parallel to the lattice
-        private const double LineMerge = 0.05;          // relative to the mesh size: an extreme of the shape closer than this to a line of an edge is merged (and division points closer than this to the ends are skipped)
-        private const double EdgeLineMerge = 1E-3;      // relative to the mesh size: lines of two edges closer than this are merged (thin parts keep their lines)
-        private const double AlignedClearance = 0.1;    // relative to the mesh size: minimum distance of a lattice point from the boundary segments parallel to the lattice
-        private const double Clearance = 0.45;          // relative to the mesh size: minimum distance of a lattice point from the other boundary segments
-        private const double LatticeMinAngle = 20.0;    // degrees: minimum angle of the triangles not made of regular points (grading near the small edges)
+        /// <summary>
+        /// Radians: edges with the same direction (angle of the lattice)
+        /// </summary>
+        private const double AngleTolerance = 1E-7;
+        /// <summary>
+        /// |sin| of the angle between an edge and the lattice under which the edge is parallel to the lattice
+        /// </summary>
+        private const double AlignedTolerance = 1E-6;
+        /// <summary>
+        /// Relative to the mesh size: an extreme of the shape closer than this to a line of an edge is merged (and division points closer than
+        /// this to the ends are skipped)
+        /// </summary>
+        private const double LineMerge = 0.05;
+        /// <summary>
+        /// Relative to the mesh size: lines of two edges closer than this are merged (thin parts keep their lines)
+        /// </summary>
+        private const double EdgeLineMerge = 1E-3;
+        /// <summary>
+        /// Relative to the mesh size: minimum distance of a lattice point from the boundary segments parallel to the lattice
+        /// </summary>
+        private const double AlignedClearance = 0.1;
+        /// <summary>
+        /// Relative to the mesh size: minimum distance of a lattice point from the other boundary segments
+        /// </summary>
+        private const double Clearance = 0.45;
+        /// <summary>
+        /// Degrees: minimum angle of the triangles not made of regular points (grading near the small edges)
+        /// </summary>
+        private const double LatticeMinAngle = 20.0;
 
         #endregion
 
         #region Variables
 
-        private readonly List<double> _x = new List<double>();          // normalized coordinates
+        /// <summary>
+        /// The normalized X of the vertices
+        /// </summary>
+        private readonly List<double> _x = new List<double>();
+        /// <summary>
+        /// The normalized Y of the vertices
+        /// </summary>
         private readonly List<double> _y = new List<double>();
-        private readonly List<double> _originalX = new List<double>();  // original coordinates
+        /// <summary>
+        /// The original X of the vertices (the input points keep their exact coordinates)
+        /// </summary>
+        private readonly List<double> _originalX = new List<double>();
+        /// <summary>
+        /// The original Y of the vertices
+        /// </summary>
         private readonly List<double> _originalY = new List<double>();
-        private readonly List<int> _tags = new List<int>();             // index of the boundary points, -1 for the points added by the refinement
-        private readonly List<bool> _latticePoints = new List<bool>();  // points inside the shape placed on the lattice
+        /// <summary>
+        /// Index of the boundary points, -1 for the points added by the refinement (the tags of the vertices of the mesh)
+        /// </summary>
+        private readonly List<int> _tags = new List<int>();
+        /// <summary>
+        /// True for the points inside the shape placed on the lattice
+        /// </summary>
+        private readonly List<bool> _latticePoints = new List<bool>();
+        /// <summary>
+        /// A triangle of each vertex (the start of the searches around the vertex)
+        /// </summary>
         private readonly List<Triangle> _vertexTriangle = new List<Triangle>();
+        /// <summary>
+        /// All the triangles, also the ones outside the shape
+        /// </summary>
         private readonly List<Triangle> _triangles = new List<Triangle>();
-        private readonly HashSet<long> _segments = new HashSet<long>(LongKeyComparer.Instance); // boundary segments (constrained edges)
+        /// <summary>
+        /// The boundary segments (constrained edges), by <see cref="SegmentKey"/>
+        /// </summary>
+        private readonly HashSet<long> _segments = new HashSet<long>(LongKeyComparer.Instance);
 
+        /// <summary>
+        /// The X of the center of the bounding box (normalization)
+        /// </summary>
         private double _centerX;
+        /// <summary>
+        /// The Y of the center of the bounding box (normalization)
+        /// </summary>
         private double _centerY;
+        /// <summary>
+        /// The largest side of the bounding box (normalization)
+        /// </summary>
         private double _scale;
+        /// <summary>
+        /// The last triangle found by the point location (the start of the next search)
+        /// </summary>
         private Triangle _lastTriangle;
-        private Lattice _lattice;                                       // not null for the quadrilateral meshes
-        private HashSet<int> _regularPoints;                            // lattice points and boundary points only on edges parallel to the lattice
+        /// <summary>
+        /// The lattice: not null for the quadrilateral meshes
+        /// </summary>
+        private Lattice _lattice;
+        /// <summary>
+        /// Lattice points and boundary points only on edges parallel to the lattice
+        /// </summary>
+        private HashSet<int> _regularPoints;
 
-        private Queue<KeyValuePair<Triangle, int>> _refineQueue;       // not null during the refinement
+        /// <summary>
+        /// The triangles to check (with their stamp): not null during the refinement
+        /// </summary>
+        private Queue<KeyValuePair<Triangle, int>> _refineQueue;
 
         #endregion
 
@@ -158,6 +291,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Input
 
+        /// <summary>
+        /// The loops of a shape: fill, holes and, recursively, fill and holes of the children
+        /// </summary>
+        /// <param name="shape">The shape</param>
+        /// <returns>The loops, without consecutive duplicated points; the first one is the fill</returns>
+        /// <exception cref="ArgumentNullException">If the shape is null</exception>
+        /// <exception cref="ArgumentException">If the fill has less than three distinct points</exception>
         private static List<List<double[]>> GetLoops(Shape shape)
         {
             if (shape is null)
@@ -172,6 +312,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return loops;
         }
 
+        /// <summary>
+        /// Adds the loops of a shape and of its children
+        /// </summary>
+        /// <param name="shape">The shape</param>
+        /// <param name="loops">The list of the loops</param>
         private static void CollectLoops(Shape shape, List<List<double[]>> loops)
         {
             AddLoop(shape.Fill, loops);
@@ -212,6 +357,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 loops.Add(loop);
         }
 
+        /// <summary>
+        /// Tell if two input points are the same (relative tolerance 1E-12)
+        /// </summary>
+        /// <param name="a">The first point (X, Y)</param>
+        /// <param name="b">The second point (X, Y)</param>
+        /// <returns>True if the points coincide</returns>
         private static bool SamePoint(double[] a, double[] b)
         {
             double tolerance = 1E-12 * Math.Max(1.0, Math.Max(Math.Abs(a[0]), Math.Abs(a[1])));
@@ -222,6 +373,16 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Build
 
+        /// <summary>
+        /// Builds the triangulation: normalization, super triangle, boundary points and segments, classification of the triangles inside,
+        /// lattice and refinement
+        /// </summary>
+        /// <param name="loops">The loops of the shape</param>
+        /// <param name="meshSize">The mesh size (original units)</param>
+        /// <param name="refine">If false only the boundary points are used</param>
+        /// <param name="minAngle">The minimum angle of the triangles (degrees), 0: only the size</param>
+        /// <param name="lattice">True for the quadrilateral meshes (points inside on a lattice)</param>
+        /// <exception cref="ArgumentException">If the shape has zero or infinite size</exception>
         private void Build(List<List<double[]>> loops, double meshSize, bool refine, double minAngle, bool lattice)
         {
             // Normalization
@@ -334,6 +495,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return parameters;
         }
 
+        /// <summary>
+        /// Inserts a boundary point and adds it to the vertices of its loop (coincident points, e.g. a hole touching the fill, are merged)
+        /// </summary>
+        /// <param name="vertices">The vertices of the loop</param>
+        /// <param name="x">The original X</param>
+        /// <param name="y">The original Y</param>
+        /// <param name="tag">The tag of the next boundary point (incremented when a new point is added)</param>
         private void AddBoundaryVertex(List<int> vertices, double x, double y, ref int tag)
         {
             int vertex = InsertPoint((x - _centerX) / _scale, (y - _centerY) / _scale, x, y, tag, null);
@@ -349,6 +517,15 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Vertices and triangles
 
+        /// <summary>
+        /// Adds a vertex (not yet in the triangulation)
+        /// </summary>
+        /// <param name="x">The normalized X</param>
+        /// <param name="y">The normalized Y</param>
+        /// <param name="originalX">The original X; NaN: computed from the normalized one</param>
+        /// <param name="originalY">The original Y; NaN: computed from the normalized one</param>
+        /// <param name="tag">The tag</param>
+        /// <returns>The index of the vertex</returns>
         private int AddVertex(double x, double y, double originalX, double originalY, int tag)
         {
             _x.Add(x);
@@ -361,6 +538,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return _x.Count - 1;
         }
 
+        /// <summary>
+        /// Creates a triangle and adds it to the triangulation
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <param name="c">The third vertex (counterclockwise)</param>
+        /// <returns>The triangle</returns>
         private Triangle NewTriangle(int a, int b, int c)
         {
             var triangle = new Triangle();
@@ -372,6 +556,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return triangle;
         }
 
+        /// <summary>
+        /// Sets the vertices of a triangle and makes it the triangle of its vertices
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <param name="c">The third vertex (counterclockwise)</param>
         private void SetVertices(Triangle t, int a, int b, int c)
         {
             t.V[0] = a;
@@ -392,6 +583,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 _refineQueue.Enqueue(new KeyValuePair<Triangle, int>(t, t.Stamp));
         }
 
+        /// <summary>
+        /// The position of a vertex in a triangle
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="vertex">The vertex</param>
+        /// <returns>0, 1 or 2; -1 if the vertex is not in the triangle</returns>
         private static int IndexOf(Triangle t, int vertex)
         {
             if (t.V[0] == vertex) return 0;
@@ -400,6 +597,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return -1;
         }
 
+        /// <summary>
+        /// The position of a neighbour in a triangle
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="neighbour">The neighbour</param>
+        /// <returns>0, 1 or 2; -1 if it is not a neighbour</returns>
         private static int IndexOfNeighbour(Triangle t, Triangle neighbour)
         {
             if (t.N[0] == neighbour) return 0;
@@ -408,6 +611,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return -1;
         }
 
+        /// <summary>
+        /// Replaces a neighbour of a triangle
+        /// </summary>
+        /// <param name="t">The triangle (null: nothing is done)</param>
+        /// <param name="oldNeighbour">The neighbour to replace</param>
+        /// <param name="newNeighbour">The new neighbour</param>
         private static void ReplaceNeighbour(Triangle t, Triangle oldNeighbour, Triangle newNeighbour)
         {
             if (t is null)
@@ -418,6 +627,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 t.N[k] = newNeighbour;
         }
 
+        /// <summary>
+        /// The key of a segment, independent of its direction
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <returns>The smaller index in the high 32 bits, the larger in the low ones</returns>
         private static long SegmentKey(int a, int b)
         {
             return a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
@@ -433,11 +648,25 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return Orient(a, b, _x[c], _y[c]);
         }
 
+        /// <summary>
+        /// Twice the signed area of the triangle a, b, (x, y)
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <param name="x">The normalized X of the third point</param>
+        /// <param name="y">The normalized Y of the third point</param>
+        /// <returns>Positive if counterclockwise</returns>
         private double Orient(int a, int b, double x, double y)
         {
             return (_x[b] - _x[a]) * (y - _y[a]) - (_y[b] - _y[a]) * (x - _x[a]);
         }
 
+        /// <summary>
+        /// The normalized distance of two vertices
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <returns>The distance</returns>
         private double Distance(int a, int b)
         {
             double dx = _x[b] - _x[a];
@@ -468,6 +697,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return det > 1E-12 * permanent;
         }
 
+        /// <summary>
+        /// The circumcenter of a triangle
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="x">The normalized X of the circumcenter (infinite or NaN for a degenerate triangle)</param>
+        /// <param name="y">The normalized Y of the circumcenter</param>
+        /// <param name="squareRadius">The square of the circumradius</param>
         private void Circumcenter(Triangle t, out double x, out double y, out double squareRadius)
         {
             int a = t.V[0], b = t.V[1], c = t.V[2];
@@ -766,8 +1002,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// <summary>
         /// Find the edge a-b
         /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
         /// <param name="t">A triangle with the edge</param>
         /// <param name="edge">Index of the edge in <paramref name="t"/></param>
+        /// <returns>True if a-b is an edge of the triangulation</returns>
         private bool FindEdge(int a, int b, out Triangle t, out int edge)
         {
             foreach (Triangle triangle in Fan(a))
@@ -839,6 +1078,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// Marks an edge as boundary segment, in both its triangles
+        /// </summary>
+        /// <param name="t">A triangle of the edge</param>
+        /// <param name="edge">The index of the edge in <paramref name="t"/></param>
         private void MarkSegment(Triangle t, int edge)
         {
             t.C[edge] = true;
@@ -999,6 +1243,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             throw new InvalidOperationException("Can not find the boundary segment in the triangulation");
         }
 
+        /// <summary>
+        /// The vertex of a triangle different from two given vertices
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="v1">The first vertex</param>
+        /// <param name="v2">The second vertex</param>
+        /// <returns>Its position in the triangle; -1 if none</returns>
         private static int OppositeIndex(Triangle t, int v1, int v2)
         {
             for (int k = 0; k < 3; k++)
@@ -1071,6 +1322,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Refinement
 
+        /// <summary>
+        /// Refinement (Ruppert): the triangles too large or with a too small angle are split by their circumcenter; a circumcenter that
+        /// encroaches a boundary segment, or is not visible from its triangle, splits the segment instead. The number of new points is limited
+        /// </summary>
+        /// <param name="size">The normalized mesh size</param>
+        /// <param name="minAngle">The minimum angle (degrees, at most 30), 0: only the size</param>
         private void Refine(double size, double minAngle)
         {
             double maxSquareRadius = SizeFactor * size * SizeFactor * size;
@@ -1159,6 +1416,14 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             _refineQueue = null;
         }
 
+        /// <summary>
+        /// Tell if a triangle must be refined: circumradius too large or ratio circumradius / shortest edge too large (small angle), unless the
+        /// small angle is between two boundary segments or the triangle is made of regular points of the lattice
+        /// </summary>
+        /// <param name="t">The triangle</param>
+        /// <param name="maxSquareRadius">The largest square circumradius</param>
+        /// <param name="maxRatio">The largest ratio circumradius / shortest edge (infinite: the angles are not checked)</param>
+        /// <returns>True if the triangle must be refined</returns>
         private bool IsBad(Triangle t, double maxSquareRadius, double maxRatio)
         {
             Circumcenter(t, out _, out _, out double squareRadius);
@@ -1412,6 +1677,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return lines.ToArray();
         }
 
+        /// <summary>
+        /// Tell if a segment is parallel to an axis of the lattice
+        /// </summary>
+        /// <param name="ax">The normalized X of the first point</param>
+        /// <param name="ay">The normalized Y of the first point</param>
+        /// <param name="bx">The normalized X of the second point</param>
+        /// <param name="by">The normalized Y of the second point</param>
         /// <param name="alongU">True if the segment is parallel to the u axis (v constant)</param>
         /// <returns>True if the segment a-b (normalized coordinates) is parallel to one of the axes of the lattice</returns>
         private bool IsParallelToLattice(double ax, double ay, double bx, double by, out bool alongU)
@@ -1674,6 +1946,14 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return false;
         }
 
+        /// <summary>
+        /// Tell if a point is too close to the boundary segments to be a lattice point
+        /// </summary>
+        /// <param name="x">The normalized X</param>
+        /// <param name="y">The normalized Y</param>
+        /// <param name="segments">The segments near the point: vertices and 1 if parallel to the lattice</param>
+        /// <param name="size">The normalized mesh size</param>
+        /// <returns>True if the point is closer than the clearance (<see cref="AlignedClearance"/> or <see cref="Clearance"/> Ã— size)</returns>
         private bool IsTooClose(double x, double y, List<int[]> segments, double size)
         {
             foreach (int[] segment in segments)
@@ -1685,6 +1965,14 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return false;
         }
 
+        /// <summary>
+        /// The distance of a point from a segment
+        /// </summary>
+        /// <param name="x">The normalized X</param>
+        /// <param name="y">The normalized Y</param>
+        /// <param name="a">The first vertex of the segment</param>
+        /// <param name="b">The second vertex of the segment</param>
+        /// <returns>The normalized distance</returns>
         private double DistanceToSegment(double x, double y, int a, int b)
         {
             double dx = _x[b] - _x[a], dy = _y[b] - _y[a];
@@ -1695,11 +1983,23 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return Math.Sqrt(px * px + py * py);
         }
 
+        /// <summary>
+        /// The index of the cell of a coordinate
+        /// </summary>
+        /// <param name="value">The coordinate</param>
+        /// <param name="size">The size of the cells</param>
+        /// <returns>The index</returns>
         private static long CellIndex(double value, double size)
         {
             return (long)Math.Floor(value / size);
         }
 
+        /// <summary>
+        /// The key of a cell
+        /// </summary>
+        /// <param name="i">The index along X</param>
+        /// <param name="j">The index along Y</param>
+        /// <returns>The key</returns>
         private static long CellKey(long i, long j)
         {
             return (i << 32) ^ (j & 0xFFFFFFFF);
@@ -1766,6 +2066,10 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Output
 
+        /// <summary>
+        /// The mesh of the triangles inside the shape: the vertices with their original coordinates (Z = 0) and their tags, the faces and the edges
+        /// </summary>
+        /// <returns>The mesh</returns>
         private Mesh ToMesh()
         {
             var mesh = new Mesh();

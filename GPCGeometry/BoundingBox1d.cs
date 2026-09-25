@@ -4,36 +4,69 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// An interval [Min, Max] on a line: the one-dimensional bounding box. A new box is empty until the first value is added with
+    /// <see cref="Update(double)"/>
+    /// </summary>
     [Serializable]
     public class BoundingBox1d : ISerializable
     {
         #region Variables
 
+        /// <summary>
+        /// The lower end
+        /// </summary>
         protected double _min;
+        /// <summary>
+        /// The upper end
+        /// </summary>
         protected double _max;
+        /// <summary>
+        /// True if no value has been added
+        /// </summary>
         protected bool _isEmpty;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The lower end of the interval
+        /// </summary>
         public double Min { get => _min; set => _min = value; }
 
+        /// <summary>
+        /// The upper end of the interval
+        /// </summary>
         public double Max { get => _max; set => _max = value; }
 
+        /// <summary>
+        /// True if no value has been added yet
+        /// </summary>
         public bool IsEmpty => _isEmpty; 
 
+        /// <summary>
+        /// The length of the interval: Max - Min
+        /// </summary>
         public double Size => _max - _min; 
 
         #endregion
 
         #region Public Constructors
 
+        /// <summary>
+        /// Creates an empty interval
+        /// </summary>
         public BoundingBox1d()
         {
             Reset();
         }
 
+        /// <summary>
+        /// Deserialization constructor
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         protected BoundingBox1d(SerializationInfo info, StreamingContext context)
         {
             _min = info.GetDouble("Min");
@@ -45,11 +78,19 @@ namespace GPC.Geometry
 
         #region Public Methods Specific
 
+        /// <summary>
+        /// The middle of the interval
+        /// </summary>
+        /// <returns>(Min + Max) / 2</returns>
         public double Center()
         {
             return _min + 0.5 * Size;
         }
 
+        /// <summary>
+        /// Extends the interval to include <paramref name="x"/> (the first value sets both ends)
+        /// </summary>
+        /// <param name="x">The value to include</param>
         public void Update(double x)
         {
             if (_isEmpty)
@@ -71,6 +112,9 @@ namespace GPC.Geometry
             _isEmpty = false;
         }
 
+        /// <summary>
+        /// Empties the interval
+        /// </summary>
         public void Reset()
         {
             _min = 0;
@@ -82,6 +126,12 @@ namespace GPC.Geometry
 
         #region public static Methods
 
+        /// <summary>
+        /// The union of two intervals
+        /// </summary>
+        /// <param name="a">The first interval</param>
+        /// <param name="b">The second interval</param>
+        /// <returns>One interval if <paramref name="a"/> and <paramref name="b"/> overlap or touch, otherwise the two intervals</returns>
         public static List<BoundingBox1d> GetUnion(BoundingBox1d a, BoundingBox1d b)
         {
 			BoundingBox1d buffer = GetIntersection(a, b, 0);
@@ -98,6 +148,14 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// The parts of <paramref name="a"/> outside <paramref name="b"/>
+        /// </summary>
+        /// <param name="a">The interval to subtract from</param>
+        /// <param name="b">The interval to subtract</param>
+        /// <param name="minLength">The minimum length of the parts: shorter parts are discarded</param>
+        /// <returns><paramref name="a"/> if the intervals do not overlap; otherwise the parts of <paramref name="a"/> above and below <paramref name="b"/>
+        /// not shorter than <paramref name="minLength"/>, null if there are none</returns>
         public static List<BoundingBox1d> GetDifference(BoundingBox1d a, BoundingBox1d b, double minLength)
         {
 			BoundingBox1d buffer = GetIntersection(a, b, 0);
@@ -134,6 +192,13 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// The intersections of every interval of <paramref name="a"/> with every interval of <paramref name="b"/>
+        /// </summary>
+        /// <param name="a">The first list of intervals</param>
+        /// <param name="b">The second list of intervals</param>
+        /// <param name="minLength">The minimum length of the intersections: shorter ones are discarded</param>
+        /// <returns>The intersections, null if there are none</returns>
         public static List<BoundingBox1d> GetIntersection(List<BoundingBox1d> a, List<BoundingBox1d> b, double minLength)
         {
 			List<BoundingBox1d> result = null;
@@ -158,6 +223,13 @@ namespace GPC.Geometry
             return result;
         }
 
+        /// <summary>
+        /// The intersection of two intervals
+        /// </summary>
+        /// <param name="a">The first interval</param>
+        /// <param name="b">The second interval</param>
+        /// <param name="minLength">The minimum length of the intersection</param>
+        /// <returns>The common part, null if it is shorter than <paramref name="minLength"/> (or the intervals do not overlap)</returns>
         public static BoundingBox1d GetIntersection(BoundingBox1d a, BoundingBox1d b, double minLength)
         {
             double maxOfMin = Math.Max(a.Min, b.Min);
@@ -176,6 +248,11 @@ namespace GPC.Geometry
             }
         }
 
+		/// <summary>
+		/// Equality of the ends and of the empty state (exact comparison)
+		/// </summary>
+		/// <param name="obj">The object to compare</param>
+		/// <returns>True if <paramref name="obj"/> is an equal interval</returns>
 		public override bool Equals(object obj)
 		{
             return obj is BoundingBox1d d &&
@@ -184,6 +261,10 @@ namespace GPC.Geometry
                    _isEmpty == d._isEmpty;
 		}
 
+        /// <summary>
+        /// The hash code of the ends and of the empty state
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -197,6 +278,11 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// Serializes the interval
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("Min", _min);

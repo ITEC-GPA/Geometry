@@ -6,53 +6,99 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// A segment in the space from <see cref="Start"/> to <see cref="End"/>. Two segments are equal if their ends are equal within the
+    /// tolerance, also with the opposite direction
+    /// </summary>
     [Serializable]
     [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
     public sealed class Line3d : GeometryBase, ISerializable, IEquatable<Line3d>, ICloneable
     {
         #region Variables
 
+        /// <summary>
+        /// The start point
+        /// </summary>
         private Point3d _start;
+        /// <summary>
+        /// The end point
+        /// </summary>
         private Point3d _end;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The start point (the instance is kept, not copied)
+        /// </summary>
         public Point3d Start { get => _start; set => _start = value; }
 
+        /// <summary>
+        /// The end point (the instance is kept, not copied)
+        /// </summary>
         public Point3d End { get => _end; set => _end = value; }
 
+        /// <summary>
+        /// A new point in the middle of the segment
+        /// </summary>
         public Point3d Mid => GetMidPoint();
 
+        /// <summary>
+        /// The length of the segment
+        /// </summary>
         public double Length => GetLength();
 
+        /// <summary>
+        /// A new infinite line through the segment (origin <see cref="Start"/>, direction <see cref="End"/> - <see cref="Start"/>)
+        /// </summary>
         public Ray3d Ray => new Ray3d(Start, new Vector3d(End - Start));
 
+        /// <summary>
+        /// A new semi-infinite line from <see cref="Start"/> in the direction of <see cref="End"/>
+        /// </summary>
         public SemiRay3d SemiRay => new SemiRay3d(Start, new Vector3d(End - Start));
 
 		#endregion
 
 		#region Public Constructors
 
+		/// <summary>
+		/// Creates a segment (the point instances are kept, not copied)
+		/// </summary>
+		/// <param name="start">The start point</param>
+		/// <param name="end">The end point</param>
 		public Line3d(Point3d start, Point3d end)
         {
             _start = start;
             _end = end;
         }
 
+        /// <summary>
+        /// Creates a copy of a segment, with copies of its points
+        /// </summary>
+        /// <param name="line">The segment to copy</param>
         public Line3d(Line3d line)
         {
             _start = new Point3d(line.Start);
             _end = new Point3d(line.End);
         }
 
+        /// <summary>
+        /// Creates the segment of the XY plane (Z = 0) with the ends of a planar segment
+        /// </summary>
+        /// <param name="line">The planar segment</param>
         public Line3d(Line2d line)
         {
             _start = new Point3d(line.Start);
             _end = new Point3d(line.End);
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the ends (the saved <see cref="BaseObject.Guid"/> is not read)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private Line3d(SerializationInfo info, StreamingContext context)
         {
             _start = (Point3d)info.GetValue("Start", typeof(Point3d));
@@ -66,6 +112,7 @@ namespace GPC.Geometry
         /// <summary>
         /// Get the line length
         /// </summary>
+        /// <returns>The distance between the ends</returns>
         public double GetLength()
         {
             return _start.DistanceTo(_end);
@@ -74,19 +121,20 @@ namespace GPC.Geometry
         /// <summary>
         /// Get the line mid point
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A new point in the middle of the segment</returns>
         public Point3d GetMidPoint()
         {
             return new Point3d((_start.X + _end.X) * 0.5, (_start.Y + _end.Y) * 0.5, (_start.Z + _end.Z) * 0.5);
         }
 
         /// <summary>
-        /// Get the intersection with another line
+        /// Get the intersection with another segment. The intersection must be unique: segments parallel, coincident or overlapping have no
+        /// intersection; segments that share an end (and do not overlap) intersect at that end
         /// </summary>
-        /// <param name="line">The other line</param>
-        /// <param name="inters">The intersection point</param>
-        /// <param name="tolerance"></param>
-        /// <returns>True if the lines have an intersection. Return false if the lines are parallel, coincident or overlap</returns>
+        /// <param name="line">The other segment</param>
+        /// <param name="inters">The intersection point, null if there is none</param>
+        /// <param name="tolerance">The tolerance on the distances</param>
+        /// <returns>True if the segments have a single intersection point</returns>
         public bool GetIntersection(Line3d line, out Point3d inters, double tolerance = GeometryBase.Tolerance)
         {
             // http://paulbourke.net/geometry/pointlineplane                 
@@ -130,12 +178,12 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Get the intersection with another infinite line
+        /// Get the intersection of the infinite lines through the two segments
         /// </summary>
         /// <param name="line">The other line</param>
-        /// <param name="inters">The intersection point</param>
-        /// <param name="tolerance"></param>
-        /// <returns>True if the lines have an intersection. Return false if the lines are parallel, coincident or overlap</returns>
+        /// <param name="inters">The intersection point, null if there is none</param>
+        /// <param name="tolerance">The tolerance on the distances</param>
+        /// <returns>True if the lines have a single intersection point. Return false if the lines are parallel, coincident or overlap</returns>
         public bool GetIntersectionWithInfiniteLine(Line3d line, out Point3d inters, double tolerance = GeometryBase.Tolerance)
         {
             // http://paulbourke.net/geometry/pointlineplane                 
@@ -161,6 +209,16 @@ namespace GPC.Geometry
             return false;
         }
 
+        /// <summary>
+        /// The common part of the intersections: the points of the two infinite lines at the minimum distance and the cases of the segments that
+        /// share an end
+        /// </summary>
+        /// <param name="line">The other segment</param>
+        /// <param name="tolerance">The tolerance on the distances</param>
+        /// <param name="pa">The point of this line nearest to the other line</param>
+        /// <param name="pb">The point of the other line nearest to this line</param>
+        /// <param name="inters">The common end when the segments share an end (and do not overlap), otherwise null</param>
+        /// <returns>False if the lines are parallel, coincident, overlapping or degenerate (a point); true otherwise</returns>
         private bool GetIntersectionHelper(Line3d line, double tolerance, out Point3d pa, out Point3d pb, out Point3d inters)
         {
             inters = null;
@@ -311,12 +369,12 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Get the intersection with vector3d <paramref name="vector"/>
+		/// Get the intersection with the segment from the origin to <paramref name="vector"/>
 		/// </summary>
-		/// <param name="vector">The vector</param>
-		/// <param name="tolerance"></param>
-		/// <param name="inters">The intersection point</param>
-		/// <returns>True if have an intersection. Return false if the line and the vector are parallel or overlap</returns>
+		/// <param name="vector">The vector (the segment from the origin to its end)</param>
+		/// <param name="inters">The intersection point, null if there is none</param>
+		/// <param name="tolerance">The tolerance on the distances</param>
+		/// <returns>True if the infinite lines intersect in a point of this segment. Return false if the line and the vector are parallel or overlap</returns>
 		public bool GetIntersection(Vector3d vector, out Point3d inters, double tolerance = GeometryBase.Tolerance)
         {
             Line3d vectorLine = new Line3d(Point3d.Origin, new Point3d(vector.X, vector.Y, vector.Z));
@@ -364,7 +422,7 @@ namespace GPC.Geometry
         /// Clone and move the cloned line with the vector <paramref name="movement"/>
         /// </summary>
         /// <param name="movement">The movement vector</param>
-        /// <returns>The new point moved</returns>
+        /// <returns>The new line moved</returns>
         public Line3d CloneAndMove(Vector3d movement)
         {
             var p = (Line3d)Clone();
@@ -407,8 +465,8 @@ namespace GPC.Geometry
         /// Tell if the given point is on the segment
         /// </summary>
         /// <param name="point">The point to test</param>
-        /// <param name="tolerance"></param>
-        /// <returns>True if the point is on the line</returns>
+        /// <param name="tolerance">The tolerance: the cross product of the vectors from the point to the ends is compared with the propagated tolerance</param>
+        /// <returns>True if the point is aligned with the ends and between them</returns>
         /// <exception cref="ArgumentNullException">Thrown when the point parameter is null</exception>
         public bool IsPointOnLine(Point3d point, double tolerance = GeometryBase.Tolerance)
         {
@@ -443,12 +501,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Tell if the given point is on the mathematical line
+        /// Tell if the given point is on the mathematical (infinite) line through the segment
         /// </summary>
         /// <param name="point">The point to test</param>
-        /// <param name="tolerance"></param>
+        /// <param name="tolerance">The tolerance on the distance</param>
         /// <returns>True if the point is on the mathematical line</returns>
-        /// <exception cref="ArgumentNullException">Thrown when the point parameter is null</exception>
         public bool IsPointOnInfiniteLine(Point3d point, double tolerance = GeometryBase.Tolerance)
         {
             return Ray.IsPointOnRay(point, tolerance);
@@ -469,11 +526,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Split line by a array of points.
+        /// Split the segment by an array of points: the points on the segment, not at its ends, are the ends of the parts
         /// </summary>
-        /// <param name="Points">The list of 3d points</param>
-        /// <param name="line">The list of resultant lines</param>
+        /// <param name="Points">The points (the ones out of the segment are ignored)</param>
         /// <param name="tolerance">Tolerance</param>
+        /// <returns>The parts, from the start to the end</returns>
         public Line3d[] Split(Point3d[] Points, double tolerance = GeometryBase.Tolerance)
         {
             List<double> param = new List<double>();
@@ -495,11 +552,12 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Split the line by parameters
+        /// Split the segment by parameters
         /// </summary>
-        /// <param name="parameters">The imput parameters (0 - start, 1 - end)</param>
-        /// <param name="tolerance">The tolerance</param>
-        /// <param name="line">The list of resultant lines</param>
+        /// <param name="parameters">The input parameters (0 - start, 1 - end); the ones not strictly inside (within the tolerance) and the repeated
+        /// ones are ignored</param>
+        /// <param name="tolerance">The tolerance on the parameters</param>
+        /// <returns>The parts, from the start to the end (the whole segment if there are no parameters)</returns>
         public Line3d[] Split(double[] parameters, double tolerance = GeometryBase.Tolerance)
         {
             List<double> param = new List<double>();
@@ -521,6 +579,11 @@ namespace GPC.Geometry
             return Split(paramArray);
         }
 
+        /// <summary>
+        /// Split the segment at sorted parameters
+        /// </summary>
+        /// <param name="paramArray">The parameters, sorted, strictly between 0 and 1</param>
+        /// <returns>The parts, from the start to the end (a new segment with the same end points if there are no parameters)</returns>
         private Line3d[] Split(double[] paramArray)
         {
             List<Point3d> points = new List<Point3d>();
@@ -557,11 +620,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Split the line in <paramref name="subdivision"/> parts
+        /// Split the segment in <paramref name="subdivision"/> equal parts
         /// </summary>
-        /// <param name="subdivision">number of parts</param>
-        /// <param name="lines">Output lines</param>
-        /// <param name="tolerance">The matching tolerance</param>
+        /// <param name="subdivision">The number of parts (0: no segment, 1: this segment)</param>
+        /// <returns>The parts, from the start to the end</returns>
         public Line3d[] Split(int subdivision)
         {
             if (subdivision == 0)
@@ -596,8 +658,8 @@ namespace GPC.Geometry
 		/// </summary>
 		/// <param name="semiRay">Semi infinite line (ray), which begins at first point and is infinite in the direction of the end point.</param>
 		/// <param name="inters">Point of intersection if any.</param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
+		/// <param name="tolerance">The tolerance on the distance between the lines</param>
+		/// <returns>True if the ray crosses the segment strictly between its ends, in front of the start of the ray</returns>
 		public bool GetIntersectionWihtSemiInfiniteRay(in Line3d semiRay, out Point3d inters, double tolerance = GeometryBase.Tolerance)
         {
             inters = null;
@@ -637,6 +699,12 @@ namespace GPC.Geometry
 
         #region Operators overrides
 
+        /// <summary>
+        /// Equality: true if the segments are the same object, both null or equal (<see cref="Equals(Line3d)"/>)
+        /// </summary>
+        /// <param name="line1">The first segment</param>
+        /// <param name="line2">The second segment</param>
+        /// <returns>True if the segments are equal</returns>
         public static bool operator ==(Line3d line1, Line3d line2)
         {
             if (ReferenceEquals(line1, line2))
@@ -648,6 +716,12 @@ namespace GPC.Geometry
             return line1.Equals(line2);
         }
 
+        /// <summary>
+        /// Inequality (see the equality operator)
+        /// </summary>
+        /// <param name="line1">The first segment</param>
+        /// <param name="line2">The second segment</param>
+        /// <returns>True if the segments are different</returns>
         public static bool operator !=(Line3d line1, Line3d line2)
         {
             return !(line1 == line2);
@@ -657,6 +731,11 @@ namespace GPC.Geometry
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Serializes the segment: the <see cref="BaseObject.Guid"/> and the ends
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -664,11 +743,21 @@ namespace GPC.Geometry
             info.AddValue("End", _end, typeof(Point3d));
         }
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Line3d)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal segment</returns>
         public override bool Equals(object obj)
         {
             return Equals(obj as Line3d);
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(Line3d)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal segment</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Line3d line)
@@ -678,9 +767,9 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// 
+        /// Equality of the ends within the tolerance, in either direction
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">The segment to compare</param>
         /// <returns>True if Start and End of line and otherLine are equals.
         /// True also if otherLine is flipped (line.Start == otherLine.End AND line.End == otherLine.Start)</returns>
         public bool Equals(Line3d other)
@@ -689,7 +778,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// 
+        /// The hash code, independent of the direction
         /// </summary>
         /// <returns>The hashCode. If (line.Start == otherLine.End AND line.End == otherLine.Start), line and otherLine returns the same hashcode</returns>
         public override int GetHashCode()
@@ -708,11 +797,19 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// A description of the segment
+        /// </summary>
+        /// <returns>"Start: ... End: ..."</returns>
         public override string ToString()
         {
             return $"Start: {_start} End: {_end}";
         }
 
+        /// <summary>
+        /// The text shown by the debugger
+        /// </summary>
+        /// <returns>See <see cref="ToString"/></returns>
         private string GetDebuggerDisplay()
         {
             return ToString();

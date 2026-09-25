@@ -19,20 +19,38 @@ namespace GPC.Geometry.BVH
         /// </summary>
         private class AABB
         {
+            /// <summary>
+            /// The minimum corner
+            /// </summary>
             public Point3d Min;
+            /// <summary>
+            /// The maximum corner
+            /// </summary>
             public Point3d Max;
 
+            /// <summary>
+            /// Creates an empty box (minimum at +MaxValue, maximum at -MaxValue)
+            /// </summary>
             public AABB()
             {
                 Min = new Point3d(double.MaxValue, double.MaxValue, double.MaxValue);
                 Max = new Point3d(-double.MaxValue, -double.MaxValue, -double.MaxValue);
             }
 
+            /// <summary>
+            /// Creates a box from its corners (the instances are kept)
+            /// </summary>
+            /// <param name="min">The minimum corner</param>
+            /// <param name="max">The maximum corner</param>
             public AABB(Point3d min, Point3d max)
             {
                 Min = min; Max = max;
             }
 
+            /// <summary>
+            /// The center of the box
+            /// </summary>
+            /// <returns>The middle point of the corners</returns>
             public Point3d GetCenter()
             {
                 return new Point3d(
@@ -42,11 +60,21 @@ namespace GPC.Geometry.BVH
                     );
             }
 
+            /// <summary>
+            /// Tell if a point is inside the box (border included)
+            /// </summary>
+            /// <param name="point">The point</param>
+            /// <returns>True if the point is inside</returns>
             public bool Contains(Point3d point)
             {
                 return point.X >= Min.X && point.Y >= Min.Y && point.Z >= Min.Z && point.X <= Max.X && point.Y <= Max.Y && point.Z <= Max.Z;
             }
 
+            /// <summary>
+            /// Tell if two boxes overlap (touching boxes included)
+            /// </summary>
+            /// <param name="box">The other box</param>
+            /// <returns>True if the boxes overlap</returns>
             public bool Intersects(AABB box)
             {
                 if (Min.X > box.Max.X || Min.Y > box.Max.Y || Min.Z > box.Max.Z)
@@ -60,6 +88,10 @@ namespace GPC.Geometry.BVH
                 return true;
             }
 
+            /// <summary>
+            /// Enlarges the box to contain another box (the coordinates of the corners are changed in place)
+            /// </summary>
+            /// <param name="box">The box to contain</param>
             public void Union(AABB box)
             {
                 this.Min.X = Math.Min(this.Min.X, box.Min.X);
@@ -70,6 +102,10 @@ namespace GPC.Geometry.BVH
                 this.Max.Z = Math.Max(this.Max.Z, box.Max.Z);
             }
 
+            /// <summary>
+            /// Enlarges the box to contain other boxes
+            /// </summary>
+            /// <param name="boxes">The boxes to contain</param>
             public void SetVolume(IEnumerable<AABB> boxes)
             {
                 for (int i = 0; i < boxes.Count(); ++i)
@@ -84,10 +120,22 @@ namespace GPC.Geometry.BVH
         /// </summary>
         private class AABBNode
         {
+            /// <summary>
+            /// The id of the point (leaf nodes); -1 for the internal nodes
+            /// </summary>
             public int Id;
+            /// <summary>
+            /// The box of the node
+            /// </summary>
             public AABB Box;
+            /// <summary>
+            /// The children of the node (empty for the leaves)
+            /// </summary>
             public List<AABBNode> Children;
 
+            /// <summary>
+            /// Creates an internal node with an empty box
+            /// </summary>
             public AABBNode()
             {
                 Id = -1;
@@ -95,12 +143,21 @@ namespace GPC.Geometry.BVH
                 Children = new List<AABBNode>();
             }
 
+            /// <summary>
+            /// Creates a node with a cube around a point. Not used: <c>Box</c> is null, so it throws <see cref="NullReferenceException"/>
+            /// </summary>
+            /// <param name="coord">The center of the cube</param>
+            /// <param name="size">Half the side of the cube</param>
             public AABBNode(Point3d coord, double size)
             {
                 Box.Min = new Point3d(coord.X - size, coord.Y - size, coord.Z - size);
                 Box.Max = new Point3d(coord.X + size, coord.Y + size, coord.Z + size);
             }
 
+            /// <summary>
+            /// Splits the box in two halves across its longest side
+            /// </summary>
+            /// <returns>The two halves; the box itself if it has zero size</returns>
             public AABB[] HalveVolume()
             {
                 var sizes = new double[3] {
@@ -137,6 +194,10 @@ namespace GPC.Geometry.BVH
                 return new AABB[1] { Box };
             }
 
+            /// <summary>
+            /// Enlarges the box of the node to contain the boxes of the children
+            /// </summary>
+            /// <param name="children">The children</param>
             public void SetVolume(IEnumerable<AABBNode> children)
             {
                 for (int i = 0; i < children.Count(); i++)
@@ -150,8 +211,8 @@ namespace GPC.Geometry.BVH
         /// <summary>
         /// Constructor of an Axis Aligned Bounding Box Bounding Volulme Hierarchy used to search points
         /// </summary>
-        /// <param name="points"> The points used as nodes in the hierarchy</param>
-        /// <param name="ids"> The ids of the points</param>
+        /// <param name="points">The points used as nodes in the hierarchy (the instances are kept)</param>
+        /// <param name="ids">The ids of the points; if the counts are different, the extra points or ids are ignored</param>
         public AABBBVH(IEnumerable<Point3d> points, IEnumerable<int> ids)
         {
             _root = new AABBNode();
@@ -226,11 +287,11 @@ namespace GPC.Geometry.BVH
         }
 
         /// <summary>
-        /// Search intersections with a point in a given radius
+        /// Search the points closer than a radius to a given point
         /// </summary>
-        /// <param name="point"> Origin point where to search </param>
-        /// <param name="radius"> Radius of the search </param>
-        /// <returns>Only leaf nodes ids within the radius</returns>
+        /// <param name="point">Origin point where to search</param>
+        /// <param name="radius">Radius of the search</param>
+        /// <returns>The ids of the points not farther than <paramref name="radius"/> from <paramref name="point"/></returns>
         public List<int> GetIntersections(Point3d point, double radius)
         {
             var fullRadius = new Point3d(1, 1, 1) * (radius * Math.Sqrt(2));
@@ -283,6 +344,9 @@ namespace GPC.Geometry.BVH
     }
 
 
+    /// <summary>
+    /// Bounding Volume Hierarchy of spheres, to search points or elements (groups of points) near a point or crossed by a line
+    /// </summary>
     public class SphereBVH
     {
         /// <summary>
@@ -295,31 +359,60 @@ namespace GPC.Geometry.BVH
         /// </summary>
         private class Sphere
         {
+            /// <summary>
+            /// The center
+            /// </summary>
             public Point3d Coord;
+            /// <summary>
+            /// The radius
+            /// </summary>
             public double Radius;
 
+            /// <summary>
+            /// Creates a sphere with center at the origin and zero radius
+            /// </summary>
             public Sphere()
             {
                 Coord = new Point3d(0, 0, 0);
                 Radius = 0;
             }
 
+            /// <summary>
+            /// Creates a sphere (the instance of the center is kept)
+            /// </summary>
+            /// <param name="coord">The center</param>
+            /// <param name="radius">The radius</param>
             public Sphere(Point3d coord, double radius)
             {
                 Coord = coord;
                 Radius = radius;
             }
 
+            /// <summary>
+            /// Tell if a point is inside the sphere (surface included)
+            /// </summary>
+            /// <param name="point">The point</param>
+            /// <returns>True if the point is inside</returns>
             public bool Contains(Point3d point)
             {
                 return Coord.DistanceTo(point) <= Radius;
             }
 
+            /// <summary>
+            /// Tell if two spheres overlap (touching spheres included)
+            /// </summary>
+            /// <param name="sphere">The other sphere</param>
+            /// <returns>True if the spheres overlap</returns>
             public bool Intersects(Sphere sphere)
             {
                 return Coord.DistanceTo(sphere.Coord) <= Radius + sphere.Radius;
             }
 
+            /// <summary>
+            /// Tell if the infinite line of a ray crosses or touches the sphere (both the directions are considered)
+            /// </summary>
+            /// <param name="ray">The ray</param>
+            /// <returns>True if the line crosses the sphere</returns>
             public bool RayIntersects(Ray3d ray)
             {
                 var oc = new Vector3d(ray.Point - Coord);
@@ -330,6 +423,10 @@ namespace GPC.Geometry.BVH
                 return discriminant >= 0;
             }
 
+            /// <summary>
+            /// Changes the sphere into the smallest sphere that contains this sphere and another one
+            /// </summary>
+            /// <param name="sphere">The other sphere</param>
             public void Union(Sphere sphere)
             {
                 var dist = Coord.DistanceTo(sphere.Coord);
@@ -352,6 +449,11 @@ namespace GPC.Geometry.BVH
                     Radius = (Radius + dist + sphere.Radius) * 0.5;
                 }
             }
+            /// <summary>
+            /// Sets the sphere around other spheres: the center is the mean of the centers (added to the current one: the sphere must be new),
+            /// the radius the largest distance of their surfaces
+            /// </summary>
+            /// <param name="spheres">The spheres to contain (not empty)</param>
             public void SetVolume(IEnumerable<Sphere> spheres)
             {
                 for (int i = 0; i < spheres.Count(); ++i)
@@ -379,10 +481,22 @@ namespace GPC.Geometry.BVH
         /// </summary>
         private class SphereNode
         {
+            /// <summary>
+            /// The id of the point or element (leaf nodes); -1 for the internal nodes
+            /// </summary>
             public int Id;
+            /// <summary>
+            /// The sphere of the node
+            /// </summary>
             public Sphere Sphere;
+            /// <summary>
+            /// The children of the node (empty for the leaves)
+            /// </summary>
             public List<SphereNode> Children;
 
+            /// <summary>
+            /// Creates an internal node with a sphere at the origin and zero radius
+            /// </summary>
             public SphereNode()
             {
                 Id = -1;
@@ -390,12 +504,22 @@ namespace GPC.Geometry.BVH
                 Children = new List<SphereNode>();
             }
 
+            /// <summary>
+            /// Creates a node with a sphere. Not used: <c>Sphere</c> is null, so it throws <see cref="NullReferenceException"/>
+            /// </summary>
+            /// <param name="coord">The center</param>
+            /// <param name="size">The radius</param>
             public SphereNode(Point3d coord, double size)
             {
                 Sphere.Coord = coord;
                 Sphere.Radius = size;
             }
 
+            /// <summary>
+            /// Sets the sphere of a new node around the spheres of the children: the center is the mean of their centers, the radius the largest
+            /// distance of their surfaces
+            /// </summary>
+            /// <param name="children">The children (not empty)</param>
             public void SetVolume(IEnumerable<SphereNode> children)
             {
                 for (int i = 0; i < children.Count(); ++i)
@@ -419,8 +543,8 @@ namespace GPC.Geometry.BVH
         /// <summary>
         /// Constructor of a Sphere Bounding Volulme Hierarchy used to search points
         /// </summary>
-        /// <param name="points"> The points used as nodes in the hierarchy</param>
-        /// <param name="ids"> The ids of the points</param>
+        /// <param name="points">The points used as nodes in the hierarchy (the instances are kept)</param>
+        /// <param name="ids">The ids of the points; if the counts are different, the extra points or ids are ignored</param>
         public SphereBVH(IEnumerable<Point3d> points, IEnumerable<int> ids)
         {
             _root = new SphereNode();
@@ -442,8 +566,8 @@ namespace GPC.Geometry.BVH
         /// <summary>
         /// Constructor of a Sphere Bounding Volulme Hierarchy used to search elements
         /// </summary>
-        /// <param name="elements"> The elements as list of points defining a volume </param>
-        /// <param name="ids"> The ids of the elements </param>
+        /// <param name="elements">The elements as list of points defining a volume (each element must have at least one point)</param>
+        /// <param name="ids">The ids of the elements; if the counts are different, the extra elements or ids are ignored</param>
         public SphereBVH(IEnumerable<IEnumerable<Point3d>> elements, IEnumerable<int> ids)
         {
             _root = new SphereNode();
@@ -469,11 +593,12 @@ namespace GPC.Geometry.BVH
 
 
         /// <summary>
-        /// Recursion method to build the BVH
+        /// Recursion method to build the BVH: the nodes are sorted along an axis and split in <paramref name="divisions"/> groups (plus one for the remainder)
         /// </summary>
-        /// <param name="node"> Current recursion node</param>
-        /// <param name="toAdd"> Nodes to add to current node</param>
-        /// <param name="divisions"> number of splits of the nodes to add</param>
+        /// <param name="node">Current recursion node</param>
+        /// <param name="toAdd">Nodes to add to current node (the list is sorted in place)</param>
+        /// <param name="axis">The axis of the sorting: 0 X, 1 Y, 2 Z (the next level uses the next axis)</param>
+        /// <param name="divisions">The maximum number of children of a node</param>
         /// <returns>true if it is a leaf node, false otherwise</returns>
         private static bool BuildRecursion(ref SphereNode node, List<SphereNode> toAdd, int axis, int divisions = 8)
         {
@@ -527,11 +652,12 @@ namespace GPC.Geometry.BVH
         }
 
         /// <summary>
-        /// Search intersections with a point in a given radius
+        /// Search the points or the elements near a point
         /// </summary>
-        /// <param name="point"> Origin point where to search </param>
-        /// <param name="radius"> Radius of the search </param>
-        /// <returns>Only leaf nodes ids within the radius</returns>
+        /// <param name="point">Origin point where to search</param>
+        /// <param name="radius">Radius of the search</param>
+        /// <returns>The ids of the leaves whose sphere overlaps the sphere of the search: the points within the radius, the elements that can be
+        /// within the radius (their bounding sphere is)</returns>
         public List<int> GetIntersections(Point3d point, double radius)
         {
             var sphere = new Sphere(point, radius);
@@ -581,10 +707,10 @@ namespace GPC.Geometry.BVH
         }
 
         /// <summary>
-        /// Search intersections with a ray
+        /// Search the points or the elements crossed by a line
         /// </summary>
-        /// <param name="ray"> The ray that intesects the spheres </param>
-        /// <returns>Only leaf nodes ids within the radius</returns>
+        /// <param name="ray">The ray that intesects the spheres (its infinite line)</param>
+        /// <returns>The ids of the leaves whose sphere is crossed by the line</returns>
         public List<int> GetRayIntersections(Ray3d ray)
         {
             var intersectingNodes = new List<SphereNode>();

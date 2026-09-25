@@ -14,7 +14,12 @@ namespace GPC.Geometry
         /// </summary>
         private const double Range = 1E9;
 
-        /// <returns>The power of ten that brings the largest coordinate close to <see cref="Range"/> (relative precision 1E-9)</returns>
+        /// <summary>
+        /// The scale factor for the coordinates of the polygons of an operation
+        /// </summary>
+        /// <param name="maxAbsCoordinate">The largest absolute coordinate of the polygons</param>
+        /// <returns>The power of ten that brings the largest coordinate close to <see cref="Range"/> (relative precision 1E-9); 1E6 if the
+        /// coordinate is zero or not finite</returns>
         public static double Factor(double maxAbsCoordinate)
         {
             if (!(maxAbsCoordinate > 0) || double.IsInfinity(maxAbsCoordinate) || double.IsNaN(maxAbsCoordinate))
@@ -23,12 +28,21 @@ namespace GPC.Geometry
             return Math.Pow(10.0, Math.Floor(Math.Log10(Range / maxAbsCoordinate)));
         }
 
+        /// <summary>
+        /// Converts a coordinate to the integer used by Clipper
+        /// </summary>
+        /// <param name="coordinate">The coordinate</param>
+        /// <param name="factor">The scale factor (see <see cref="Factor"/>)</param>
         /// <returns>The scaled and rounded coordinate</returns>
         public static long Scale(double coordinate, double factor)
         {
             return (long)Math.Round(coordinate * factor);
         }
 
+        /// <summary>
+        /// The largest absolute coordinate of the vertices of polygons in the space (Z is ignored)
+        /// </summary>
+        /// <param name="polygons">The polygons (the null ones are skipped)</param>
         /// <returns>The largest absolute coordinate (X and Y) of the polygons</returns>
         public static double MaxAbsCoordinate(params Polygon3d[] polygons)
         {
@@ -43,6 +57,10 @@ namespace GPC.Geometry
             return max;
         }
 
+        /// <summary>
+        /// The largest absolute coordinate of the vertices of planar polygons
+        /// </summary>
+        /// <param name="polygons">The polygons (the null ones are skipped)</param>
         /// <returns>The largest absolute coordinate (X and Y) of the polygons</returns>
         public static double MaxAbsCoordinate(params Polygon2d[] polygons)
         {
@@ -57,6 +75,11 @@ namespace GPC.Geometry
             return max;
         }
 
+        /// <summary>
+        /// The largest absolute coordinate of the vertices of two groups of shapes
+        /// </summary>
+        /// <param name="a">The first group of shapes</param>
+        /// <param name="b">The second group of shapes</param>
         /// <returns>The largest absolute coordinate (X and Y) of the fills and of the holes of the shapes</returns>
         public static double MaxAbsCoordinate(Shape[] a, Shape[] b)
         {

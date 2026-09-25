@@ -5,34 +5,75 @@ using MathNet.Numerics.LinearAlgebra;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// A right handed orthonormal coordinate system: origin and unit axes V1 (X), V2 (Y), V3 (Z). It moves points, vectors, lines,
+    /// polygons and shapes between the global system and the local one
+    /// </summary>
     [Serializable]
     public class CoordinateSystem : GeometryBase, ISerializable, ICloneable, IEquatable<CoordinateSystem>
     {
         #region Variables
 
+        /// <summary>
+        /// The origin, in global coordinates
+        /// </summary>
         protected Point3d _origin;
+        /// <summary>
+        /// The unit X axis, in global coordinates
+        /// </summary>
         protected Vector3d _v1;
+        /// <summary>
+        /// The unit Y axis, in global coordinates
+        /// </summary>
         protected Vector3d _v2;
+        /// <summary>
+        /// The unit Z axis, in global coordinates
+        /// </summary>
         protected Vector3d _v3;
+        /// <summary>
+        /// The local coordinates of the global origin: minus the origin projected on the axes (the translation of <see cref="ToLocal(Point3d)"/>)
+        /// </summary>
         protected Vector3d _InvOrigin;
+        /// <summary>
+        /// The transformation matrix from local to global coordinates (see <see cref="TrfMatrix"/>)
+        /// </summary>
         protected Matrix<double> _trfMatrix;
+        /// <summary>
+        /// The name of the coordinate system
+        /// </summary>
         protected string _name;
 
-        // components of the axes, of the origin and of the inverse origin (the transformations read these fields instead of the
-        // indexer of the MathNet matrix: about 10 times faster)
+        /// <summary>
+        /// The components of the axes (the transformations read these fields instead of the indexer of the MathNet matrix: about 10 times faster)
+        /// </summary>
         [NonSerialized] private double _v1x, _v1y, _v1z, _v2x, _v2y, _v2z, _v3x, _v3y, _v3z;
+        /// <summary>
+        /// The components of the origin and of the inverse origin (see <see cref="_InvOrigin"/>)
+        /// </summary>
         [NonSerialized] private double _ox, _oy, _oz, _ix, _iy, _iz;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The origin, in global coordinates
+        /// </summary>
         public Point3d Origin => _origin;
 
+        /// <summary>
+        /// The unit X axis, in global coordinates
+        /// </summary>
         public Vector3d V1 => _v1;
 
+        /// <summary>
+        /// The unit Y axis, in global coordinates
+        /// </summary>
         public Vector3d V2 => _v2;
 
+        /// <summary>
+        /// The unit Z axis, in global coordinates
+        /// </summary>
         public Vector3d V3 => _v3;
 
         /// <summary>
@@ -41,8 +82,14 @@ namespace GPC.Geometry
         /// <remarks>Size of the matrix is 3 x 4. Where the 4th column rapresent the origin of the reference system </remarks>
         public Matrix<double> TrfMatrix => _trfMatrix;
 
+        /// <summary>
+        /// The name of the coordinate system
+        /// </summary>
         public string Name => _name;
 
+        /// <summary>
+        /// A new global coordinate system: origin (0, 0, 0) and the axes X, Y, Z
+        /// </summary>
         public static CoordinateSystem Global => new CoordinateSystem(Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, "Global coordinate system");
 
 		#endregion
@@ -63,13 +110,14 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Create a new right handed Coordinate System
+		/// Create a new right handed Coordinate System: X along <paramref name="v1"/>, Z along <paramref name="v1"/> × <paramref name="v2"/>
 		/// </summary>
 		/// <param name="origin">The origin point</param>
-		/// <param name="v1">The X axis vector</param>
-		/// <param name="v2">The Y axis vector</param>
-		/// <param name="name"></param>
-		/// <param name="tolerance"></param>
+		/// <param name="v1">The X axis vector (it is unitized in place)</param>
+		/// <param name="v2">The Y axis vector, orthogonal to <paramref name="v1"/> (it is unitized in place)</param>
+		/// <param name="name">The name of the CS</param>
+		/// <param name="tolerance">The angular tolerance of the orthogonality check</param>
+		/// <exception cref="ArgumentException">If the vectors are not orthogonal</exception>
 		public CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, string name = "", double tolerance = GeometryBase.AngularTolerance)
             : this(origin, v1, v2, v1.CrossProduct(v2), name, Guid.Empty, tolerance)
         {
@@ -80,18 +128,23 @@ namespace GPC.Geometry
         /// Create a new Coordinate System
         /// </summary>
         /// <param name="origin">The origin point</param>
-        /// <param name="v1">The X axis vector</param>
-        /// <param name="v2">The Y axis vector</param>
-        /// <param name="v3">The Z axis vector</param>
+        /// <param name="v1">The X axis vector (it is unitized in place)</param>
+        /// <param name="v2">The Y axis vector (it is unitized in place)</param>
+        /// <param name="v3">The Z axis vector (it is unitized in place)</param>
         /// <param name="name">The name of the CS</param>
-        /// <param name="tolerance">The tolerance</param>
-        /// <remarks>The 3 vector must be ortogonals</remarks>
+        /// <param name="tolerance">The angular tolerance of the orthogonality check</param>
+        /// <remarks>The 3 vector must be orthogonal (the check is on v1 - v2 and v1 - v3)</remarks>
+        /// <exception cref="ArgumentException">If the vectors are not orthogonal</exception>
         public CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name = "", double tolerance = GeometryBase.AngularTolerance)
             : this(origin, v1, v2, v3, name, Guid.Empty, tolerance)
         {
 
         }
 
+        /// <summary>
+        /// Creates a copy of a coordinate system (with a new <see cref="BaseObject.Guid"/>)
+        /// </summary>
+        /// <param name="coordinateSystem">The coordinate system to copy</param>
         public CoordinateSystem(CoordinateSystem coordinateSystem)
             :this(coordinateSystem.Origin, coordinateSystem.V1, coordinateSystem.V2, coordinateSystem.Name)
 		{
@@ -127,29 +180,30 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Create a new right handed Coordinate System
+        /// Create a new right handed Coordinate System: X along <paramref name="v1"/>, Z along <paramref name="v1"/> × <paramref name="v2"/>
         /// </summary>
         /// <param name="origin">The origin point</param>
         /// <param name="v1">The X axis vector</param>
-        /// <param name="v2">The Y axis vector</param>
+        /// <param name="v2">The Y axis vector, orthogonal to <paramref name="v1"/></param>
         /// <param name="name">The name of the CS</param>
-        /// <param name="guid">The unique GUID</param>
+        /// <param name="guid">The unique GUID. <see cref="Guid.Empty"/>: generated when it is requested</param>
         protected CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, string name, Guid guid)
             : this(origin, v1, v2, v1.CrossProduct(v2), name, guid)
         {
         }
 
         /// <summary>
-        /// Constructor for generic Coordinate System 
+        /// Constructor for generic Coordinate System
         /// </summary>
         /// <param name="origin">The origin point</param>
-        /// <param name="v1">The X axis vector</param>
-        /// <param name="v2">The Y axis vector</param>
-        /// <param name="v3">The Z axis vector</param>
+        /// <param name="v1">The X axis vector (it is unitized in place)</param>
+        /// <param name="v2">The Y axis vector (it is unitized in place)</param>
+        /// <param name="v3">The Z axis vector (it is unitized in place)</param>
         /// <param name="name">The name of the CS</param>
         /// <param name="guid">The unique GUID. <see cref="Guid.Empty"/>: generated when it is requested</param>
-        /// <param name="tolerance">The tolerance</param>
-        /// <remarks>The 3 vector must be ortogonals</remarks>
+        /// <param name="tolerance">The angular tolerance of the orthogonality check</param>
+        /// <remarks>The 3 vector must be orthogonal (the check is on v1 - v2 and v1 - v3)</remarks>
+        /// <exception cref="ArgumentException">If the vectors are not orthogonal</exception>
         protected CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name, Guid guid, double tolerance = GeometryBase.AngularTolerance)
         {
             v1.Unitize();
@@ -175,6 +229,11 @@ namespace GPC.Geometry
             SetTransformationMatrix(v1, v2, v3);
         }
 
+        /// <summary>
+        /// Deserialization constructor (the saved <see cref="BaseObject.Guid"/> is not read)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         protected CoordinateSystem(SerializationInfo info, StreamingContext context)
             : base()
         {
@@ -192,6 +251,10 @@ namespace GPC.Geometry
 
         #region Public Methods Specific
 
+        /// <summary>
+        /// Sets the origin (a copy of <paramref name="origin"/>) and updates the transformation
+        /// </summary>
+        /// <param name="origin">The new origin, in global coordinates</param>
         public virtual void SetOrigin(Point3d origin)
         {
             _trfMatrix[0, 3] = origin.X;
@@ -204,6 +267,9 @@ namespace GPC.Geometry
                 SetInverseOrigin();
         }
 
+        /// <summary>
+        /// Computes <see cref="_InvOrigin"/> from the origin and the axes
+        /// </summary>
         private void SetInverseOrigin()
         {
             _InvOrigin = new Vector3d(-(_trfMatrix[0, 0] * Origin.X + _trfMatrix[1, 0] * Origin.Y + _trfMatrix[2, 0] * Origin.Z),
@@ -228,11 +294,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Set the trasformation matrix from 3 points
+        /// Set the transformation matrix from 3 points: X towards <paramref name="p2"/>, Y towards <paramref name="p3"/> (made orthogonal to X)
         /// </summary>
         /// <param name="p1">The origin</param>
         /// <param name="p2">A point on the X axes</param>
-        /// <param name="p3">A point on the Y axes</param>
+        /// <param name="p3">A point on the XY plane, on the side of the positive Y</param>
         protected virtual void SetTransformationMatrix(Point3d p1, Point3d p2, Point3d p3)
         {
             SetOrigin(p1);
@@ -250,7 +316,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Set the trasformation matrix from 3 vectors
+        /// Set the transformation matrix from 3 unit orthogonal vectors (the instances are kept)
         /// </summary>
         /// <param name="v1">X axis</param>
         /// <param name="v2">Y axis</param>
@@ -313,10 +379,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move a polygon from global to local system
+        /// Move a polygon from global to local system, on the local XY plane
         /// </summary>
         /// <param name="polygon">The polygon in global system</param>
-        /// <returns>The poligon in local system</returns>
+        /// <returns>A new polygon with the local X and Y of the vertices (the local Z is dropped)</returns>
         public virtual Polygon2d ToLocal(Polygon3d polygon)
         {
             Polygon2d polygonLocal = new Polygon2d();
@@ -328,10 +394,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move a shape from glocal to local system
+        /// Move a shape from global to local system, on the local XY plane
         /// </summary>
         /// <param name="shape">The shape in global system</param>
-        /// <returns>A new shape in local system</returns>
+        /// <returns>A new shape with the local X and Y of the vertices (the local Z is dropped)</returns>
         public virtual Shape2d ToLocal(Shape shape)
         {
             Polygon2d fill = ToLocal(shape.Fill);
@@ -447,7 +513,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Rotate the coordinate system around X global axis.
+        /// Rotate the axes of the coordinate system around X global axis (the origin does not change)
         /// </summary>
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateX(double angle)
@@ -495,7 +561,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Rotate the coordinate system around Y global axis.
+        /// Rotate the axes of the coordinate system around Y global axis (the origin does not change)
         /// </summary>
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateY(double angle)
@@ -543,7 +609,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Rotate the coordinate system around Z global axis.
+        /// Rotate the axes of the coordinate system around Z global axis (the origin does not change)
         /// </summary>
         /// <param name="angle">The angle rotation in radians</param>
         public void RotateZ(double angle)
@@ -591,7 +657,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Rotate the coordinate system 
+        /// Rotate the axes of the coordinate system around the global axes: first X, then Y, then Z
         /// </summary>
         /// <param name="rotateX">The angle rotation  around X-axis in radians</param>
         /// <param name="rotateY">The angle rotation  around Y-axis in radians</param>
@@ -652,21 +718,42 @@ namespace GPC.Geometry
             SetTransformationMatrix(Rotate(_v1), Rotate(_v2), Rotate(_v3));
         }
 
+        /// <summary>
+        /// Not implemented: use <see cref="SetOrigin"/>
+        /// </summary>
+        /// <param name="v1">The translation along X</param>
+        /// <param name="v2">The translation along Y</param>
+        /// <param name="v3">The translation along Z</param>
+        /// <exception cref="NotImplementedException">Always</exception>
         public override void Move(double v1, double v2, double v3)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Not implemented: use <see cref="SetOrigin"/>
+        /// </summary>
+        /// <param name="vector">The translation</param>
+        /// <exception cref="NotImplementedException">Always</exception>
         public override void Move(Vector3d vector)
         {
             throw new NotImplementedException();
         }
 
+		/// <summary>
+		/// Creates a copy of the coordinate system (see the copy constructor)
+		/// </summary>
+		/// <returns>The copy</returns>
 		public override object Clone()
 		{
             return new CoordinateSystem(this);
 		}
 
+        /// <summary>
+        /// Serializes the coordinate system: the <see cref="BaseObject.Guid"/>, the origin, the axes, the matrix and the name
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -679,6 +766,11 @@ namespace GPC.Geometry
             info.AddValue("Name", _name);
         }
 
+        /// <summary>
+        /// Equality of origin, axes and name within the tolerance (<see cref="Equals(CoordinateSystem)"/> does not compare the name)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal coordinate system</returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj))
@@ -696,6 +788,10 @@ namespace GPC.Geometry
                    _name == system._name;
         }
 
+        /// <summary>
+        /// The hash code of the exact origin, axes and name
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -712,6 +808,11 @@ namespace GPC.Geometry
             }
         }
 
+		/// <summary>
+		/// Equality of origin and axes within the tolerance (the name is not compared)
+		/// </summary>
+		/// <param name="other">The coordinate system to compare</param>
+		/// <returns>True if the coordinate systems are equal</returns>
 		public bool Equals(CoordinateSystem other)
 		{
             if (ReferenceEquals(this, other))
@@ -720,6 +821,11 @@ namespace GPC.Geometry
             return !(other is null) && other._origin.Equals(_origin) && other._v1.Equals(_v1) && other._v2.Equals(_v2) && other._v3.Equals(_v3);
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(CoordinateSystem)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal coordinate system</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is CoordinateSystem cs)

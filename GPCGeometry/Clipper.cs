@@ -68,21 +68,43 @@ namespace GPC.Geometry
     using Path = List<IntPoint>;
     using Paths = List<List<IntPoint>>;
 
+    /// <summary>
+    /// A point with double coordinates (used by the offsetting)
+    /// </summary>
     public struct DoublePoint
     {
+        /// <summary>
+        /// The X coordinate
+        /// </summary>
         public double X;
+        /// <summary>
+        /// The Y coordinate
+        /// </summary>
         public double Y;
 
+        /// <summary>
+        /// Creates a point
+        /// </summary>
+        /// <param name="x">The X coordinate</param>
+        /// <param name="y">The Y coordinate</param>
         public DoublePoint(double x = 0, double y = 0)
         {
             this.X = x; this.Y = y;
         }
 
+        /// <summary>
+        /// Creates a copy of a point
+        /// </summary>
+        /// <param name="dp">The point to copy</param>
         public DoublePoint(DoublePoint dp)
         {
             this.X = dp.X; this.Y = dp.Y;
         }
 
+        /// <summary>
+        /// Creates a point from an integer point
+        /// </summary>
+        /// <param name="ip">The integer point</param>
         public DoublePoint(IntPoint ip)
         {
             this.X = ip.X; this.Y = ip.Y;
@@ -93,6 +115,11 @@ namespace GPC.Geometry
     // PolyTree & PolyNode classes
     //------------------------------------------------------------------------------
 
+    /// <summary>
+    /// The result of <see cref="Clipper.Execute(ClipType, PolyTree, PolyFillType)"/> or of <see cref="ClipperOffset.Execute(ref PolyTree, double)"/>
+    /// as a tree: the children of the root are the outer polygons (and the open paths), their children are the holes, the children of the
+    /// holes are the outer polygons inside them, and so on. The root itself has no contour
+    /// </summary>
     public class PolyTree : PolyNode
     {
         internal List<PolyNode> m_AllPolys = new List<PolyNode>();
@@ -100,6 +127,9 @@ namespace GPC.Geometry
         //The GC probably handles this cleanup more efficiently ...
         //~PolyTree(){Clear();}
 
+        /// <summary>
+        /// Removes all the nodes
+        /// </summary>
         public void Clear()
         {
             for (int i = 0; i < m_AllPolys.Count; i++)
@@ -108,6 +138,10 @@ namespace GPC.Geometry
             m_Childs.Clear();
         }
 
+        /// <summary>
+        /// The first node of the traversal of the tree (see <see cref="PolyNode.GetNext"/>)
+        /// </summary>
+        /// <returns>The first child of the root; null if the tree is empty</returns>
         public PolyNode GetFirst()
         {
             if (m_Childs.Count > 0)
@@ -116,6 +150,9 @@ namespace GPC.Geometry
                 return null;
         }
 
+        /// <summary>
+        /// The number of polygons in the tree (without the hidden outer polygon of the negative offsets)
+        /// </summary>
         public int Total
         {
             get
@@ -128,6 +165,9 @@ namespace GPC.Geometry
         }
     }
 
+    /// <summary>
+    /// A polygon (or an open path) of a <see cref="PolyTree"/>, with its parent and its children
+    /// </summary>
     public class PolyNode
     {
         internal PolyNode m_Parent;
@@ -149,11 +189,17 @@ namespace GPC.Geometry
             return result;
         }
 
+        /// <summary>
+        /// The number of children
+        /// </summary>
         public int ChildCount
         {
             get { return m_Childs.Count; }
         }
 
+        /// <summary>
+        /// The vertices of the polygon (the list of the node)
+        /// </summary>
         public Path Contour
         {
             get { return m_polygon; }
@@ -167,6 +213,10 @@ namespace GPC.Geometry
             Child.m_Index = cnt;
         }
 
+        /// <summary>
+        /// The next node of the depth-first traversal of the tree: the first child, otherwise the next sibling of the node or of its ancestors
+        /// </summary>
+        /// <returns>The next node; null at the end of the tree</returns>
         public PolyNode GetNext()
         {
             if (m_Childs.Count > 0)
@@ -185,21 +235,33 @@ namespace GPC.Geometry
                 return m_Parent.m_Childs[m_Index + 1];
         }
 
+        /// <summary>
+        /// The children: the holes of an outer polygon, the polygons inside a hole
+        /// </summary>
         public List<PolyNode> Childs
         {
             get { return m_Childs; }
         }
 
+        /// <summary>
+        /// The parent node (the root for the outer polygons); null for the root
+        /// </summary>
         public PolyNode Parent
         {
             get { return m_Parent; }
         }
 
+        /// <summary>
+        /// True if the polygon is a hole: its depth in the tree is even (the children of the root are not holes)
+        /// </summary>
         public bool IsHole
         {
             get { return IsHoleNode(); }
         }
 
+        /// <summary>
+        /// True if the node is an open path (a line)
+        /// </summary>
         public bool IsOpen { get; set; }
     }
 
@@ -211,6 +273,9 @@ namespace GPC.Geometry
     //    val3.ToString => "85070591730234615847396907784232501249" (8.5e+37)
     //------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Signed 128-bit integer: exact products of 64-bit coordinates (e.g. (2^63 - 1)^2 = 8.5E+37) for the coordinates beyond <see cref="ClipperBase.loRange"/>
+    /// </summary>
     internal struct Int128
     {
         private Int64 hi;
@@ -349,9 +414,18 @@ namespace GPC.Geometry
     //------------------------------------------------------------------------------
     //------------------------------------------------------------------------------
 
+    /// <summary>
+    /// A point with integer coordinates: Clipper works on integers, so the coordinates must be scaled (see <see cref="ClipperScale"/>)
+    /// </summary>
     public struct IntPoint
     {
+        /// <summary>
+        /// The X coordinate
+        /// </summary>
         public cInt X;
+        /// <summary>
+        /// The Y coordinate
+        /// </summary>
         public cInt Y;
 #if use_xyz
     public cInt Z;
@@ -377,16 +451,30 @@ namespace GPC.Geometry
     }
 #else
 
+        /// <summary>
+        /// Creates a point
+        /// </summary>
+        /// <param name="X">The X coordinate</param>
+        /// <param name="Y">The Y coordinate</param>
         public IntPoint(cInt X, cInt Y)
         {
             this.X = X; this.Y = Y;
         }
 
+        /// <summary>
+        /// Creates a point from double coordinates (truncated, not rounded)
+        /// </summary>
+        /// <param name="x">The X coordinate</param>
+        /// <param name="y">The Y coordinate</param>
         public IntPoint(double x, double y)
         {
             this.X = (cInt)x; this.Y = (cInt)y;
         }
 
+        /// <summary>
+        /// Creates a copy of a point
+        /// </summary>
+        /// <param name="pt">The point to copy</param>
         public IntPoint(IntPoint pt)
         {
             this.X = pt.X; this.Y = pt.Y;
@@ -394,16 +482,33 @@ namespace GPC.Geometry
 
 #endif
 
+        /// <summary>
+        /// Equality of the coordinates
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The second point</param>
+        /// <returns>True if the coordinates are equal</returns>
         public static bool operator ==(IntPoint a, IntPoint b)
         {
             return a.X == b.X && a.Y == b.Y;
         }
 
+        /// <summary>
+        /// Inequality of the coordinates
+        /// </summary>
+        /// <param name="a">The first point</param>
+        /// <param name="b">The second point</param>
+        /// <returns>True if a coordinate is different</returns>
         public static bool operator !=(IntPoint a, IntPoint b)
         {
             return a.X != b.X || a.Y != b.Y;
         }
 
+        /// <summary>
+        /// Equality with another object
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an <see cref="IntPoint"/> with the same coordinates</returns>
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
@@ -415,6 +520,10 @@ namespace GPC.Geometry
             else return false;
         }
 
+        /// <summary>
+        /// The hash code of the coordinates
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             //simply prevents a compiler warning
@@ -422,19 +531,45 @@ namespace GPC.Geometry
         }
     }// end struct IntPoint
 
+    /// <summary>
+    /// A rectangle with integer coordinates
+    /// </summary>
     public struct IntRect
     {
+        /// <summary>
+        /// The minimum X
+        /// </summary>
         public cInt left;
+        /// <summary>
+        /// The minimum Y
+        /// </summary>
         public cInt top;
+        /// <summary>
+        /// The maximum X
+        /// </summary>
         public cInt right;
+        /// <summary>
+        /// The maximum Y
+        /// </summary>
         public cInt bottom;
 
+        /// <summary>
+        /// Creates a rectangle
+        /// </summary>
+        /// <param name="l">The minimum X</param>
+        /// <param name="t">The minimum Y</param>
+        /// <param name="r">The maximum X</param>
+        /// <param name="b">The maximum Y</param>
         public IntRect(cInt l, cInt t, cInt r, cInt b)
         {
             this.left = l; this.top = t;
             this.right = r; this.bottom = b;
         }
 
+        /// <summary>
+        /// Creates a copy of a rectangle
+        /// </summary>
+        /// <param name="ir">The rectangle to copy</param>
         public IntRect(IntRect ir)
         {
             this.left = ir.left; this.top = ir.top;
@@ -442,24 +577,91 @@ namespace GPC.Geometry
         }
     }
 
-    public enum ClipType { ctIntersection, ctUnion, ctDifference, ctXor };
+    /// <summary>
+    /// The boolean operation of <see cref="Clipper.Execute(ClipType, PolyTree, PolyFillType, PolyFillType)"/>
+    /// </summary>
+    public enum ClipType
+    {
+        /// <summary>The areas inside both the subject and the clip polygons</summary>
+        ctIntersection,
+        /// <summary>The areas inside the subject or the clip polygons</summary>
+        ctUnion,
+        /// <summary>The areas inside the subject polygons and outside the clip polygons</summary>
+        ctDifference,
+        /// <summary>The areas inside the subject or the clip polygons, but not both (exclusive or)</summary>
+        ctXor
+    };
 
-    public enum PolyType { ptSubject, ptClip };
+    /// <summary>
+    /// The role of a path in a boolean operation
+    /// </summary>
+    public enum PolyType
+    {
+        /// <summary>A subject path (polygon or open path)</summary>
+        ptSubject,
+        /// <summary>A clip polygon</summary>
+        ptClip
+    };
 
-    //By far the most widely used winding rules for polygon filling are
-    //EvenOdd & NonZero (GDI, GDI+, XLib, OpenGL, Cairo, AGG, Quartz, SVG, Gr32)
-    //Others rules include Positive, Negative and ABS_GTR_EQ_TWO (only in OpenGL)
-    //see http://glprogramming.com/red/chapter11.html
-    public enum PolyFillType { pftEvenOdd, pftNonZero, pftPositive, pftNegative };
+    /// <summary>
+    /// The rule that tells which areas are inside the polygons, from the winding number of the area (the number of polygons around it,
+    /// counted with the orientation). EvenOdd and NonZero are the most used rules (GDI, OpenGL, SVG...)
+    /// </summary>
+    public enum PolyFillType
+    {
+        /// <summary>Inside if the winding number is odd</summary>
+        pftEvenOdd,
+        /// <summary>Inside if the winding number is not zero</summary>
+        pftNonZero,
+        /// <summary>Inside if the winding number is positive</summary>
+        pftPositive,
+        /// <summary>Inside if the winding number is negative</summary>
+        pftNegative
+    };
 
-    public enum JoinType { jtSquare, jtRound, jtMiter };
+    /// <summary>
+    /// The shape of the corners of the offset paths (see <see cref="ClipperOffset"/>)
+    /// </summary>
+    public enum JoinType
+    {
+        /// <summary>Corners squared off at the offset distance</summary>
+        jtSquare,
+        /// <summary>Rounded corners (see <see cref="ClipperOffset.ArcTolerance"/>)</summary>
+        jtRound,
+        /// <summary>Mitered corners, squared off beyond <see cref="ClipperOffset.MiterLimit"/></summary>
+        jtMiter
+    };
 
-    public enum EndType { etClosedPolygon, etClosedLine, etOpenButt, etOpenSquare, etOpenRound };
+    /// <summary>
+    /// The kind of an offset path (see <see cref="ClipperOffset"/>): closed polygon, closed line or open line with the shape of its ends
+    /// </summary>
+    public enum EndType
+    {
+        /// <summary>A closed path offset as a polygon (inflated or deflated)</summary>
+        etClosedPolygon,
+        /// <summary>A closed path offset as a line (on both sides)</summary>
+        etClosedLine,
+        /// <summary>An open path with square ends at the end points</summary>
+        etOpenButt,
+        /// <summary>An open path with square ends extended by the offset</summary>
+        etOpenSquare,
+        /// <summary>An open path with round ends</summary>
+        etOpenRound
+    };
 
+    /// <summary>
+    /// The side of a bound of a polygon in the active edge list
+    /// </summary>
     internal enum EdgeSide { esLeft, esRight };
 
+    /// <summary>
+    /// The direction of a horizontal edge
+    /// </summary>
     internal enum Direction { dRightToLeft, dLeftToRight };
 
+    /// <summary>
+    /// An edge of an input path, with its state during the sweep (active edge list, sorted edge list, winding counts, output polygon)
+    /// </summary>
     internal class TEdge
     {
         internal IntPoint Bot;
@@ -482,6 +684,9 @@ namespace GPC.Geometry
         internal TEdge PrevInSEL;
     };
 
+    /// <summary>
+    /// An intersection of two edges found during the sweep (internal data of the algorithm)
+    /// </summary>
     public class IntersectNode
     {
         internal TEdge Edge1;
@@ -489,8 +694,17 @@ namespace GPC.Geometry
         internal IntPoint Pt;
     };
 
+    /// <summary>
+    /// Sorts the intersections by decreasing Y
+    /// </summary>
     public class MyIntersectNodeSort : IComparer<IntersectNode>
     {
+        /// <summary>
+        /// Compares two intersections by their Y
+        /// </summary>
+        /// <param name="node1">The first intersection</param>
+        /// <param name="node2">The second intersection</param>
+        /// <returns>1 if the first one is lower, -1 if it is higher, 0 if they have the same Y</returns>
         public int Compare(IntersectNode node1, IntersectNode node2)
         {
             cInt i = node2.Pt.Y - node1.Pt.Y;
@@ -500,6 +714,9 @@ namespace GPC.Geometry
         }
     }
 
+    /// <summary>
+    /// A local minimum of the input paths: the two bounds (left and right) that start from it
+    /// </summary>
     internal class LocalMinima
     {
         internal cInt Y;
@@ -508,12 +725,18 @@ namespace GPC.Geometry
         internal LocalMinima Next;
     };
 
+    /// <summary>
+    /// A Y coordinate where the sweep stops (a vertex), in a sorted linked list
+    /// </summary>
     internal class Scanbeam
     {
         internal cInt Y;
         internal Scanbeam Next;
     };
 
+    /// <summary>
+    /// The X of a local maximum of the open paths, in a sorted linked list
+    /// </summary>
     internal class Maxima
     {
         internal cInt X;
@@ -521,8 +744,9 @@ namespace GPC.Geometry
         internal Maxima Prev;
     };
 
-    //OutRec: contains a path in the clipping solution. Edges in the AEL will
-    //carry a pointer to an OutRec when they are part of the clipping solution.
+    /// <summary>
+    /// A path of the clipping solution: the edges in the active edge list carry a reference to it when they are part of the solution
+    /// </summary>
     internal class OutRec
     {
         internal int Idx;
@@ -534,6 +758,9 @@ namespace GPC.Geometry
         internal PolyNode PolyNode;
     };
 
+    /// <summary>
+    /// A vertex of an output path, in a circular doubly linked list
+    /// </summary>
     internal class OutPt
     {
         internal int Idx;
@@ -542,6 +769,9 @@ namespace GPC.Geometry
         internal OutPt Prev;
     };
 
+    /// <summary>
+    /// Two output vertices to join (touching output polygons that must be merged or split)
+    /// </summary>
     internal class Join
     {
         internal OutPt OutPt1;
@@ -549,6 +779,9 @@ namespace GPC.Geometry
         internal IntPoint OffPt;
     };
 
+    /// <summary>
+    /// The base of <see cref="Clipper"/>: the paths to clip, converted to edges and local minima
+    /// </summary>
     public class ClipperBase
     {
         internal const double horizontal = -3.4E+38;
@@ -565,7 +798,13 @@ namespace GPC.Geometry
     public const cInt loRange = 0x7FFF;
     public const cInt hiRange = 0x7FFF;
 #else
+        /// <summary>
+        /// The largest coordinate (absolute value) for the fast 64-bit arithmetic (about 1.07E9)
+        /// </summary>
         public const cInt loRange = 0x3FFFFFFF;
+        /// <summary>
+        /// The largest coordinate (absolute value) allowed: the products are computed with 128-bit integers (about 4.6E18)
+        /// </summary>
         public const cInt hiRange = 0x3FFFFFFFFFFFFFFFL;
 #endif
 
@@ -580,6 +819,9 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// If true, the collinear vertices of the input are kept in the solution (default false: they are removed)
+        /// </summary>
         public bool PreserveCollinear
         {
             get;
@@ -588,6 +830,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Swaps two integers
+        /// </summary>
+        /// <param name="val1">The first integer</param>
+        /// <param name="val2">The second integer</param>
         public void Swap(ref cInt val1, ref cInt val2)
         {
             cInt tmp = val1;
@@ -699,6 +946,9 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Removes all the paths
+        /// </summary>
         public virtual void Clear()
         {
             DisposeLocalMinimaList();
@@ -906,6 +1156,14 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Adds a path to clip. The duplicated consecutive vertices are removed (and the collinear ones, unless <see cref="PreserveCollinear"/>)
+        /// </summary>
+        /// <param name="pg">The vertices of the path</param>
+        /// <param name="polyType">Subject or clip</param>
+        /// <param name="Closed">True for a polygon, false for an open path (only as subject)</param>
+        /// <returns>False if the path is degenerate (less than 3 distinct vertices for a polygon, 2 for an open path) and it is not added</returns>
+        /// <exception cref="ClipperException">If an open path is a clip, or a coordinate is larger than <see cref="hiRange"/></exception>
         public bool AddPath(Path pg, PolyType polyType, bool Closed)
         {
 #if use_lines
@@ -1082,6 +1340,13 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Adds paths to clip (see <see cref="AddPath(List{IntPoint}, PolyType, bool)"/>)
+        /// </summary>
+        /// <param name="ppg">The paths</param>
+        /// <param name="polyType">Subject or clip</param>
+        /// <param name="closed">True for polygons, false for open paths</param>
+        /// <returns>True if at least one path was added</returns>
         public bool AddPaths(Paths ppg, PolyType polyType, bool closed)
         {
             bool result = false;
@@ -1202,6 +1467,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The bounding rectangle of paths
+        /// </summary>
+        /// <param name="paths">The paths</param>
+        /// <returns>The bounding rectangle; all zero if there are no vertices</returns>
         public static IntRect GetBounds(Paths paths)
         {
             int i = 0, cnt = paths.Count;
@@ -1404,12 +1674,24 @@ namespace GPC.Geometry
         //------------------------------------------------------------------------------
     } //end ClipperBase
 
+    /// <summary>
+    /// The polygon clipper (Vatti algorithm): boolean operations (intersection, union, difference, exclusive or) between subject and clip
+    /// polygons with integer coordinates. Library of Angus Johnson, version 6.4.2 (Boost Software License)
+    /// </summary>
     public class Clipper : ClipperBase
     {
-        //InitOptions that can be passed to the constructor ...
+        /// <summary>
+        /// Option of the constructor: see <see cref="ReverseSolution"/>
+        /// </summary>
         public const int ioReverseSolution = 1;
 
+        /// <summary>
+        /// Option of the constructor: see <see cref="StrictlySimple"/>
+        /// </summary>
         public const int ioStrictlySimple = 2;
+        /// <summary>
+        /// Option of the constructor: see <see cref="ClipperBase.PreserveCollinear"/>
+        /// </summary>
         public const int ioPreserveCollinear = 4;
 
         private ClipType m_ClipType;
@@ -1429,6 +1711,10 @@ namespace GPC.Geometry
       public ZFillCallback ZFillFunction { get; set; }
 #endif
 
+        /// <summary>
+        /// Creates a clipper
+        /// </summary>
+        /// <param name="InitOptions">A combination of <see cref="ioReverseSolution"/>, <see cref="ioStrictlySimple"/>, <see cref="ioPreserveCollinear"/></param>
         public Clipper(int InitOptions = 0) : base() //constructor
         {
             m_Scanbeam = null;
@@ -1484,6 +1770,9 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// If true, the polygons of the solution have the opposite orientation (default: the outer polygons have positive area)
+        /// </summary>
         public bool ReverseSolution
         {
             get;
@@ -1492,6 +1781,9 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// If true, the polygons of the solution are strictly simple (no touching vertices or edges): slower
+        /// </summary>
         public bool StrictlySimple
         {
             get;
@@ -1500,6 +1792,14 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Executes a boolean operation with the same fill rule for subject and clip polygons
+        /// </summary>
+        /// <param name="clipType">The operation</param>
+        /// <param name="solution">The polygons of the result (the list is cleared first)</param>
+        /// <param name="FillType">The fill rule</param>
+        /// <returns>False if the operation fails</returns>
+        /// <exception cref="ClipperException">If there are open paths (they need a <see cref="PolyTree"/>)</exception>
         public bool Execute(ClipType clipType, Paths solution,
             PolyFillType FillType = PolyFillType.pftEvenOdd)
         {
@@ -1508,6 +1808,13 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Executes a boolean operation with the same fill rule for subject and clip polygons
+        /// </summary>
+        /// <param name="clipType">The operation</param>
+        /// <param name="polytree">The result as tree of outer polygons and holes</param>
+        /// <param name="FillType">The fill rule</param>
+        /// <returns>False if the operation fails</returns>
         public bool Execute(ClipType clipType, PolyTree polytree,
             PolyFillType FillType = PolyFillType.pftEvenOdd)
         {
@@ -1516,6 +1823,15 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Executes a boolean operation
+        /// </summary>
+        /// <param name="clipType">The operation</param>
+        /// <param name="solution">The polygons of the result (the list is cleared first)</param>
+        /// <param name="subjFillType">The fill rule of the subject polygons</param>
+        /// <param name="clipFillType">The fill rule of the clip polygons</param>
+        /// <returns>False if the operation fails or another execution is in progress</returns>
+        /// <exception cref="ClipperException">If there are open paths (they need a <see cref="PolyTree"/>)</exception>
         public bool Execute(ClipType clipType, Paths solution,
             PolyFillType subjFillType, PolyFillType clipFillType)
         {
@@ -1546,6 +1862,14 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Executes a boolean operation
+        /// </summary>
+        /// <param name="clipType">The operation</param>
+        /// <param name="polytree">The result as tree of outer polygons and holes (and open paths)</param>
+        /// <param name="subjFillType">The fill rule of the subject polygons</param>
+        /// <param name="clipFillType">The fill rule of the clip polygons</param>
+        /// <returns>False if the operation fails or another execution is in progress</returns>
         public bool Execute(ClipType clipType, PolyTree polytree,
             PolyFillType subjFillType, PolyFillType clipFillType)
         {
@@ -3453,6 +3777,10 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Reverses the order of the vertices of every path (in place)
+        /// </summary>
+        /// <param name="polys">The paths</param>
         public static void ReversePaths(Paths polys)
         {
             foreach (var poly in polys) { poly.Reverse(); }
@@ -3460,6 +3788,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The orientation of a polygon
+        /// </summary>
+        /// <param name="poly">The polygon</param>
+        /// <returns>True if its area is not negative (counterclockwise with the Y axis upwards)</returns>
         public static bool Orientation(Path poly)
         {
             return Area(poly) >= 0;
@@ -3905,6 +4238,12 @@ namespace GPC.Geometry
 
         //----------------------------------------------------------------------
 
+        /// <summary>
+        /// Position of a point respect to a polygon
+        /// </summary>
+        /// <param name="pt">The point</param>
+        /// <param name="path">The polygon</param>
+        /// <returns>0 if the point is outside, 1 if it is inside, -1 if it is on the border</returns>
         public static int PointInPolygon(IntPoint pt, Path path)
         {
             //returns 0 if false, +1 if true, -1 if pt ON polygon boundary
@@ -4245,6 +4584,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The signed area of a polygon
+        /// </summary>
+        /// <param name="poly">The polygon</param>
+        /// <returns>The area, positive if <see cref="Orientation"/> is true</returns>
         public static double Area(Path poly)
         {
             int cnt = (int)poly.Count;
@@ -4285,6 +4629,12 @@ namespace GPC.Geometry
         // Convert self-intersecting polygons into simple polygons
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Removes the self-intersections of a polygon (union of the polygon with itself, strictly simple result)
+        /// </summary>
+        /// <param name="poly">The polygon</param>
+        /// <param name="fillType">The fill rule</param>
+        /// <returns>The simple polygons</returns>
         public static Paths SimplifyPolygon(Path poly,
               PolyFillType fillType = PolyFillType.pftEvenOdd)
         {
@@ -4298,6 +4648,12 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Removes the self-intersections of polygons (union of the polygons, strictly simple result)
+        /// </summary>
+        /// <param name="polys">The polygons</param>
+        /// <param name="fillType">The fill rule</param>
+        /// <returns>The simple polygons</returns>
         public static Paths SimplifyPolygons(Paths polys,
             PolyFillType fillType = PolyFillType.pftEvenOdd)
         {
@@ -4385,6 +4741,13 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Removes the vertices of a polygon closer than <paramref name="distance"/> to an adjacent vertex or to the line of the adjacent vertices
+        /// (collinear vertices and spikes)
+        /// </summary>
+        /// <param name="path">The polygon</param>
+        /// <param name="distance">The distance (default about sqrt(2): the rounding of the coordinates)</param>
+        /// <returns>The cleaned polygon (empty if less than 3 vertices remain)</returns>
         public static Path CleanPolygon(Path path, double distance = 1.415)
         {
             //distance = proximity in units/pixels below which vertices will be stripped.
@@ -4446,6 +4809,12 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Cleans polygons (see <see cref="CleanPolygon(List{IntPoint}, double)"/>)
+        /// </summary>
+        /// <param name="polys">The polygons</param>
+        /// <param name="distance">The distance</param>
+        /// <returns>The cleaned polygons</returns>
         public static Paths CleanPolygons(Paths polys,
             double distance = 1.415)
         {
@@ -4497,6 +4866,13 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The Minkowski sum of a pattern and a path: the area swept by the pattern moved along the path
+        /// </summary>
+        /// <param name="pattern">The pattern polygon</param>
+        /// <param name="path">The path</param>
+        /// <param name="pathIsClosed">True if the path is closed</param>
+        /// <returns>The polygons of the sum</returns>
         public static Paths MinkowskiSum(Path pattern, Path path, bool pathIsClosed)
         {
             Paths paths = Minkowski(pattern, path, true, pathIsClosed);
@@ -4518,6 +4894,13 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The Minkowski sum of a pattern and paths (the union of the sums with each path)
+        /// </summary>
+        /// <param name="pattern">The pattern polygon</param>
+        /// <param name="paths">The paths</param>
+        /// <param name="pathIsClosed">True if the paths are closed</param>
+        /// <returns>The polygons of the sum</returns>
         public static Paths MinkowskiSum(Path pattern, Paths paths, bool pathIsClosed)
         {
             Paths solution = new Paths();
@@ -4539,6 +4922,12 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The Minkowski difference of two polygons
+        /// </summary>
+        /// <param name="poly1">The first polygon</param>
+        /// <param name="poly2">The second polygon</param>
+        /// <returns>The polygons of the difference</returns>
         public static Paths MinkowskiDiff(Path poly1, Path poly2)
         {
             Paths paths = Minkowski(poly1, poly2, false, true);
@@ -4550,8 +4939,16 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The kind of paths to extract from a tree
+        /// </summary>
         internal enum NodeType { ntAny, ntOpen, ntClosed };
 
+        /// <summary>
+        /// All the paths of a tree
+        /// </summary>
+        /// <param name="polytree">The tree</param>
+        /// <returns>The paths</returns>
         public static Paths PolyTreeToPaths(PolyTree polytree)
         {
             Paths result = new Paths();
@@ -4580,6 +4977,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The open paths of a tree
+        /// </summary>
+        /// <param name="polytree">The tree</param>
+        /// <returns>The open paths</returns>
         public static Paths OpenPathsFromPolyTree(PolyTree polytree)
         {
             Paths result = new Paths();
@@ -4592,6 +4994,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The closed paths (polygons) of a tree
+        /// </summary>
+        /// <param name="polytree">The tree</param>
+        /// <returns>The polygons</returns>
         public static Paths ClosedPathsFromPolyTree(PolyTree polytree)
         {
             Paths result = new Paths();
@@ -4603,6 +5010,9 @@ namespace GPC.Geometry
         //------------------------------------------------------------------------------
     } //end Clipper
 
+    /// <summary>
+    /// Offsets (inflates or deflates) polygons and open paths by a distance
+    /// </summary>
     public class ClipperOffset
     {
         private Paths m_destPolys;
@@ -4615,12 +5025,23 @@ namespace GPC.Geometry
         private IntPoint m_lowest;
         private PolyNode m_polyNodes = new PolyNode();
 
+        /// <summary>
+        /// The largest distance of the approximated arcs of the round joins and ends from the true arcs (default 0.25)
+        /// </summary>
         public double ArcTolerance { get; set; }
+        /// <summary>
+        /// The largest distance of a mitered vertex from the original one, as multiple of the offset (default 2); over it the corner is squared
+        /// </summary>
         public double MiterLimit { get; set; }
 
         private const double two_pi = System.Math.PI * 2;
         private const double def_arc_tolerance = 0.25;
 
+        /// <summary>
+        /// Creates an offsetter
+        /// </summary>
+        /// <param name="miterLimit">See <see cref="MiterLimit"/></param>
+        /// <param name="arcTolerance">See <see cref="ArcTolerance"/></param>
         public ClipperOffset(
           double miterLimit = 2.0, double arcTolerance = def_arc_tolerance)
         {
@@ -4631,6 +5052,9 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Removes all the paths
+        /// </summary>
         public void Clear()
         {
             m_polyNodes.Childs.Clear();
@@ -4646,6 +5070,12 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Adds a path to offset
+        /// </summary>
+        /// <param name="path">The path</param>
+        /// <param name="joinType">The shape of the corners</param>
+        /// <param name="endType">The kind of path (closed polygon or line) and the shape of the ends of the open paths</param>
         public void AddPath(Path path, JoinType joinType, EndType endType)
         {
             int highI = path.Count - 1;
@@ -4689,6 +5119,12 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Adds paths to offset (see <see cref="AddPath(List{IntPoint}, JoinType, EndType)"/>)
+        /// </summary>
+        /// <param name="paths">The paths</param>
+        /// <param name="joinType">The shape of the corners</param>
+        /// <param name="endType">The kind of path and the shape of the ends</param>
         public void AddPaths(Paths paths, JoinType joinType, EndType endType)
         {
             foreach (Path p in paths)
@@ -4923,6 +5359,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Offsets the paths
+        /// </summary>
+        /// <param name="solution">The offset polygons (the list is cleared first)</param>
+        /// <param name="delta">The offset distance: positive inflates the polygons, negative deflates them</param>
         public void Execute(ref Paths solution, double delta)
         {
             solution.Clear();
@@ -4955,6 +5396,11 @@ namespace GPC.Geometry
 
         //------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Offsets the paths
+        /// </summary>
+        /// <param name="solution">The offset polygons as tree (cleared first)</param>
+        /// <param name="delta">The offset distance: positive inflates the polygons, negative deflates them</param>
         public void Execute(ref PolyTree solution, double delta)
         {
             solution.Clear();
@@ -5092,6 +5538,9 @@ namespace GPC.Geometry
         //------------------------------------------------------------------------------
     }
 
+    /// <summary>
+    /// An error of the clipping algorithm (invalid input or internal inconsistency)
+    /// </summary>
     internal class ClipperException : Exception
     {
         public ClipperException(string description) : base(description)

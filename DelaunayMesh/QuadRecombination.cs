@@ -29,29 +29,79 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// </summary>
         private const int MaxPathPairs = 6;
 
+        /// <summary>
+        /// Number of iterations of the smoothing
+        /// </summary>
         private const int SmoothingIterations = 8;
 
         #endregion
 
         #region Variables
 
-        private readonly List<double> _x;           // normalized coordinates
+        /// <summary>
+        /// The normalized X of the vertices
+        /// </summary>
+        private readonly List<double> _x;
+        /// <summary>
+        /// The normalized Y of the vertices
+        /// </summary>
         private readonly List<double> _y;
+        /// <summary>
+        /// The original X of the vertices
+        /// </summary>
         private readonly List<double> _originalX;
+        /// <summary>
+        /// The original Y of the vertices
+        /// </summary>
         private readonly List<double> _originalY;
+        /// <summary>
+        /// The tags of the vertices (index of the boundary points, -1 for the new points)
+        /// </summary>
         private readonly List<int> _tags;
-        private readonly List<bool> _fixed;         // points on the lattice (and the points of the regular elements after the subdivision)
-        private readonly HashSet<long> _segments;   // boundary segments
+        /// <summary>
+        /// The points not moved by the smoothing: points on the lattice (and the points of the regular elements after the subdivision)
+        /// </summary>
+        private readonly List<bool> _fixed;
+        /// <summary>
+        /// The boundary segments, by <see cref="EdgeKey"/>
+        /// </summary>
+        private readonly HashSet<long> _segments;
+        /// <summary>
+        /// The scale of the normalization
+        /// </summary>
         private readonly double _scale;
+        /// <summary>
+        /// The X of the center of the normalization
+        /// </summary>
         private readonly double _centerX;
+        /// <summary>
+        /// The Y of the center of the normalization
+        /// </summary>
         private readonly double _centerY;
 
-        private List<int[]> _elements;              // triangles and quadrilaterals, counterclockwise
+        /// <summary>
+        /// The elements: triangles and quadrilaterals, counterclockwise (vertex indices)
+        /// </summary>
+        private List<int[]> _elements;
 
         #endregion
 
         #region Constructor
 
+        /// <summary>
+        /// Creates the recombination of a triangulation (the lists are copied)
+        /// </summary>
+        /// <param name="x">The normalized X of the vertices</param>
+        /// <param name="y">The normalized Y of the vertices</param>
+        /// <param name="originalX">The original X of the vertices</param>
+        /// <param name="originalY">The original Y of the vertices</param>
+        /// <param name="tags">The tags of the vertices</param>
+        /// <param name="latticePoints">True for the points on the lattice (not moved by the smoothing)</param>
+        /// <param name="triangles">The triangles, counterclockwise</param>
+        /// <param name="segments">The boundary segments</param>
+        /// <param name="scale">The scale of the normalization</param>
+        /// <param name="centerX">The X of the center of the normalization</param>
+        /// <param name="centerY">The Y of the center of the normalization</param>
         public QuadRecombination(List<double> x, List<double> y, List<double> originalX, List<double> originalY, List<int> tags, List<bool> latticePoints,
             List<int[]> triangles, HashSet<long> segments, double scale, double centerX, double centerY)
         {
@@ -117,6 +167,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return squares > 0 ? 2.0 * Math.Sqrt(3.0) * (abx * acy - aby * acx) / squares : 0;
         }
 
+        /// <summary>
+        /// The quality of a triangle or of a quadrilateral (see <see cref="TriangleQuality"/> and <see cref="QuadQuality"/>)
+        /// </summary>
+        /// <param name="element">The vertices of the element</param>
+        /// <returns>The quality: 1 for the regular shapes, not positive for the inverted ones</returns>
         private double ElementQuality(int[] element)
         {
             return element.Length == 3 ? TriangleQuality(element[0], element[1], element[2]) : QuadQuality(element[0], element[1], element[2], element[3]);
@@ -228,6 +283,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             throw new InvalidOperationException("The triangles are not adjacent");
         }
 
+        /// <summary>
+        /// The quality of the quadrilateral made of two adjacent triangles
+        /// </summary>
+        /// <param name="t">The index of the first triangle</param>
+        /// <param name="u">The index of the second triangle</param>
+        /// <returns>The quality of the quadrilateral (see <see cref="QuadQuality"/>)</returns>
         private double PairQuality(int t, int u)
         {
             int[] quad = Merge(t, u);
@@ -324,6 +385,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return eliminated;
         }
 
+        /// <summary>
+        /// Adds the edges of an element to the map edge -> elements
+        /// </summary>
+        /// <param name="e">The index of the element</param>
+        /// <param name="edgeElements">The map</param>
         private void AddElementEdges(int e, Dictionary<long, List<int>> edgeElements)
         {
             int[] element = _elements[e];
@@ -336,6 +402,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// Removes the edges of an element from the map edge -> elements
+        /// </summary>
+        /// <param name="e">The index of the element</param>
+        /// <param name="edgeElements">The map</param>
         private void RemoveElementEdges(int e, Dictionary<long, List<int>> edgeElements)
         {
             int[] element = _elements[e];
@@ -347,6 +418,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// The element on the other side of an edge
+        /// </summary>
+        /// <param name="e">The element</param>
+        /// <param name="a">The first vertex of the edge</param>
+        /// <param name="b">The second vertex of the edge</param>
+        /// <param name="edgeElements">The map edge -> elements</param>
         /// <returns>The element across the edge a-b, -1 if the edge is on the boundary</returns>
         private int Across(int e, int a, int b, Dictionary<long, List<int>> edgeElements)
         {
@@ -488,13 +566,25 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return true;
         }
 
+        /// <summary>
+        /// The cost of crossing a quadrilateral with a channel: higher for the good quadrilaterals, that are divided in two
+        /// </summary>
+        /// <param name="element">The index of the quadrilateral</param>
+        /// <returns>0.3 + its quality</returns>
         private double CrossingCost(int element)
         {
             int[] quad = _elements[element];
             return 0.3 + QuadQuality(quad[0], quad[1], quad[2], quad[3]);
         }
 
+        /// <summary>
+        /// The position of an edge in an element
+        /// </summary>
+        /// <param name="element">The vertices of the element</param>
+        /// <param name="a">The first vertex of the edge</param>
+        /// <param name="b">The second vertex of the edge</param>
         /// <returns>Index i such that the element has the edge (a, b) as (element[i], element[i + 1]) or (element[i + 1], element[i])</returns>
+        /// <exception cref="InvalidOperationException">If the edge is not in the element</exception>
         private static int IndexOfEdge(int[] element, int a, int b)
         {
             int n = element.Length;
@@ -507,6 +597,13 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             throw new InvalidOperationException("The edge is not in the element");
         }
 
+        /// <summary>
+        /// Inserts a point in an edge of an element
+        /// </summary>
+        /// <param name="element">The vertices of the element</param>
+        /// <param name="a">The first vertex of the edge</param>
+        /// <param name="b">The second vertex of the edge</param>
+        /// <param name="m">The point to insert</param>
         /// <returns>The element with the point <paramref name="m"/> inserted between a and b</returns>
         private static int[] Insert(int[] element, int a, int b, int m)
         {
@@ -516,6 +613,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return result.ToArray();
         }
 
+        /// <summary>
+        /// Replaces an element, updating the map edge -> elements
+        /// </summary>
+        /// <param name="e">The index of the element</param>
+        /// <param name="element">The new vertices of the element</param>
+        /// <param name="edgeElements">The map</param>
         private void ReplaceElement(int e, int[] element, Dictionary<long, List<int>> edgeElements)
         {
             RemoveElementEdges(e, edgeElements);
@@ -603,6 +706,15 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             _segments.UnionWith(segments);
         }
 
+        /// <summary>
+        /// Adds a vertex
+        /// </summary>
+        /// <param name="x">The normalized X</param>
+        /// <param name="y">The normalized Y</param>
+        /// <param name="originalX">The original X</param>
+        /// <param name="originalY">The original Y</param>
+        /// <param name="isFixed">True if the smoothing must not move it</param>
+        /// <returns>The index of the vertex</returns>
         private int AddVertex(double x, double y, double originalX, double originalY, bool isFixed)
         {
             _x.Add(x);
@@ -701,12 +813,20 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
         }
 
+        /// <summary>
+        /// The quality of the worst element of the mesh (see <see cref="ElementQuality"/>)
+        /// </summary>
         /// <returns>The quality of the worst element of the mesh</returns>
         public double WorstElementQuality()
         {
             return WorstQuality(_elements);
         }
 
+        /// <summary>
+        /// The quality of the worst element of a list
+        /// </summary>
+        /// <param name="elements">The elements</param>
+        /// <returns>The lowest quality; <see cref="double.MaxValue"/> for an empty list</returns>
         private double WorstQuality(List<int[]> elements)
         {
             double worst = double.MaxValue;
@@ -719,6 +839,10 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
         #region Helpers and output
 
+        /// <summary>
+        /// The vertices of the boundary segments
+        /// </summary>
+        /// <returns>The indices of the vertices</returns>
         private HashSet<int> BoundaryVertices()
         {
             var boundary = new HashSet<int>();
@@ -730,11 +854,21 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             return boundary;
         }
 
+        /// <summary>
+        /// The key of an edge, independent of its direction
+        /// </summary>
+        /// <param name="a">The first vertex</param>
+        /// <param name="b">The second vertex</param>
+        /// <returns>The smaller index in the high 32 bits, the larger in the low ones</returns>
         private static long EdgeKey(int a, int b)
         {
             return a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
         }
 
+        /// <summary>
+        /// The mesh of the elements: the vertices with their original coordinates (Z = 0) and their tags, the faces and the edges
+        /// </summary>
+        /// <returns>The mesh</returns>
         public Mesh ToMesh()
         {
             var mesh = new Mesh();
