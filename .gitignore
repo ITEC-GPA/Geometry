@@ -1,0 +1,5 @@
+.vs/
+TestResults/
+**/bin/Release/TestResults/
+**/bin/Release/it/
+**/bin/Debug/it/

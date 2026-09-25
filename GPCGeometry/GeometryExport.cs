@@ -7,15 +7,19 @@ using System.Threading.Tasks;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// Export of geometries to the .geo format of Gmsh (a draft: only the lines are exported)
+    /// </summary>
     public static class GeometryExport
     {
 
 
         /// <summary>
-        /// Export geometry to .geo format. This file can be opened by Gmsh
+        /// Export geometry to .geo format. This file can be opened by Gmsh. Only the <see cref="Line3d"/> are exported, with their end points;
+        /// the other geometries are ignored
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="geometries"></param>
+        /// <param name="path">The path of the file to write</param>
+        /// <param name="geometries">The geometries</param>
         public static void ExportToGeoFormat(string path, List<GeometryBase> geometries)
         {
             // questa classe non è finita, è solo un abbozzo, vanno aggiunte le altre geometrie
@@ -63,22 +67,45 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// The geometries already exported, with their ids in the .geo file
+        /// </summary>
+        /// <typeparam name="T">The type of the geometries</typeparam>
         private class GeometryMapCollection<T> where T : GeometryBase
         {
+            /// <summary>
+            /// The exported geometries with their ids
+            /// </summary>
             private HashSet<GeometryMap<T>> _map;
 
+            /// <summary>
+            /// The last id given (static: shared by all the exports of the same type of geometry)
+            /// </summary>
             public static int MaxId { get; private set; }
 
+            /// <summary>
+            /// Creates an empty collection
+            /// </summary>
             public GeometryMapCollection()
             {
                 _map = new HashSet<GeometryMap<T>>();
             }
 
+            /// <summary>
+            /// Adds an exported geometry
+            /// </summary>
+            /// <param name="map">The geometry and its id</param>
             public void Add(GeometryMap<T> map)
             {
                 _map.Add(map);
             }
 
+            /// <summary>
+            /// Tell if a geometry has already been exported
+            /// </summary>
+            /// <param name="geometry">The geometry</param>
+            /// <param name="index">The id of the geometry, -1 if it has not been exported</param>
+            /// <returns>True if the geometry has been exported</returns>
             public bool Constains(T geometry, out int index)
             {
                 GeometryMap<T> fakeGeom = new GeometryMap<T>(geometry, -1);
@@ -99,6 +126,10 @@ namespace GPC.Geometry
             }
 
 
+            /// <summary>
+            /// A new id: the last one plus one
+            /// </summary>
+            /// <returns>The new id</returns>
             public int GetNextId()
             {
                 MaxId++;
@@ -108,17 +139,38 @@ namespace GPC.Geometry
         }
 
 
+        /// <summary>
+        /// A geometry and its id in the .geo file
+        /// </summary>
+        /// <typeparam name="T">The type of the geometry</typeparam>
         private class GeometryMap<T> where T : GeometryBase
         {
+            /// <summary>
+            /// The geometry
+            /// </summary>
             public T GeometryBase;
+            /// <summary>
+            /// The id in the .geo file
+            /// </summary>
             public int ExportId;
 
+            /// <summary>
+            /// Creates the association of a geometry with its id
+            /// </summary>
+            /// <param name="geometryBase">The geometry</param>
+            /// <param name="exportId">The id</param>
             public GeometryMap(T geometryBase, int exportId)
             {
                 GeometryBase = geometryBase;
                 ExportId = exportId;
             }
 
+            /// <summary>
+            /// Tell if <paramref name="geom"/> is the geometry of this association
+            /// </summary>
+            /// <param name="geom">The geometry to compare</param>
+            /// <param name="id">The id of the association if the geometries are equal, otherwise -1</param>
+            /// <returns>True if the geometries are equal</returns>
             public bool Match(T geom, out int id)
             {
                 if (GeometryBase.Equals(geom))
@@ -133,6 +185,11 @@ namespace GPC.Geometry
                 }
             }
 
+            /// <summary>
+            /// Equality of the geometry and of the id
+            /// </summary>
+            /// <param name="obj">The object to compare</param>
+            /// <returns>True if <paramref name="obj"/> is an equal association</returns>
             public override bool Equals(object obj)
             {
                 return obj is GeometryMap<T> map &&
@@ -140,6 +197,10 @@ namespace GPC.Geometry
                        ExportId == map.ExportId;
             }
 
+            /// <summary>
+            /// The hash code of the geometry
+            /// </summary>
+            /// <returns>The hash code</returns>
             public override int GetHashCode()
             {
                 return 1439058172 + EqualityComparer<T>.Default.GetHashCode(GeometryBase);

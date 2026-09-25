@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 
 namespace GPC.Geometry.Collections
 {
+    /// <summary>
+    /// Extension methods for collections of points
+    /// </summary>
     public static class CollectionExtension
     {
         /// <summary>
-        /// Sort the Point2d collection in clockwide order
+        /// Sort the points in clockwise order around their mean point, starting from the direction -Y (valid for the points visible from their mean)
         /// </summary>
         /// <param name="points">The points to sort</param>
-        /// <returns>The sorted collection</returns>
+        /// <returns>A new list with the sorted points</returns>
         public static ICollection<Point2d> SortClockwise(this ICollection<Point2d> points)
         {
             double cx = points.Average(p => p.X);
@@ -22,9 +25,9 @@ namespace GPC.Geometry.Collections
         }
 
         /// <summary>
-        /// Calculate the center of the given Point2d collection
+        /// Calculate the center of the given Point2d collection: the mean of the points (not the centroid of the area)
         /// </summary>
-        /// <param name="points">The points collection</param>
+        /// <param name="points">The points collection (not empty)</param>
         /// <returns>The center point</returns>
         public static Point2d Center(this ICollection<Point2d> points)
         {
@@ -34,16 +37,25 @@ namespace GPC.Geometry.Collections
         }
 
         /// <summary>
-        /// Triangulate the given Point3d collection
+        /// Triangulate the polygon of the given Point3d collection: the triangle at the vertex with the smallest angle is cut at every step
+        /// (the first and the last vertices are never cut). The result is right for convex polygons
         /// </summary>
-        /// <param name="points">The points to triangulate</param>
-        /// <returns>A Mesh with the triangles</returns>
+        /// <param name="points">The vertices of the polygon</param>
+        /// <returns>A Mesh with the triangles; null if there are less than three points</returns>
+        /// <remarks>The input collection is not modified. A last point equal to the first one (closed polyline) is ignored</remarks>
         public static Mesh Triangulate(this ICollection<Point3d> points)
         {
+            // work on a copy: the points are removed while the triangles are created
+            List<Point3d> buffer = points.ToList();
+            if (buffer.Count > 3 && buffer[0].Equals(buffer[buffer.Count - 1]))
+                buffer.RemoveAt(buffer.Count - 1);
+
+            points = buffer;
+
             if (points.Count < 3)
                 return null;
             Mesh mesh = new Mesh();
-            do
+            while (points.Count > 3)
             {
                 int min_i = -1;
                 double min_a = double.MaxValue;
@@ -69,16 +81,25 @@ namespace GPC.Geometry.Collections
                             points.ElementAt(min_i),
                             points.ElementAt(min_i + 1)
                         });
-                    points.Remove(points.ElementAt(min_i));
+                    buffer.RemoveAt(min_i);
                 }
-            } while (points.Count > 3);
+                else
+                {
+                    break;
+                }
+            }
+
+            // the last three points are the last triangle
+            if (points.Count == 3)
+                mesh.AddFaceMesh(new[] { buffer[0], buffer[1], buffer[2] });
+
             return mesh;
         }
 
         /// <summary>
-        /// Calculate the mass center of the genven Point3d collection
+        /// Calculate the centroid of the area of the polygon of the given Point3d collection (see <see cref="Triangulate"/>)
         /// </summary>
-        /// <param name="points">The points</param>
+        /// <param name="points">The vertices of the polygon (at least three)</param>
         /// <returns>The mass center</returns>
         public static Point3d MassCenter(this ICollection<Point3d> points)
         {
@@ -101,10 +122,10 @@ namespace GPC.Geometry.Collections
         }
 
         /// <summary>
-        /// Calculate the area of the polygon defined by the given points
+        /// Calculate the signed area of the polygon defined by the given points (shoelace formula)
         /// </summary>
         /// <param name="points">The Point2d collection</param>
-        /// <returns>The area</returns>
+        /// <returns>The area: positive if the points are counterclockwise</returns>
         public static double Area(this ICollection<Point2d> points)
         {
             double area = 0;

@@ -17,7 +17,6 @@ C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GMesh.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GMsh.Net.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GPCGeometry.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GPCUtilities.dll
-C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\UnsafeEx.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GPCGeometry.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GMsh.Net.xml
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GPCUtilities.pdb
@@ -27,4 +26,4 @@ C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\obj\Release\GMesh.csproj.U
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\obj\Release\GMesh.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\obj\Release\GMesh.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\GMsh.Net.pdb
-C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\UnsafeEx.pdb
+C:\Users\g.pacini\Documents\Repository\Geometry\GMesh\bin\Release\gmsh-4.15.dll

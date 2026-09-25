@@ -11,6 +11,7 @@
     <AssemblyName>GMesh</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <PlatformTarget>x64</PlatformTarget>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -33,7 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GMsh.Net, Version=1.4.13.1, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="GMsh.Net, Version=4.15.2.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\GMsh.Net.dll</HintPath>
     </Reference>
@@ -49,10 +50,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnsafeEx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\UnsafeEx.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GMesh.cs" />
@@ -66,6 +63,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="..\..\Gmsh.Net\dll\windows\gmsh-4.15.dll">
+      <Link>gmsh-4.15.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

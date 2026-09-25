@@ -12,6 +12,7 @@
     <AssemblyName>UnitTest</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <PlatformTarget>x64</PlatformTarget>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -39,7 +40,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GMsh.Net, Version=1.4.13.1, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="GMsh.Net, Version=4.15.2.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\GMsh.Net.dll</HintPath>
     </Reference>
@@ -66,10 +67,6 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
-    <Reference Include="UnsafeEx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Gmsh.Net\src\GMsh.Net\bin\Release\netstandard2.0\UnsafeEx.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\CollectionExtension.cs" />
@@ -82,13 +79,22 @@
     <Compile Include="Geometry\Line3dTest.cs" />
     <Compile Include="Geometry\PlaneTest.cs" />
     <Compile Include="Geometry\Point3dTest.cs" />
+    <Compile Include="Geometry\AlignedPointsTest.cs" />
     <Compile Include="Geometry\Polygon2dTest.cs" />
     <Compile Include="Geometry\Polygon3dTest.cs" />
+    <Compile Include="Geometry\ReviewFixesTest.cs" />
+    <Compile Include="Geometry\OptimizationTest.cs" />
+    <Compile Include="Geometry\GeometryReviewTest.cs" />
     <Compile Include="Geometry\SerializationTest.cs" />
     <Compile Include="Geometry\Shape2dTest.cs" />
     <Compile Include="Geometry\ShapeTest.cs" />
     <Compile Include="Geometry\Vector2dTest.cs" />
     <Compile Include="Geometry\Vector3dTest.cs" />
+    <Compile Include="Mesh\ConstrainedDelaunayTest.cs" />
+    <Compile Include="Mesh\QuadMeshTest.cs" />
+    <Compile Include="Mesh\MeshCutTest.cs" />
+    <Compile Include="Mesh\GMeshReviewTest.cs" />
+    <Compile Include="Mesh\GMesh415RegressionTest.cs" />
     <Compile Include="Mesh\DelaunayMeshTestGeneric.cs" />
     <Compile Include="Mesh\GenericMeshTest.cs" />
     <Compile Include="Mesh\GMeshTestGeneric.cs" />
@@ -108,6 +114,10 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <Content Include="..\..\Gmsh.Net\dll\windows\gmsh-4.15.dll">
+      <Link>gmsh-4.15.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DelaunayMesh\DelaunayMesh.csproj">

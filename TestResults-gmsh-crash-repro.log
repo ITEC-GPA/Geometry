@@ -1,0 +1,94 @@
+Versione di VSTest 17.14.0 (x64)
+
+Avvio dell'esecuzione dei test in corso. Attendere...
+Un totale di 1 file di test corrisponde al criterio specificato.
+Info    : [  0%] Difference                                                                                  
+Info    : [ 10%] Difference                                                                                  
+Info    : [ 20%] Difference                                                                                  
+Info    : [ 30%] Difference                                                                                  
+Info    : [ 40%] Difference                                                                                  
+Info    : [ 50%] Difference                                                                                  
+Info    : [ 70%] Difference - Filling splits of edges                                                                                
+Info    : [ 80%] Difference - Making faces                                                                                
+Info    : [ 90%] Difference - Adding holes                                                                                
+Info    : Healing shapes (tolerance: 0.0001)
+Info    :  - Fixing degenerated edges and faces
+Info    :  - Fixing small edges
+Info    :  - Fixing spot and strip faces
+Info    :  - Sewing faces
+Info    :  - Making solids
+Info    :  . Could not make solid
+Info    : Done healing shapes (Wall 0.00209403s, CPU 0s):
+Info    :  - Compounds          : 0 (1)
+Info    :  - Composite solids   : 0 (0)
+Info    :  - Solids             : 0 (0)
+Info    :  - Shells             : 1 (0)
+Info    :  - Wires              : 3 (3)
+Info    :  - Faces              : 2 (2)
+Info    :  - Edges              : 8 (12)
+Info    :  - Vertices           : 8 (8)
+Info    :  - Total surface area : 800000 (800000)
+Info    : Build background mesh and guiding field ...
+Info    : Meshing 1D...
+Info    : [  0%] Meshing curve 5 (Line)
+Info    : [ 10%] Meshing curve 6 (Line)
+Info    : [ 20%] Meshing curve 7 (Line)
+Info    : [ 30%] Meshing curve 8 (Line)
+Info    : [ 40%] Meshing curve 9 (Line)
+Info    : [ 50%] Meshing curve 10 (Line)
+Info    : [ 60%] Meshing curve 11 (Line)
+Info    : [ 60%] Meshing curve 12 (Line)
+Info    : [ 70%] Meshing curve 13 (Line)
+Info    : [ 80%] Meshing curve 14 (Line)
+Info    : [ 90%] Meshing curve 15 (Line)
+Info    : [100%] Meshing curve 16 (Line)
+Info    : Done meshing 1D (Wall 0.000504017s, CPU 0s)
+Info    : Meshing 2D...
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay)
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay)
+Info    : Done meshing 2D (Wall 0.0662112s, CPU 0.046875s)
+Info    : 3663 nodes 7340 elements
+Info    : - quadqs sizemap method: background mesh sizes (3), expect midpoint subdivision: 0, scaling on edge length: 0.750000
+Info    : - Face 1/2: compute cross field (7128 triangles, 196 B.C. edges, 4 diffusion levels) ...
+Info    : - Face 2/2: compute cross field (4 triangles, 4 B.C. edges, 4 diffusion levels) ...
+Info    : Size map statistics: min=11.057, max=25.421, target #elements: 1729.939
+Info    : Build background field (view 'guiding_field') ...
+Info    : Meshing 1D...
+Info    : [  0%] Meshing curve 5 (Line)
+Info    : [ 10%] Meshing curve 6 (Line)
+Info    : [ 20%] Meshing curve 7 (Line)
+Info    : [ 30%] Meshing curve 8 (Line)
+Info    : [ 40%] Meshing curve 9 (Line)
+Info    : [ 50%] Meshing curve 10 (Line)
+Info    : [ 60%] Meshing curve 11 (Line)
+Info    : [ 60%] Meshing curve 12 (Line)
+Info    : [ 70%] Meshing curve 13 (Line)
+Info    : [ 80%] Meshing curve 14 (Line)
+Info    : [ 90%] Meshing curve 15 (Line)
+Info    : [100%] Meshing curve 16 (Line)
+Info    : Done meshing 1D (Wall 0.000386953s, CPU 0s)
+Info    : 148 nodes 160 elements
+Info    : Meshing 2D...
+Info    : [  0%] Meshing surface 1 (Plane, Packing of Parallelograms)
+Info    : [  0%] 1649 Nodes created --> now staring insertion
+Info    : [ 60%] Meshing surface 2 (Plane, Packing of Parallelograms)
+Info    : [ 60%] 0 Nodes created --> now staring insertion
+Info    : Pattern-based quad meshing of simple CAD faces ...
+Info    : loading 9 quad patterns
+Info    : Quad mesh after simple face pattern-based remeshing:
+Info    : - 0 vertices, 0 quads
+Info    : - vertex topology: 0 regular, 0 valence 3, 0 valence 5, 0 very irregular
+Info    : Optimizing mesh (UntangleTris)...
+Info    : Winslow Untangler applied to Plane face 1 size 1280.62
+L'esecuzione dei test attivi è stata interrotta. Motivo: Arresto anomalo del processo host di test
+
+L'esecuzione dei test attiva è stata interrotta perché il processo host è stato terminato in modo imprevisto. Esaminare lo stack di chiamate in alto, se disponibile, per ottenere altre informazioni sull'origine dell'eccezione.
+Test in esecuzione quando si è verificato l'arresto anomalo: 
+Meshes.GMsh.GMeshTestShape.RectangularWithShapeEmb14
+
+Il test potrebbe essere l'origine dell'arresto anomalo.
+File di risultati: C:\Users\g.pacini\Documents\Repository\Geometry\TestResults\gmsh-4.15-crash-repro.trx
+
+Allegati:
+  C:\Users\g.pacini\Documents\Repository\Geometry\TestResults\d4547cd5-91f0-4ead-a540-31b65c72f4a3\Sequence_58b954634a544c13b4e8fd2d2bf4b0f4.xml
+Esecuzione dei test interrotta.

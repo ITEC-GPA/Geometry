@@ -3,38 +3,66 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// An infinite line in the space through <see cref="Point"/> with direction <see cref="Direction"/>
+    /// </summary>
     [Serializable]
     public class Ray3d : GeometryBase, ISerializable, ICloneable, IEquatable<Ray3d>
     {
         #region Variables
 
+        /// <summary>
+        /// A point of the line
+        /// </summary>
         private Point3d _point;
+        /// <summary>
+        /// The direction of the line
+        /// </summary>
         private Vector3d _direction;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// A point of the line (the instance is kept, not copied)
+        /// </summary>
         public Point3d Point { get => _point; set => _point = value; }
 
+        /// <summary>
+        /// The direction of the line (not necessarily unitary)
+        /// </summary>
         public Vector3d Direction { get => _direction; set => _direction = value; }
 
         #endregion
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a line through a point with a direction (the instances are kept, not copied)
+        /// </summary>
+        /// <param name="point">A point of the line</param>
+        /// <param name="direction">The direction</param>
         public Ray3d(Point3d point, Vector3d direction)
         {
             _point = point;
             _direction = direction;
         }
 
+        /// <summary>
+        /// Creates the line through two points
+        /// </summary>
+        /// <param name="startPoint">The first point (the instance is kept)</param>
+        /// <param name="endPoint">The second point: the direction is <paramref name="endPoint"/> - <paramref name="startPoint"/></param>
         public Ray3d(Point3d startPoint, Point3d endPoint)
         {
             _point = startPoint;
             _direction = endPoint - startPoint;
         }
 
+        /// <summary>
+        /// Creates a degenerate line: point at the origin and zero direction
+        /// </summary>
         public Ray3d()
         {
             _point = Point3d.Origin;
@@ -49,8 +77,9 @@ namespace GPC.Geometry
         /// Tell if the given point is on the mathematical line
         /// </summary>
         /// <param name="point">The point to test</param>
-        /// <param name="tolerance"></param>
-        /// <returns>True if the point is on the mathematical line</returns>
+        /// <param name="tolerance">The tolerance on the distance</param>
+        /// <returns>True if the distance of the point from the line is lower than <paramref name="tolerance"/> (from <see cref="Point"/> if the
+        /// direction is zero)</returns>
         /// <exception cref="ArgumentNullException">Thrown when the point parameter is null</exception>
         public bool IsPointOnRay(Point3d point, double tolerance = GeometryBase.Tolerance)
         {
@@ -63,32 +92,38 @@ namespace GPC.Geometry
             // If the cross product of the vectors n1 and n2 is zero in all directions then the points are collinear, 
             // n1 and n2 are the vectors connecting one point to the other two points       
 
-            var _start = Point;
-            var _end = Point + Direction;
+            // The point is on the line if its distance from the line is lower than the tolerance.
+            // Distance = |d x (P - P0)| / |d|, independent from the length of the direction vector
 
-            double crossProductX = ((_end.Y - _start.Y) * (point.Z - _start.Z) - (point.Y - _start.Y) * (_end.Z - _start.Z));
-            double crossProductY = ((point.X - _start.X) * (_end.Z - _start.Z) - (_end.X - _start.X) * (point.Z - _start.Z));
-            double crossProductZ = ((_end.X - _start.X) * (point.Y - _start.Y) - (point.X - _start.X) * (_end.Y - _start.Y));
+            double dx = Direction.X;
+            double dy = Direction.Y;
+            double dz = Direction.Z;
+            double squareLength = dx * dx + dy * dy + dz * dz;
 
-            double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(crossProductX, crossProductY, crossProductZ, tolerance, tolerance, tolerance);
+            if (squareLength == 0.0)
+                return point.DistanceTo(Point) < tolerance;
 
-            if (Math.Abs(crossProductX) < tol && Math.Abs(crossProductY) < tol && Math.Abs(crossProductZ) < tol)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            double wx = point.X - Point.X;
+            double wy = point.Y - Point.Y;
+            double wz = point.Z - Point.Z;
+
+            double crossProductX = dy * wz - dz * wy;
+            double crossProductY = dz * wx - dx * wz;
+            double crossProductZ = dx * wy - dy * wx;
+
+            double squareCrossLength = crossProductX * crossProductX + crossProductY * crossProductY + crossProductZ * crossProductZ;
+
+            // distance^2 < tolerance^2
+            return squareCrossLength < tolerance * tolerance * squareLength;
         }
 
         /// <summary>
-        /// Get intersection of ray with plane.
+        /// Get intersection of the line with a plane, only in the half of the line in front of <see cref="Point"/> (in the direction)
         /// </summary>
         /// <param name="s">The plane</param>
-        /// <param name="intersection">Returns null is there is no intersection or the intersection point
+        /// <param name="intersection">The intersection point, null if there is none (<see cref="Point"/> if the line lies on the plane)</param>
         /// <param name="tolerance">The calculation tolerance</param>
-        /// <returns>True if the instersection exist</returns>
+        /// <returns>True if the intersection exists</returns>
         public bool IntersectionWith(Plane s, out Point3d intersection, double tolerance = GeometryBase.Tolerance)
         {
             intersection = null;
@@ -135,16 +170,14 @@ namespace GPC.Geometry
 
         /// <summary>
         /// From http://paulbourke.net/geometry/pointlineplane/
-        /// The shortest line between two rays in 3D.
-        /// This object --> first ray.
-        /// Parameter ray --> second ray.
-        /// If they are parallel there is no solution and returns null for the points.
+        /// The shortest line between two lines in 3D: Pa = Point + mua * Direction on this line, Pb = ray.Point + mub * ray.Direction on the other one.
+        /// If the lines are parallel (exactly) Pa is <see cref="Point"/> (mua = 0) and Pb its projection on the other line
         /// </summary>
-        /// <param name="ray">Second ray.</param>
-        /// <param name="mua">Parameter for point Pa in first ray, this object.</param>
-        /// <param name="mub">Parameter for point Pb in second ray.</param>
-        /// <param name="Pa">First point of shortest line segment in first ray. If two rays are parallel return null.</param>
-        /// <param name="Pb">Second point of shortest line segment in second ray. If two rays are parallel return null.</param>
+        /// <param name="ray">Second line.</param>
+        /// <param name="mua">Parameter for point Pa in first line, this object.</param>
+        /// <param name="mub">Parameter for point Pb in second line.</param>
+        /// <param name="Pa">First point of shortest line segment, on this line.</param>
+        /// <param name="Pb">Second point of shortest line segment, on the second line.</param>
         public void CalcShortestLineBetweenTwoRays(Ray3d ray, out double mua, out double mub, out Point3d Pa, out Point3d Pb)
         {
             // Pa = P1 + mua (P2 - P1)
@@ -186,16 +219,10 @@ namespace GPC.Geometry
 
         /// <summary>
         /// From http://paulbourke.net/geometry/pointlineplane/
-        /// The shortest line between two rays in 3D.
-        /// This object --> first ray.
-        /// Parameter ray --> second ray.
-        /// If they are parallel there is no solution and returns null for the points.
+        /// The shortest line between two lines in 3D (see <see cref="CalcShortestLineBetweenTwoRays(Ray3d, out double, out double, out Point3d, out Point3d)"/>)
         /// </summary>
-        /// <param name="ray">Second ray.</param>
-        /// <param name="mua">Parameter for point Pa in first ray, this object.</param>
-        /// <param name="mub">Parameter for point Pb in second ray.</param>
-        /// <param name="Pa">First point of shortest line segment in first ray. If two rays are parallel return null.</param>
-        /// <param name="Pb">Second point of shortest line segment in second ray. If two rays are parallel return null.</param>
+        /// <param name="ray">Second line.</param>
+        /// <returns>The segment from the point of this line to the point of <paramref name="ray"/> at the minimum distance</returns>
         public Line3d CalcShortestLineBetweenTwoRays(Ray3d ray)
         {
             // Pa = P1 + mua (P2 - P1)
@@ -256,6 +283,11 @@ namespace GPC.Geometry
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Serializes the line: the <see cref="BaseObject.Guid"/>, the direction and the point (there is no deserialization constructor)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -263,21 +295,40 @@ namespace GPC.Geometry
             info.AddValue("Point", _point);
         }
 
+        /// <summary>
+        /// Translates the line (its point)
+        /// </summary>
+        /// <param name="v1">The translation along X</param>
+        /// <param name="v2">The translation along Y</param>
+        /// <param name="v3">The translation along Z</param>
         public override void Move(double v1, double v2, double v3)
         {
             _point.Move(v1, v2, v3);
         }
 
+        /// <summary>
+        /// Translates the line (its point)
+        /// </summary>
+        /// <param name="vector">The translation</param>
         public override void Move(Vector3d vector)
         {
             _point.Move(vector);
         }
 
+        /// <summary>
+        /// Creates a copy of the line, with copies of its point and direction
+        /// </summary>
+        /// <returns>The copy</returns>
         public override object Clone()
         {
-            return new Ray3d(_point, _direction);
+            return new Ray3d(new Point3d(_point), new Vector3d(_direction));
         }
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Ray3d)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal line</returns>
         public override bool Equals(object obj)
         {
             if (obj is Ray3d ray)
@@ -286,6 +337,11 @@ namespace GPC.Geometry
             return false;
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(Ray3d)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal line</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Ray3d ray)
@@ -294,6 +350,12 @@ namespace GPC.Geometry
             return false;
         }
 
+        /// <summary>
+        /// Equality of the point and of the direction within the tolerance (the same line described by another point or another length of the
+        /// direction is not equal)
+        /// </summary>
+        /// <param name="other">The line to compare</param>
+        /// <returns>True if the points and the directions are equal</returns>
         public bool Equals(Ray3d other)
         {
             if (ReferenceEquals(this, other))
@@ -302,6 +364,10 @@ namespace GPC.Geometry
             return !(other is null) && other._point.Equals(_point) && other._direction.Equals(_direction);
         }
 
+        /// <summary>
+        /// A constant hash code (see <see cref="GeometryBase.GetHashCode"/>)
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             return base.GetHashCode();

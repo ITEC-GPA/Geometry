@@ -6,37 +6,78 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry.Meshes
 {
+    /// <summary>
+    /// A face of a mesh: the ids of its three (triangle) or four (quadrangle) vertices
+    /// </summary>
     [Serializable]
     [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
     public sealed class MeshFace : MeshBase, ISerializable, IEquatable<MeshFace>, ICloneable
     {
         #region Variables
 
+        /// <summary>
+        /// The id of the first vertex
+        /// </summary>
         private int _a;
+        /// <summary>
+        /// The id of the second vertex
+        /// </summary>
         private int _b;
+        /// <summary>
+        /// The id of the third vertex
+        /// </summary>
         private int _c;
+        /// <summary>
+        /// The id of the fourth vertex; <see cref="MeshVertex.Unassigned"/> for a triangle
+        /// </summary>
         private int _d;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The id of the first vertex
+        /// </summary>
         public int A => _a;
 
+        /// <summary>
+        /// The id of the second vertex
+        /// </summary>
         public int B => _b;
 
+        /// <summary>
+        /// The id of the third vertex
+        /// </summary>
         public int C => _c;
 
+        /// <summary>
+        /// The id of the fourth vertex; <see cref="MeshVertex.Unassigned"/> for a triangle
+        /// </summary>
         public int D => _d;
 
+        /// <summary>
+        /// True if the face has three vertices
+        /// </summary>
         public bool IsTriangle => _d == -1;
 
+        /// <summary>
+        /// True if the face has four vertices
+        /// </summary>
         public bool IsQuad => _d != -1;
 
         #endregion
 
         #region Public Constructors
 
+        /// <summary>
+        /// Creates a face
+        /// </summary>
+        /// <param name="a">The id of the first vertex</param>
+        /// <param name="b">The id of the second vertex</param>
+        /// <param name="c">The id of the third vertex</param>
+        /// <param name="d">The id of the fourth vertex; <see cref="MeshVertex.Unassigned"/> for a triangle</param>
+        /// <param name="tag">The tag of the face</param>
         public MeshFace(int a, int b, int c, int d, object tag = null)
         {
             _a = a;
@@ -46,6 +87,12 @@ namespace GPC.Geometry.Meshes
             Tag = tag;
         }
 
+        /// <summary>
+        /// Creates a triangular face
+        /// </summary>
+        /// <param name="a">The id of the first vertex</param>
+        /// <param name="b">The id of the second vertex</param>
+        /// <param name="c">The id of the third vertex</param>
         public MeshFace(int a, int b, int c)
             : this(a, b, c, MeshVertex.Unassigned, null)
         {
@@ -53,10 +100,10 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// 
+        /// Creates a triangular or quadrangular face from the ids of its vertices
         /// </summary>
-        /// <param name="vertices"></param>
-        /// <param name="tag"></param>
+        /// <param name="vertices">The ids of the vertices (3 or 4)</param>
+        /// <param name="tag">The tag of the face</param>
         /// <exception cref="ArgumentOutOfRangeException">if Vertices[] lenght is higher than 4 or lower than 3</exception>
         public MeshFace(int[] vertices, object tag = null)
         {
@@ -74,6 +121,10 @@ namespace GPC.Geometry.Meshes
             base.Tag = tag;
         }
 
+        /// <summary>
+        /// Creates a copy of a face: same id, vertices and tag
+        /// </summary>
+        /// <param name="face">The face to copy</param>
         public MeshFace(MeshFace face)
         {
             Id = face.Id;
@@ -84,6 +135,11 @@ namespace GPC.Geometry.Meshes
             Tag = face.Tag;
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the id and the vertices
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private MeshFace(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             _a = info.GetInt32("A");
@@ -113,6 +169,11 @@ namespace GPC.Geometry.Meshes
             return nodes;
         }
 
+        /// <summary>
+        /// Serializes the <see cref="BaseObject.Guid"/>, the id and the vertices
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -122,18 +183,38 @@ namespace GPC.Geometry.Meshes
             info.AddValue("D", _d);
         }
 
+        /// <summary>
+        /// Equality of the id and of the vertices, in the same order
+        /// </summary>
+        /// <param name="other">The face to compare</param>
+        /// <returns>True if the faces are equal</returns>
         public bool Equals(MeshFace other)
         {
             return base.Equals(other) && _a == other._a && _b == other._b && _c == other._c && _d == other._d;
         }
 
+        /// <summary>
+        /// Equality of the vertices in the same order (see <see cref="MeshBase.HasSameContent(MeshBase)"/>)
+        /// </summary>
+        /// <param name="other">The element to compare</param>
+        /// <returns>True if <paramref name="other"/> is a face with the same vertices</returns>
+        internal override bool HasSameContent(MeshBase other)
+        {
+            return other is MeshFace face && _a == face._a && _b == face._b && _c == face._c && _d == face._d;
+        }
+
+        /// <summary>
+        /// Creates a copy of the face (see <see cref="MeshFace(MeshFace)"/>)
+        /// </summary>
+        /// <returns>The copy</returns>
         public object Clone()
         {
             return new MeshFace(this);
         }
 
         /// <summary>
-        /// Tells if 2 faces have the same nodes also if the faces don't have the same number of nodes and not in the same order
+        /// Tells if the nodes of the smaller face (or edge) are consecutive nodes of the larger one, in the same or in the opposite order.
+        /// The larger face is closed only once (its first node is repeated at the end): not all the rotations of the nodes are recognized
         /// </summary>
         /// <param name="nodes">The nodes of the face to compare</param>
         /// <returns>True if the nodes matches</returns>
@@ -178,13 +259,27 @@ namespace GPC.Geometry.Meshes
 
         #region Operators overrides
 
+        /// <summary>
+        /// Equality operator (see <see cref="Equals(MeshFace)"/>); two null faces are equal
+        /// </summary>
+        /// <param name="face1">The first face</param>
+        /// <param name="face2">The second face</param>
+        /// <returns>True if the faces are equal</returns>
         public static bool operator ==(MeshFace face1, MeshFace face2)
         {
             if (ReferenceEquals(face1, face2))
                 return true;
+            if (face1 is null || face2 is null)
+                return false;
             return face1.Equals(face2);
         }
 
+        /// <summary>
+        /// Inequality operator (see <see cref="Equals(MeshFace)"/>)
+        /// </summary>
+        /// <param name="face1">The first face</param>
+        /// <param name="face2">The second face</param>
+        /// <returns>True if the faces are different</returns>
         public static bool operator !=(MeshFace face1, MeshFace face2)
         {
             return !(face1 == face2);
@@ -194,15 +289,24 @@ namespace GPC.Geometry.Meshes
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(MeshFace)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal face</returns>
         public override bool Equals(object obj)
         {
             if (obj is MeshFace face)
             {
                 return Equals(face);
             }
-            return Equals(obj);
+            return false;
         }
 
+        /// <summary>
+        /// The hash code of the vertices (dependent on their order)
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -216,6 +320,10 @@ namespace GPC.Geometry.Meshes
             }
         }
 
+        /// <summary>
+        /// The text shown by the debugger
+        /// </summary>
+        /// <returns>The id and the vertices</returns>
         private string GetDebuggerDisplay()
         {
             return $"Id:{Id}, A:{A}, B:{B}, C:{C}, D:{D}";

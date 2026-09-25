@@ -1123,8 +1123,10 @@ namespace Meshes.GMsh
 			MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
 			CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus);
 
-			int[] embFaces1 = new int[3] { 26, 27, 28 };
-			int[] embFaces2 = new int[3] { 55, 56, 57 };
+			// September 2026: the faces of the embedded shape were mapped to the id of the previous face (26: centroid (71, 75), out of the
+			// shape; 29 was missing): the ids are the ones of the faces inside the shape
+			int[] embFaces1 = new int[3] { 27, 28, 29 };
+			int[] embFaces2 = new int[3] { 56, 57, 58 };
 
 			int[] outFace1 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[0]][embShape1];
 			int[] outFace2 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[1]][embShape2];
@@ -1646,8 +1648,9 @@ namespace Meshes.GMsh
 			MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
 			CommonGMeshAssert(meshes, new[] { s1 }, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus);
 
-			int[] embShape1Faces = new int[] { 35, 36, 37, 38, 39 };
-			int[] embShape2Faces = new int[] { 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49 };
+			// September 2026: the faces of the embedded shapes were mapped to the id of the previous face: the ids are one more
+			int[] embShape1Faces = new int[] { 36, 37, 38, 39, 40 };
+			int[] embShape2Faces = new int[] { 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 };
 
 			int[] outFace1 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[0]].ElementAt(0).Value;
 			int[] outFace2 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[0]].ElementAt(1).Value;
@@ -1822,8 +1825,9 @@ namespace Meshes.GMsh
 			MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
 			CommonGMeshAssert(meshes, new[] { s1 }, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus);
 
-			int[] embShape1Faces = new int[] { 35, 36, 37, 38, 39 };
-			int[] embShape2Faces = new int[] { 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49 };
+			// September 2026: the faces of the embedded shapes were mapped to the id of the previous face: the ids are one more
+			int[] embShape1Faces = new int[] { 36, 37, 38, 39, 40 };
+			int[] embShape2Faces = new int[] { 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 };
 
 			int[] outFace1 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[0]].ElementAt(0).Value;
 			int[] outFace2 = generateMeshStatus.EmbeddedGeometriesVertexMap[meshes[0]].ElementAt(1).Value;

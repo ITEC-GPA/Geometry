@@ -4,26 +4,42 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 
 namespace GPC.Geometry.Meshes.GMesh
 {
+    /// <summary>
+    /// Mesh of planar shapes generated with Gmsh (OpenCASCADE kernel): triangles or quadrilaterals (recombination), with points, lines,
+    /// polygons and shapes embedded in the surfaces and optional transfinite meshes. Gmsh has a global state: the generations are serialized
+    /// </summary>
     public sealed class GMesh : Mesh
     {
         #region Properties
 
+        /// <summary>
+        /// The options used to generate the mesh (null if the mesh was not generated with options)
+        /// </summary>
         public GMeshGenerateOptions GMeshOptions => (GMeshGenerateOptions)_options;
 
         #endregion
 
         #region Constructors
 
+        /// <summary>
+        /// Creates an empty mesh
+        /// </summary>
         public GMesh()
             : base()
         {
         }
 
+        /// <summary>
+        /// Deserialization constructor (see <see cref="Mesh"/>)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private GMesh(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -34,12 +50,13 @@ namespace GPC.Geometry.Meshes.GMesh
         #region Generate mesh functions
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes, one mesh for each shape, without embedded geometries
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
         /// <param name="shapes">Geometry to mesh</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
-        /// <param name="generateMeshStatus"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
+        /// <param name="generateMeshStatus">The errors, the warnings and the additional information of the generation</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
         {
@@ -48,14 +65,15 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with embedded geometries and their mesh sizes
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
-        /// <param name="shapes"></param>
+        /// <param name="shapes">Geometry to mesh</param>
         /// <param name="embeddedGeometries">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
-        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry. Keys must be contained in <paramref name="embeddedGeometries"/></param>
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
+        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry. Keys must be contained in <paramref name="embeddedGeometries"/></param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, Dictionary<Shape, GeometryBase[]> embeddedGeometries, GMeshGenerateOptions options,
             out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus, Dictionary<GeometryBase, double> embeddedGeomMeshSize = null)
@@ -64,13 +82,14 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with embedded geometries
+        /// (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
         /// </summary>
-        /// <param name="shapes"></param>
+        /// <param name="shapes">Geometry to mesh</param>
         /// <param name="embeddedGeometries">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
-        /// <param name="meshes"></param>
+        /// <param name="meshes">The meshes generated, one for each shape</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, Dictionary<Shape, GeometryBase[]> embeddedGeometries, GMeshGenerateOptions options,
             out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
@@ -79,7 +98,8 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
-        /// 
+        /// Generate the meshes of shapes with Gmsh, one mesh for each shape: the shapes are built with OpenCASCADE, the embedded geometries
+        /// (points, lines, polygons, shapes) are embedded in the surfaces, then the surfaces are meshed with the options
         /// </summary>
         /// <param name="shapesInput">Geometry to mesh</param>
         /// <param name="embeddedGeometriesInput">association one to many of geometries embedded in geometry. es points in surface. Keys must be contained in shapes </param>
@@ -88,8 +108,12 @@ namespace GPC.Geometry.Meshes.GMesh
         /// <param name="generateMeshStatus">Class that collect all the errors, warning and additional information related to geometry generation</param>
         /// <param name="options">Generate mesh options</param>
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
-        /// <remarks>The default geometry tolerance is 10E-4. If the user want to use a custom tolerance, he have to scale by a number lower than 1 the geometry 
-        /// and then rescale with the reciprocal la mesh.</remarks>
+        /// <exception cref="ArgumentNullException">If <paramref name="options"/> or <paramref name="shapesInput"/> is null</exception>
+        /// <exception cref="ArgumentException">If the mesh sizes are not finite and positive (0 &lt;= minimum &lt;= maximum)</exception>
+        /// <remarks>The geometric tolerance of the points is <see cref="GeometryBase.Tolerance"/> (1E-4) times <see cref="GMeshGenerateOptions.GeometryBaseScaleFactor"/>:
+        /// for a smaller tolerance scale the geometry by a number lower than 1 and then rescale the mesh with the reciprocal.
+        /// Gmsh has a global state: the calls are serialized (lock) and Gmsh is always finalized, also when an exception is thrown
+        /// or the generation fails (before, many error paths returned without Gmsh.Finalize and the next call found the old model)</remarks>
         public static bool Generate(IEnumerable<Shape> shapesInput, Dictionary<Shape, GeometryBase[]> embeddedGeometriesInput, Dictionary<GeometryBase,
             double> embeddedGeomMeshSize, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
         {
@@ -99,11 +123,59 @@ namespace GPC.Geometry.Meshes.GMesh
             if (shapesInput is null)
                 throw new ArgumentNullException(nameof(Shape));
 
-            // DateTime dt = new DateTime();
-            DateTime dt0 = DateTime.Now;
+            if (!IsFinitePositive(options.MeshSize) || !IsFinitePositive(options.MeshSizeMax)
+                || double.IsNaN(options.MeshSizeMin) || double.IsInfinity(options.MeshSizeMin)
+                || options.MeshSizeMin < 0 || options.MeshSizeMin > options.MeshSizeMax)
+                throw new ArgumentException("Mesh sizes must be finite, with positive target/maximum and 0 <= minimum <= maximum.", nameof(options));
 
-            Gmsh.Initialize();
-            //Gmsh.Logger.Start();
+            if (embeddedGeomMeshSize != null && embeddedGeomMeshSize.Values.Any(size => !IsFinitePositive(size)))
+                throw new ArgumentException("Embedded mesh sizes must be finite and positive.", nameof(embeddedGeomMeshSize));
+
+            // the input is enumerated once (before, Count() and ElementAt(s) at every step)
+            IList<Shape> shapesList = shapesInput as IList<Shape> ?? shapesInput.ToList();
+
+            lock (GmshSync)
+            {
+                // Personal Gmsh configuration must not override this library's meshing options.
+                Gmsh.Initialize(readConfigFiles: false);
+                try
+                {
+                    return GenerateCore(shapesList, embeddedGeometriesInput, embeddedGeomMeshSize, options, out meshes, out generateMeshStatus);
+                }
+                finally
+                {
+                    Gmsh.Finalize();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gmsh is a global state: one generation at a time
+        /// </summary>
+        private static readonly object GmshSync = new object();
+
+        /// <summary>
+        /// Tell if a value is finite and positive
+        /// </summary>
+        /// <param name="value">The value</param>
+        /// <returns>True if the value is positive and not infinite (false for NaN)</returns>
+        private static bool IsFinitePositive(double value) => value > 0 && !double.IsInfinity(value);
+
+        /// <summary>
+        /// The generation, with Gmsh initialized and locked (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
+        /// </summary>
+        /// <param name="shapesInput">Geometry to mesh</param>
+        /// <param name="embeddedGeometriesInput">The geometries embedded in each shape</param>
+        /// <param name="embeddedGeomMeshSize">Mesh size at specific embed geometry</param>
+        /// <param name="options">Generate mesh options</param>
+        /// <param name="meshes">The meshes generated</param>
+        /// <param name="generateMeshStatus">The errors, the warnings and the additional information of the generation</param>
+        /// <returns>True if the mesh is generate without error, false otherwise</returns>
+        private static bool GenerateCore(IList<Shape> shapesInput, Dictionary<Shape, GeometryBase[]> embeddedGeometriesInput, Dictionary<GeometryBase,
+            double> embeddedGeomMeshSize, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
+        {
+            Stopwatch clock = Stopwatch.StartNew();
+            TimeSpan dt0 = clock.Elapsed;
 
 
             #region OPZIONI GMSH
@@ -123,10 +195,14 @@ namespace GPC.Geometry.Meshes.GMesh
             Gmsh.Option.SetNumber("General.ExpertMode", 1);     //to disable all the messages meant for inexperienced users
 
             // MESH 
-            Gmsh.Option.SetNumber("Mesh.Algorithm", (int)options.Algorithm);
-
-            if (options.MeshSizeMax == 0)
-                throw new ArgumentException("Max mesh size cannot be zero");
+            // Gmsh 4.15.2's algorithm 9 unconditionally invokes UntangleTris, even
+            // with Optimize=false. Embedded surfaces can cause native heap corruption
+            // there, which cannot be caught as a GmshException. Keep the requested
+            // options intact and report the safe algorithm actually used below.
+            bool packingWorkaround = options.Algorithm == GMeshGenerateOptions.MeshAlgorithm.PackingOfParallelograms
+                && Gmsh.Option.GetString("General.Version") == "4.15.2";
+            Gmsh.Option.SetNumber("Mesh.Algorithm", (int)(packingWorkaround
+                ? GMeshGenerateOptions.MeshAlgorithm.FrontalDelaunayForQuads : options.Algorithm));
 
             Gmsh.Option.SetNumber("Mesh.MeshSizeMax", options.MeshSizeMax);
             Gmsh.Option.SetNumber("Mesh.MeshSizeMin", options.MeshSizeMin);
@@ -152,7 +228,7 @@ namespace GPC.Geometry.Meshes.GMesh
 
             #endregion
 
-            DateTime dt1 = DateTime.Now;
+            TimeSpan dt1 = clock.Elapsed;
 
             #region TOLERANCE
 
@@ -178,6 +254,8 @@ namespace GPC.Geometry.Meshes.GMesh
 
             meshes = new List<Mesh>();                                  // lista di meshes che poi vengono date in out
             generateMeshStatus = new GMeshGenerateMeshStatus();
+            if (packingWorkaround)
+                generateMeshStatus.AddWarning("Gmsh 4.15.2 PackingOfParallelograms can crash in native UntangleTris; using FrontalDelaunayForQuads with the requested recombination instead.");
             OpenCascadeWrapper occw = new OpenCascadeWrapper();
 
             List<Shape> shapesList = new List<Shape>();
@@ -191,129 +269,129 @@ namespace GPC.Geometry.Meshes.GMesh
             // Associazione fra la geometria embedded e il tag del oggetto
             Dictionary<int, Dictionary<GeometryBase, int[]>> embeddedGeometriesTagAssociation = new Dictionary<int, Dictionary<GeometryBase, int[]>>();
             // Associazione tra shape, geometria emb con meshSize modificata e mesh size
-            Dictionary<Shape, Dictionary<GeometryBase, double>> embGeomAssociation = new Dictionary<Shape, Dictionary<GeometryBase, double>>();
+            Dictionary<Shape, Dictionary<GeometryBase, double>> embGeomAssociation = new Dictionary<Shape, Dictionary<GeometryBase, double>>(ReferenceComparer<Shape>.Instance);
             // Associazione tra shape e geometria emb 
-            Dictionary<Shape, GeometryBase[]> embeddedGeometries = new Dictionary<Shape, GeometryBase[]>();
+            Dictionary<Shape, GeometryBase[]> embeddedGeometries = new Dictionary<Shape, GeometryBase[]>(ReferenceComparer<Shape>.Instance);
             // Associazione tra shape embedded non modificata e shape embedded modificata.
-            Dictionary<Shape, Shape> shapeOutputAssociation = new Dictionary<Shape, Shape>();
+            Dictionary<Shape, Shape> shapeOutputAssociation = new Dictionary<Shape, Shape>(ReferenceComparer<Shape>.Instance);
 
             HashSet<GeometryBase> listOfAllEmbGeom = new HashSet<GeometryBase>();
             HashSet<GeometryBase> listOfAllEmbGeomForEmbShape = new HashSet<GeometryBase>();
 
             // prima di scalare tutto, creo un dizionario in cui ho la shape, il riferimento in memoria della geometria (scalata) e la size.
             // scalo tutto del fattore scalegeometryfactor            
-            for (int s = 0; s < shapesInput.Count(); s++)
+            for (int s = 0; s < shapesInput.Count; s++)
             {
-                Shape shape = new Shape(shapesInput.ElementAt(s));
+                Shape shape = new Shape(shapesInput[s]);
                 shape = shape.Scale(options.GeometryBaseScaleFactor);
                 shapesList.Add(shape);
                 List<GeometryBase> geometryBases = new List<GeometryBase>();
                 Dictionary<GeometryBase, double> geometryAndMeshSize = new Dictionary<GeometryBase, double>();
 
-                if (embeddedGeometriesInput != null && embeddedGeometriesInput.ContainsKey(shapesInput.ElementAt(s)))
+                if (embeddedGeometriesInput != null && embeddedGeometriesInput.ContainsKey(shapesInput[s]))
                 {
-                    for (int i = 0; i < embeddedGeometriesInput[shapesInput.ElementAt(s)].Length; i++)
+                    for (int i = 0; i < embeddedGeometriesInput[shapesInput[s]].Length; i++)
                     {
-                        if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Point3d point3d)
+                        if (embeddedGeometriesInput[shapesInput[s]][i] is Point3d point3d)
                         {
                             Point3d scaledPoint = point3d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledPoint);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledPoint,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Point2d point2d)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Point2d point2d)
                         {
                             Point2d scaledPoint = point2d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledPoint);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledPoint,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Line3d line3d)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Line3d line3d)
                         {
                             Line3d scaledLine = line3d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledLine);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledLine,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Line2d line2d)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Line2d line2d)
                         {
                             Line2d scaledLine = line2d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledLine);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledLine,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Polygon3d polygon3d)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Polygon3d polygon3d)
                         {
                             Polygon3d scaledPolygon = polygon3d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledPolygon);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledPolygon,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Polygon2d polygon2d)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Polygon2d polygon2d)
                         {
                             Polygon2d scaledPolygon = polygon2d.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledPolygon);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledPolygon,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
-                        else if (embeddedGeometriesInput[shapesInput.ElementAt(s)][i] is Shape shapeEmb)
+                        else if (embeddedGeometriesInput[shapesInput[s]][i] is Shape shapeEmb)
                         {
                             Shape scaledShape = shapeEmb.Scale(options.GeometryBaseScaleFactor);
                             geometryBases.Add(scaledShape);
                             if (embeddedGeomMeshSize != null)
                             {
-                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput.ElementAt(s)][i]))
+                                if (embeddedGeomMeshSize.ContainsKey(embeddedGeometriesInput[shapesInput[s]][i]))
                                 {
                                     geometryAndMeshSize.Add(scaledShape,
-                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput.ElementAt(s)][i]] * options.GeometryBaseScaleFactor);
+                                        embeddedGeomMeshSize[embeddedGeometriesInput[shapesInput[s]][i]] * options.GeometryBaseScaleFactor);
                                 }
                             }
                         }
 
                         else
-                            throw new ArgumentException($"Geom {embeddedGeometriesInput[shapesInput.ElementAt(s)][i].GetType()} not supported");
+                            throw new ArgumentException($"Geom {embeddedGeometriesInput[shapesInput[s]][i].GetType()} not supported");
                     }
                     embeddedGeometries.Add(shape, geometryBases.ToArray());
                     embGeomAssociation.Add(shape, geometryAndMeshSize);
@@ -322,21 +400,23 @@ namespace GPC.Geometry.Meshes.GMesh
                         listOfAllEmbGeom.Add(geometryBases[g]);
                 }
 
-                for (int i = 0; i < listOfAllEmbGeom.Count; i++)
-                    listOfAllEmbGeomForEmbShape.Add(listOfAllEmbGeom.ElementAt(i));
-                for (int i = 0; i < shapesInput.ElementAt(s).Fill.Count; i++)
-                    listOfAllEmbGeomForEmbShape.Add(shapesInput.ElementAt(s).Fill[i]);
-                if (shapesInput.ElementAt(s).HasHoles)
-                    for (int i = 0; i < shapesInput.ElementAt(s).Holes.Count(); i++)
-                        for (int p = 0; p < shapesInput.ElementAt(s).Holes[i].Count; p++)
-                            listOfAllEmbGeomForEmbShape.Add(shapesInput.ElementAt(s).Holes[i][p]);
+                listOfAllEmbGeomForEmbShape.UnionWith(listOfAllEmbGeom); // before, ElementAt(i) on the HashSet: O(n^2)
+                for (int i = 0; i < shapesInput[s].Fill.Count; i++)
+                    listOfAllEmbGeomForEmbShape.Add(shapesInput[s].Fill[i]);
+                if (shapesInput[s].HasHoles)
+                    for (int i = 0; i < shapesInput[s].Holes.Count(); i++)
+                        for (int p = 0; p < shapesInput[s].Holes[i].Count; p++)
+                            listOfAllEmbGeomForEmbShape.Add(shapesInput[s].Holes[i][p]);
             }
 
             Shape[] shapes = shapesList.ToArray();
 
+            // the embedded geometries in an array (before, ElementAt(g) on the HashSet in the loops: O(n^2))
+            GeometryBase[] allEmbGeom = listOfAllEmbGeom.ToArray();
+
             #endregion
 
-            DateTime dt2 = DateTime.Now;
+            TimeSpan dt2 = clock.Elapsed;
 
             try
             {
@@ -348,19 +428,9 @@ namespace GPC.Geometry.Meshes.GMesh
                 {
                     for (int c = 0; c < shapes.Count(); c++)
                     {
-                        DateTime dt2_1 = DateTime.Now;
+                        TimeSpan dt2_1 = clock.Elapsed;
 
                         HashSet<GeometryBase> hashSet = new HashSet<GeometryBase>();
-                        Shape clone = (Shape)shapes[c].Clone();
-                        GeometryBase[] embGeomClone = null;
-                        Dictionary<GeometryBase, double> embMeshSizeBuffer = null;
-
-                        if (embeddedGeometries.ContainsKey(shapes[c]))
-                        {
-                            embGeomClone = embeddedGeometries[shapes[c]];
-                            embMeshSizeBuffer = embGeomAssociation[shapes[c]];
-                        }
-                        bool addpoint = false;
 
 
                         #region PREPROCESSING DELLA GEOMETRIA
@@ -387,9 +457,10 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                             foreach (GeometryBase g in listOfAllEmbGeomForEmbShape)
                                             {
-                                                if (g.GetHashCode() != geom.GetHashCode())
+                                                // identity by reference (before, by hash code: the hash of the shape changes when a point is inserted)
+                                                if (!ReferenceEquals(g, geom))
                                                 {
-                                                    for (int j = 0; j < shapeToCut.Fill.Explode().Length; j++)
+                                                    for (int j = 0; j < shapeToCut.Fill.Count; j++) // Count = number of sides (before, Explode() at every iteration)
                                                     {
                                                         Line3d[] perim = shapeToCut.Fill.Explode();
 
@@ -409,7 +480,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                 double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                                 if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                                 {
-                                                                    addpoint = true;
                                                                     shapeToCut.Fill.Insert(j + 1, point);
                                                                     hashSet.Add(point);
                                                                     break;
@@ -428,13 +498,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                             GenerateMeshGeometryPreProcessingAddLineToShape(shapeToCut.Fill, perim[j], line, j, toleranceIntersection, out int vertexAdded);
                                                             if (vertexAdded > 0)
                                                             {
-                                                                addpoint = true;
                                                                 hashSet.Add(line);
                                                                 perim = shapeToCut.Fill.Explode();
                                                             }
                                                             if (vertexAdded == 2)
                                                             {
-                                                                addpoint = true;
                                                                 hashSet.Add(line);
                                                                 break; // ho aggiunto tutti e due i vertici della linea
                                                             }
@@ -445,7 +513,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                 double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                                 if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                                 {
-                                                                    addpoint = true;
                                                                     shapeToCut.Fill.Insert(j + 1, p);
                                                                     hashSet.Add(p);
                                                                     perim = shapeToCut.Fill.Explode();
@@ -468,13 +535,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                 GenerateMeshGeometryPreProcessingAddLineToShape(shapeToCut.Fill, perim[j], line, j, toleranceIntersection, out int vertexAdded);
                                                                 if (vertexAdded > 0)
                                                                 {
-                                                                    addpoint = true;
                                                                     hashSet.Add(line);
                                                                     perim = shapeToCut.Fill.Explode();
                                                                 }
                                                                 if (vertexAdded == 2)
                                                                 {
-                                                                    addpoint = true;
                                                                     hashSet.Add(line);
                                                                     break; // ho aggiunto tutti e due i vertici della linea
                                                                 }
@@ -485,7 +550,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                     double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                                     if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                                     {
-                                                                        addpoint = true;
                                                                         shapeToCut.Fill.Insert(j + 1, p);
                                                                         hashSet.Add(p);
                                                                         perim = shapeToCut.Fill.Explode();
@@ -505,13 +569,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                     GenerateMeshGeometryPreProcessingAddLineToShape(shapeToCut.Fill, perim[j], line, j, toleranceIntersection, out int vertexAdded);
                                                                     if (vertexAdded > 0)
                                                                     {
-                                                                        addpoint = true;
                                                                         hashSet.Add(line);
                                                                         perim = shapeToCut.Fill.Explode();
                                                                     }
                                                                     if (vertexAdded == 2)
                                                                     {
-                                                                        addpoint = true;
                                                                         hashSet.Add(line);
                                                                         break; // ho aggiunto tutti e due i vertici della linea
                                                                     }
@@ -522,7 +584,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                         double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                                         if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                                         {
-                                                                            addpoint = true;
                                                                             shapeToCut.Fill.Insert(j + 1, p);
                                                                             hashSet.Add(p);
                                                                             perim = shapeToCut.Fill.Explode();
@@ -532,24 +593,37 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                                                 if (s.HasHoles)
                                                                 {
+                                                                    // the vertices of the holes of s on the side j are added to the embedded shape, as the ones of the fill
+                                                                    // (before, they were inserted in the hole of s at the index j of the other shape, and perim was
+                                                                    // rebuilt from the host shape)
                                                                     for (int k = 0; k < s.Holes.Count(); k++)
                                                                     {
                                                                         Line3d[] arrayH = s.Holes[k].Explode();
                                                                         for (int i1 = 0; i1 < arrayH.Length; i1++)
                                                                         {
                                                                             Line3d line = arrayH[i1];
-                                                                            GenerateMeshGeometryPreProcessingAddLineToShape(s.Holes[k], perim[j], line, j, toleranceIntersection, out int vertexAdded);
+                                                                            GenerateMeshGeometryPreProcessingAddLineToShape(shapeToCut.Fill, perim[j], line, j, toleranceIntersection, out int vertexAdded);
                                                                             if (vertexAdded > 0)
                                                                             {
-                                                                                addpoint = true;
                                                                                 hashSet.Add(line);
-                                                                                perim = shapes[c].Fill.Explode();
+                                                                                perim = shapeToCut.Fill.Explode();
                                                                             }
                                                                             if (vertexAdded == 2)
                                                                             {
-                                                                                addpoint = true;
                                                                                 hashSet.Add(line);
                                                                                 break; // ho aggiunto tutti e due i vertici della linea
+                                                                            }
+                                                                            if (line.GetIntersection(perim[j], out Point3d p))
+                                                                            {
+                                                                                double dist1 = p.DistanceTo(perim[j].Start);
+                                                                                double dist2 = p.DistanceTo(perim[j].End);
+                                                                                double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
+                                                                                if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
+                                                                                {
+                                                                                    shapeToCut.Fill.Insert(j + 1, p);
+                                                                                    hashSet.Add(p);
+                                                                                    perim = shapeToCut.Fill.Explode();
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
@@ -602,7 +676,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                 catch (Exception e)
                                 {
                                     generateMeshStatus.AddException(e, "Failed modify the embedded shape in order to add a vertex in correspondance of a embedded geometry vertex");
-                                    Gmsh.Finalize();
                                     return false;
                                 }
                             }
@@ -621,49 +694,46 @@ namespace GPC.Geometry.Meshes.GMesh
                                 bool addHole = false;
                                 List<Polygon3d> holesToAdd = new List<Polygon3d>();
 
-                                for (int g = 0; g < listOfAllEmbGeom.Count; g++)
+                                for (int g = 0; g < allEmbGeom.Length; g++)
                                 {
                                     Line3d[] perimeter = shapes[c].Fill.Explode();
 
-                                    if (!hashSet.Contains(listOfAllEmbGeom.ElementAt(g)))
+                                    if (!hashSet.Contains(allEmbGeom[g]))
                                     {
                                         for (int i = 0; i < perimeter.Length; i++)
                                         {
-                                            if (listOfAllEmbGeom.ElementAt(g) is Point3d pt3d || listOfAllEmbGeom.ElementAt(g) is Point2d pt2d)
+                                            if (allEmbGeom[g] is Point3d pt3d || allEmbGeom[g] is Point2d pt2d)
                                             {
                                                 Point3d point;
-                                                if (listOfAllEmbGeom.ElementAt(g) is Point3d p3d)
+                                                if (allEmbGeom[g] is Point3d p3d)
                                                     point = p3d;
                                                 else
-                                                    point = new Point3d((Point2d)listOfAllEmbGeom.ElementAt(g));
+                                                    point = new Point3d((Point2d)allEmbGeom[g]);
 
                                                 // Se il punto è sul lato è [i] e non è un vertica, allora aggiungilo
                                                 if (perimeter[i].IsPointOnLine(point, toleranceIntersection) && !shapes[c].Fill.Contains(point))
                                                 {
-                                                    addpoint = true;
                                                     shapes[c].Fill.Insert(i + 1, point);
                                                     hashSet.Add(point);
                                                     break;
                                                 }
                                             }
-                                            else if (listOfAllEmbGeom.ElementAt(g) is Line3d line3d || listOfAllEmbGeom.ElementAt(g) is Line2d line2d)
+                                            else if (allEmbGeom[g] is Line3d line3d || allEmbGeom[g] is Line2d line2d)
                                             {
                                                 Line3d line;
-                                                if (listOfAllEmbGeom.ElementAt(g) is Line3d l)
+                                                if (allEmbGeom[g] is Line3d l)
                                                     line = l;
                                                 else
-                                                    line = new Line3d((Line2d)listOfAllEmbGeom.ElementAt(g));
+                                                    line = new Line3d((Line2d)allEmbGeom[g]);
 
                                                 GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Fill, perimeter[i], line, i, toleranceIntersection, out int vertexAdded);
                                                 if (vertexAdded > 0)
                                                 {
-                                                    addpoint = true;
                                                     hashSet.Add(line);
                                                     perimeter = shapes[c].Fill.Explode();
                                                 }
                                                 if (vertexAdded == 2)
                                                 {
-                                                    addpoint = true;
                                                     hashSet.Add(line);
                                                     break; // ho aggiunto tutti e due i vertici della linea
                                                 }
@@ -674,20 +744,19 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                     if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                     {
-                                                        addpoint = true;
                                                         shapes[c].Fill.Insert(i + 1, p);
                                                         hashSet.Add(p);
                                                         perimeter = shapes[c].Fill.Explode();
                                                     }
                                                 }
                                             }
-                                            else if (listOfAllEmbGeom.ElementAt(g) is Polygon3d p3d || listOfAllEmbGeom.ElementAt(g) is Polygon2d p2d)
+                                            else if (allEmbGeom[g] is Polygon3d p3d || allEmbGeom[g] is Polygon2d p2d)
                                             {
                                                 Polygon3d polygon3d;
-                                                if (listOfAllEmbGeom.ElementAt(g) is Polygon3d polyg)
+                                                if (allEmbGeom[g] is Polygon3d polyg)
                                                     polygon3d = polyg;
                                                 else
-                                                    polygon3d = new Polygon3d((Polygon2d)listOfAllEmbGeom.ElementAt(g));
+                                                    polygon3d = new Polygon3d((Polygon2d)allEmbGeom[g]);
 
                                                 Line3d[] lines = polygon3d.Explode().ToArray();
                                                 for (int l = 0; l < lines.Count(); l++)
@@ -695,13 +764,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Fill, perimeter[i], lines[l], i, toleranceIntersection, out int vertexAdded);
                                                     if (vertexAdded > 0)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(lines[l]);
                                                         perimeter = shapes[c].Fill.Explode();
                                                     }
                                                     if (vertexAdded == 2)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(lines[l]);
                                                         break; // ho aggiunto tutti e due i vertici della linea
                                                     }
@@ -712,7 +779,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                         double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                         if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                         {
-                                                            addpoint = true;
                                                             shapes[c].Fill.Insert(i + 1, p);
                                                             hashSet.Add(p);
                                                             perimeter = shapes[c].Fill.Explode();
@@ -720,7 +786,7 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     }
                                                 }
                                             }
-                                            else if (listOfAllEmbGeom.ElementAt(g) is Shape s)
+                                            else if (allEmbGeom[g] is Shape s)
                                             {
                                                 Line3d[] shapeArray = s.Fill.Explode();
                                                 for (int i1 = 0; i1 < shapeArray.Length; i1++)
@@ -729,13 +795,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Fill, perimeter[i], line, i, toleranceIntersection, out int vertexAdded);
                                                     if (vertexAdded > 0)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(line);
                                                         perimeter = shapes[c].Fill.Explode();
                                                     }
                                                     if (vertexAdded == 2)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(line);
                                                         break; // ho aggiunto tutti e due i vertici della linea
                                                     }
@@ -746,7 +810,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                         double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                         if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                         {
-                                                            addpoint = true;
                                                             shapes[c].Fill.Insert(i + 1, p);
                                                             hashSet.Add(p);
                                                             perimeter = shapes[c].Fill.Explode();
@@ -756,24 +819,36 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                                 if (s.HasHoles)
                                                 {
+                                                    // the vertices of the holes of s on the side i are added to the shape, as the ones of the fill
+                                                    // (before, they were inserted in the hole of s at the index i of the shape)
                                                     for (int j = 0; j < s.Holes.Count(); j++)
                                                     {
                                                         Line3d[] holeArray = s.Holes[j].Explode();
                                                         for (int i1 = 0; i1 < holeArray.Length; i1++)
                                                         {
                                                             Line3d line = holeArray[i1];
-                                                            GenerateMeshGeometryPreProcessingAddLineToShape(s.Holes[j], perimeter[i], line, i, toleranceIntersection, out int vertexAdded);
+                                                            GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Fill, perimeter[i], line, i, toleranceIntersection, out int vertexAdded);
                                                             if (vertexAdded > 0)
                                                             {
-                                                                addpoint = true;
                                                                 hashSet.Add(line);
                                                                 perimeter = shapes[c].Fill.Explode();
                                                             }
                                                             if (vertexAdded == 2)
                                                             {
-                                                                addpoint = true;
                                                                 hashSet.Add(line);
                                                                 break; // ho aggiunto tutti e due i vertici della linea
+                                                            }
+                                                            if (line.GetIntersection(perimeter[i], out Point3d p, toleranceIntersection))
+                                                            {
+                                                                double dist1 = p.DistanceTo(perimeter[i].Start);
+                                                                double dist2 = p.DistanceTo(perimeter[i].End);
+                                                                double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
+                                                                if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
+                                                                {
+                                                                    shapes[c].Fill.Insert(i + 1, p);
+                                                                    hashSet.Add(p);
+                                                                    perimeter = shapes[c].Fill.Explode();
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -786,13 +861,12 @@ namespace GPC.Geometry.Meshes.GMesh
                                             }
                                         }
 
-                                        if (listOfAllEmbGeom.ElementAt(g) is Shape sh)
+                                        if (allEmbGeom[g] is Shape sh)
                                         {
                                             if (shapes[c].IsPolygonInside(sh.Fill))
                                             {
                                                 holesToAdd.Add(sh.Fill);
                                                 addHole = true;
-                                                addpoint = true;
                                             }
                                         }
                                     }
@@ -808,41 +882,38 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                             for (int j = 0; j < perimeterHole.Length; j++)
                                             {
-                                                if (listOfAllEmbGeom.ElementAt(g) is Point3d p3d || listOfAllEmbGeom.ElementAt(g) is Point2d p2d)
+                                                if (allEmbGeom[g] is Point3d p3d || allEmbGeom[g] is Point2d p2d)
                                                 {
                                                     Point3d point;
-                                                    if (listOfAllEmbGeom.ElementAt(g) is Point3d p3)
+                                                    if (allEmbGeom[g] is Point3d p3)
                                                         point = p3;
                                                     else
-                                                        point = new Point3d((Point2d)listOfAllEmbGeom.ElementAt(g));
+                                                        point = new Point3d((Point2d)allEmbGeom[g]);
 
                                                     // Se il punto è sul lato è [i] e non è un vertica, allora aggiungilo
                                                     if (perimeterHole[j].IsPointOnLine(point, toleranceIntersection))
                                                     {
-                                                        addpoint = true;
                                                         shapes[c].Holes[k].Insert(j + 1, point);
                                                         hashSet.Add(point);
                                                         break;
                                                     }
                                                 }
-                                                else if (listOfAllEmbGeom.ElementAt(g) is Line3d line3d || listOfAllEmbGeom.ElementAt(g) is Line2d line2d)
+                                                else if (allEmbGeom[g] is Line3d line3d || allEmbGeom[g] is Line2d line2d)
                                                 {
                                                     Line3d line;
-                                                    if (listOfAllEmbGeom.ElementAt(g) is Line3d l)
+                                                    if (allEmbGeom[g] is Line3d l)
                                                         line = l;
                                                     else
-                                                        line = new Line3d((Line2d)listOfAllEmbGeom.ElementAt(g));
+                                                        line = new Line3d((Line2d)allEmbGeom[g]);
 
                                                     GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Holes[k], perimeterHole[j], line, j, toleranceIntersection, out int vertexAdded);
                                                     if (vertexAdded > 0)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(line);
                                                         perimeterHole = shapes[c].Holes[k].Explode();
                                                     }
                                                     if (vertexAdded == 2)
                                                     {
-                                                        addpoint = true;
                                                         hashSet.Add(line);
                                                         break; // ho aggiunto tutti e due i vertici della linea
                                                     }
@@ -850,20 +921,19 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     {
                                                         if (Math.Abs(p.DistanceTo(perimeterHole[j].Start)) > toleranceIntersection && Math.Abs(p.DistanceTo(perimeterHole[j].End)) > toleranceIntersection)
                                                         {
-                                                            addpoint = true;
                                                             shapes[c].Holes[k].Insert(j + 1, p);
                                                             hashSet.Add(p);
                                                             perimeterHole = shapes[c].Holes[k].Explode();
                                                         }
                                                     }
                                                 }
-                                                else if (listOfAllEmbGeom.ElementAt(g) is Polygon3d pg3d || listOfAllEmbGeom.ElementAt(g) is Polygon2d pg2d)
+                                                else if (allEmbGeom[g] is Polygon3d pg3d || allEmbGeom[g] is Polygon2d pg2d)
                                                 {
                                                     Polygon3d polygon3d;
-                                                    if (listOfAllEmbGeom.ElementAt(g) is Polygon3d polyg)
+                                                    if (allEmbGeom[g] is Polygon3d polyg)
                                                         polygon3d = polyg;
                                                     else
-                                                        polygon3d = new Polygon3d((Polygon2d)listOfAllEmbGeom.ElementAt(g));
+                                                        polygon3d = new Polygon3d((Polygon2d)allEmbGeom[g]);
 
                                                     Line3d[] lines = polygon3d.Explode().ToArray();
                                                     for (int l = 0; l < lines.Count(); l++)
@@ -871,13 +941,11 @@ namespace GPC.Geometry.Meshes.GMesh
                                                         GenerateMeshGeometryPreProcessingAddLineToShape(shapes[c].Holes[k], perimeterHole[j], lines[l], j, toleranceIntersection, out int vertexAdded);
                                                         if (vertexAdded > 0)
                                                         {
-                                                            addpoint = true;
                                                             hashSet.Add(lines[l]);
                                                             perimeterHole = shapes[c].Holes[k].Explode();
                                                         }
                                                         if (vertexAdded == 2)
                                                         {
-                                                            addpoint = true;
                                                             hashSet.Add(lines[l]);
                                                             break; // ho aggiunto tutti e due i vertici della linea
                                                         }
@@ -885,7 +953,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                         {
                                                             if (Math.Abs(p.DistanceTo(perimeterHole[j].Start)) > toleranceIntersection && Math.Abs(p.DistanceTo(perimeterHole[j].End)) > toleranceIntersection)
                                                             {
-                                                                addpoint = true;
                                                                 shapes[c].Holes[k].Insert(j + 1, p);
                                                                 hashSet.Add(p);
                                                                 perimeterHole = shapes[c].Holes[k].Explode();
@@ -893,7 +960,7 @@ namespace GPC.Geometry.Meshes.GMesh
                                                         }
                                                     }
                                                 }
-                                                else if (listOfAllEmbGeom.ElementAt(g) is Shape s)
+                                                else if (allEmbGeom[g] is Shape s)
                                                 {
                                                     if (s.HasHoles)
                                                     {
@@ -929,16 +996,9 @@ namespace GPC.Geometry.Meshes.GMesh
                                     }
                                 }
 
-                                // aggiorno i dizionari
-                                if (addpoint && embGeomClone != null)
-                                {
-                                    if (!shapes[c].Equals(clone))
-                                    {
-                                        embeddedGeometries.Add(shapes[c], embGeomClone);
-                                        embGeomAssociation.Add(shapes[c], embMeshSizeBuffer);
-                                        embeddedGeometries.Remove(clone);
-                                    }
-                                }
+                                // The dictionaries use the reference of the shape as key: the shape can be modified here without updating them
+                                // (before, the modified shape was added again and the old key was not removed; a shape changed only by
+                                // RemoveDuplicatedPoints was no more found and its embedded geometries were ignored)
                             }
 
                             #endregion
@@ -946,13 +1006,12 @@ namespace GPC.Geometry.Meshes.GMesh
                         catch (Exception e)
                         {
                             generateMeshStatus.AddException(e, "Failed modify the shape in order to add a vertex in correspondance of a embedded geometry vertex");
-                            Gmsh.Finalize();
                             return false;
                         }
 
                         #endregion
 
-                        DateTime dt2_2 = DateTime.Now;
+                        TimeSpan dt2_2 = clock.Elapsed;
                         preProctime += (dt2_2 - dt2_1).TotalSeconds;
 
                         #region GENERAZIONE DELLA GEOMETRIA DENTRO OPENCASCADE
@@ -1018,40 +1077,39 @@ namespace GPC.Geometry.Meshes.GMesh
                         }
                         catch (GmshException ge)
                         {
-                            generateMeshStatus.AddException(ge, $"{GMeshGenerateMeshStatus.FailedToCreateTheShape}: {Array.IndexOf(shapes.ToArray(), shapes[c])} in CAD.");
+                            generateMeshStatus.AddException(ge, $"{GMeshGenerateMeshStatus.FailedToCreateTheShape}: {c} in CAD.");
                             return false;
                         }
 
 
                         #endregion
 
-                        DateTime dt3 = DateTime.Now;
+                        TimeSpan dt3 = clock.Elapsed;
                         geomCADTime += (dt3 - dt2_2).TotalSeconds;
 
                     }
 
                     Gmsh.Model.Occ.Synchronize();
 
-                    DateTime dt3_3 = DateTime.Now;
+                    TimeSpan dt3_3 = clock.Elapsed;
 
                     if (embShapeCut)
                         occw.RebuildObjectTagsAndCheck(toleranceIntersection);
                     else
                         occw.RebuildObjectTags();
 
-                    DateTime dt3_4 = DateTime.Now;
+                    TimeSpan dt3_4 = clock.Elapsed;
                     rebuildObjectTagsTime += (dt3_4 - dt3_3).TotalSeconds;
                 }
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, "Failed to add the shapes into CAD");
-                    Gmsh.Finalize();
                     return false;
                 }
 
                 #endregion
 
-                DateTime dt3_2 = DateTime.Now;
+                TimeSpan dt3_2 = clock.Elapsed;
 
                 #region FRAGMENT
 
@@ -1062,10 +1120,20 @@ namespace GPC.Geometry.Meshes.GMesh
                 {
                     if (physicalGroupTagSurfacesAssociation.Count > 1)
                     {
-                        // creo un array (int,int) in cui associo ad ogni PhG la propria superficie (in questa fase sono associate 1 a 1). 
-                        // poi faccio il fragment tra questo array e se stesso, in modo che trovi tutte le intersezioni e generi le geometrie di cui ha bisogno. 
-                        (int, int)[] dimSurfaceTagBuffer = physicalGroupTagSurfacesAssociation.Select(i => new { i.dim, i.surfacesTag }).
-                            Select(i => new ValueTuple<int, int>(i.dim, i.surfacesTag[0])).ToArray();
+                        // creo un array (int,int) con tutte le superfici di ogni PhG (una shape con fori può essere divisa in più superfici dal Cut).
+                        // poi faccio il fragment tra questo array e se stesso, in modo che trovi tutte le intersezioni e generi le geometrie di cui ha bisogno.
+                        // (before, only the first surface of each shape was fragmented: the other ones lost the congruence and the physical group)
+                        var surfaceOwner = new List<int>();
+                        var dimSurfaceTagList = new List<(int, int)>();
+                        for (int i = 0; i < physicalGroupTagSurfacesAssociation.Count; i++)
+                        {
+                            foreach (int surfaceTag in physicalGroupTagSurfacesAssociation[i].surfacesTag)
+                            {
+                                dimSurfaceTagList.Add((physicalGroupTagSurfacesAssociation[i].dim, surfaceTag));
+                                surfaceOwner.Add(i);
+                            }
+                        }
+                        (int, int)[] dimSurfaceTagBuffer = dimSurfaceTagList.ToArray();
                         try
                         {
                             Gmsh.Model.Occ.Fragment(dimSurfaceTagBuffer, dimSurfaceTagBuffer, out (int, int)[] result, out (int, int)[][] resultMap, -1, true, true);
@@ -1075,35 +1143,43 @@ namespace GPC.Geometry.Meshes.GMesh
                             {
                                 int physicalTag = physicalGroupTagSurfacesAssociation[i].physicalGroupTag;
                                 int dim = physicalGroupTagSurfacesAssociation[i].dim;
-                                int surfaceTag = physicalGroupTagSurfacesAssociation[i].surfacesTag[0];
 
-                                var newSurfaceTags = resultMap[i].Where(j => j.Item2 != 0).Select(j => j.Item2).ToArray();
+                                // resultMap: the new entities of every input object (the objects come first)
+                                var newSurfaceTags = new List<int>();
+                                for (int k = 0; k < surfaceOwner.Count; k++)
+                                {
+                                    if (surfaceOwner[k] != i)
+                                        continue;
+                                    foreach ((int, int) dimTag in resultMap[k] ?? new (int, int)[0])
+                                    {
+                                        if (dimTag.Item2 != 0 && !newSurfaceTags.Contains(dimTag.Item2))
+                                            newSurfaceTags.Add(dimTag.Item2);
+                                    }
+                                }
 
-                                int newPhysicalTag = Gmsh.Model.AddPhysicalGroup(dim, newSurfaceTags, physicalTag);
+                                int newPhysicalTag = Gmsh.Model.AddPhysicalGroup(dim, newSurfaceTags.ToArray(), physicalTag);
 
-                                physicalGroupTagSurfacesAssociation[i] = (newPhysicalTag, dim, newSurfaceTags, physicalGroupTagSurfacesAssociation[i].shape);
-
-                                generateMeshStatus.GeneratedSurfaces = i;
+                                physicalGroupTagSurfacesAssociation[i] = (newPhysicalTag, dim, newSurfaceTags.ToArray(), physicalGroupTagSurfacesAssociation[i].shape);
                             }
+
+                            generateMeshStatus.GeneratedSurfaces = physicalGroupTagSurfacesAssociation.Count; // it was the index of the last one
                         }
                         catch (GmshException e)
                         {
                             generateMeshStatus.AddException(e, "Failed to find shapes intersections");
-                            Gmsh.Finalize();
                             return false;
                         }
                         catch (Exception e)
                         {
                             generateMeshStatus.AddException(e, "Failed to find shapes intersections");
-                            Gmsh.Finalize();
                             return false;
                         }
 
-                        DateTime dt3_3 = DateTime.Now;
+                        TimeSpan dt3_3 = clock.Elapsed;
 
                         occw.RebuildObjectTags();
 
-                        DateTime dt3_4 = DateTime.Now;
+                        TimeSpan dt3_4 = clock.Elapsed;
                         rebuildObjectTagsTime += (dt3_4 - dt3_3).TotalSeconds;
                     }
                     else
@@ -1118,13 +1194,12 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, "Failed split the shapes");
-                    Gmsh.Finalize();
                     return false;
                 }
 
                 #endregion
 
-                DateTime dt4 = DateTime.Now;
+                TimeSpan dt4 = clock.Elapsed;
 
                 #region TRANSFINITE BOUNDARY
 
@@ -1132,17 +1207,23 @@ namespace GPC.Geometry.Meshes.GMesh
                 {
                     if (options.Transfinite && !options.TransfiniteSurface)
                     {
-                        for (int k = 0; k < shapes.Count(); k++)
+                        // the association k is the one of the shape k (before, searched with == at every iteration: equal shapes were
+                        // confused); a curve shared by two surfaces is set once
+                        var transfiniteCurves = new HashSet<int>();
+                        for (int k = 0; k < shapes.Length; k++)
                         {
-                            int physicalTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[k]).First().physicalGroupTag;
+                            int[] surfacesTag = physicalGroupTagSurfacesAssociation[k].surfacesTag;
 
-                            for (int count = 0; count < physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[k]).First().surfacesTag.Length; count++)
+                            for (int count = 0; count < surfacesTag.Length; count++)
                             {
-                                int surfaceTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[k]).First().surfacesTag[count];
+                                int surfaceTag = surfacesTag[count];
                                 var boundaryCurvesTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTag) }, false, false, false).Select(i => i.Item2).ToList();
 
-                                for (int j = 0; j < boundaryCurvesTag.Count(); j++)
+                                for (int j = 0; j < boundaryCurvesTag.Count; j++)
                                 {
+                                    if (!transfiniteCurves.Add(Math.Abs(boundaryCurvesTag[j])))
+                                        continue;
+
                                     try
                                     {
                                         TransfiniteLine(boundaryCurvesTag[j], options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
@@ -1150,7 +1231,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                     catch (GmshException ge)
                                     {
                                         generateMeshStatus.AddException(ge, "Boundary transfinite failed");
-                                        Gmsh.Finalize();
                                         return false;
                                     }
                                 }
@@ -1163,13 +1243,12 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, "Boundary transfinite failed");
-                    Gmsh.Finalize();
                     return false;
                 }
 
                 #endregion
 
-                DateTime dt5 = DateTime.Now;
+                TimeSpan dt5 = clock.Elapsed;
 
                 #region GESTIONE DELLE GEOMETRIE EMBEDDED
 
@@ -1201,7 +1280,7 @@ namespace GPC.Geometry.Meshes.GMesh
                 }
 
                 // associa ogni shape con le relative shape divise (se ci sono) 
-                Dictionary<Shape, Shape[]> shapeToShapeSplitted = new Dictionary<Shape, Shape[]>();
+                Dictionary<Shape, Shape[]> shapeToShapeSplitted = new Dictionary<Shape, Shape[]>(ReferenceComparer<Shape>.Instance);
                 try
                 {
                     if (embeddedGeometries != null)
@@ -1293,19 +1372,21 @@ namespace GPC.Geometry.Meshes.GMesh
                                             // questo metodo riaggiunge i vertici alle shape spezzate che clipper ha tolto
                                             if (listOfShapeDiffAndIntersect.Count() > 1)
                                             {
-                                                for (int k = 0; k < listOfShapeDiffAndIntersect.Count(); k++)
+                                                for (int k = 0; k < listOfShapeDiffAndIntersect.Count; k++)
                                                 {
-                                                    for (int p = 0; p < listOfShapeDiffAndIntersect[k].Fill.Explode().Count(); p++)
+                                                    Polygon3d fill = listOfShapeDiffAndIntersect[k].Fill;
+                                                    for (int p = 0; p < fill.Count; p++)
                                                     {
+                                                        // the side p (before, the whole polygon was exploded for every point and every side)
+                                                        Line3d side = new Line3d(fill[p], fill[(p + 1) % fill.Count]);
+
                                                         for (int j = 0; j < shapePoints.Count; j++)
                                                         {
-                                                            Line3d[] perim = listOfShapeDiffAndIntersect[k].Fill.Explode();
-
                                                             // Se il punto è sul lato è [i] e non è un vertica, allora aggiungilo
-                                                            if (perim[p].IsPointOnLine(shapePoints[j], toleranceIntersection))
+                                                            if (side.IsPointOnLine(shapePoints[j], toleranceIntersection))
                                                             {
-                                                                double dist1 = shapePoints[j].DistanceTo(perim[p].Start);
-                                                                double dist2 = shapePoints[j].DistanceTo(perim[p].End);
+                                                                double dist1 = shapePoints[j].DistanceTo(side.Start);
+                                                                double dist2 = shapePoints[j].DistanceTo(side.End);
                                                                 double tol = ErrorPropagation.ProductTolerance(dist1, dist2, toleranceIntersection, toleranceIntersection);
                                                                 if (Math.Abs(dist1) > tol && Math.Abs(dist2) > tol)
                                                                 {
@@ -1335,7 +1416,6 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, $"Failed to split the embedded shape");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -1347,17 +1427,18 @@ namespace GPC.Geometry.Meshes.GMesh
                 {
                     if (embeddedGeometries != null)
                     {
-                        foreach (Shape shape in shapes)
+                        for (int si = 0; si < shapes.Length; si++)
                         {
+                            Shape shape = shapes[si];
                             if (embeddedGeometries.ContainsKey(shape))
                             {
-                                int physicalTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shape).First().physicalGroupTag;
+                                int physicalTag = physicalGroupTagSurfacesAssociation[si].physicalGroupTag;
                                 embeddedGeometriesTagAssociation[physicalTag] = new Dictionary<GeometryBase, int[]>();
 
                                 // aggiungo a questa lista una shape ogni volta che la embeddo
                                 List<Shape> listEmbShape = new List<Shape>();
-                                // dizionario di associazione Shape e tag surface
-                                Dictionary<Shape, int> shapeSurfaceTagAssociation = new Dictionary<Shape, int>();
+                                // dizionario di associazione Shape e tag delle superfici (più di una se i fori la dividono)
+                                Dictionary<Shape, int[]> shapeSurfaceTagAssociation = new Dictionary<Shape, int[]>(ReferenceComparer<Shape>.Instance);
 
                                 for (int j = 0; j < embeddedGeometries[shape].Length; j++)
                                 {
@@ -1368,9 +1449,10 @@ namespace GPC.Geometry.Meshes.GMesh
                                         for (int k = 0; k < shapeToShapeSplitted[sh].Length; k++)
                                         {
                                             Shape embS = shapeToShapeSplitted[sh][k];
-                                            for (int count = 0; count < physicalGroupTagSurfacesAssociation.Where(i => i.shape == shape).First().surfacesTag.Length; count++)
+
+                                            // before, this was repeated for every surface of the host shape (the same work, and the tag of an
+                                            // existing shape was added once per surface)
                                             {
-                                                int[] SurfaceTagArray = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shape).First().surfacesTag.ToArray();
                                                 bool match = false;
 
                                                 // controllo che non sia già stata aggiunta.
@@ -1380,8 +1462,7 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     Shape s = listEmbShape[i];
                                                     if (embS.EqualsShifted(s))
                                                     {
-                                                        shapeSurfaceTagAssociation.TryGetValue(s, out int tg);
-                                                        surfTagBuffer.Add(tg);
+                                                        surfTagBuffer.AddRange(shapeSurfaceTagAssociation[s]);
                                                         match = true;
                                                         break;
                                                     }
@@ -1419,24 +1500,18 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                 }
                                                                 catch (Exception e)
                                                                 {
-                                                                    generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{tag}. Line Start:{lines[tag].Start * options.MeshScalingFactor} Line End{lines[tag].End * options.MeshScalingFactor}");
+                                                                    // lines[i]: before lines[tag], the Gmsh tag used as index (another exception in the catch)
+                                                                    generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{tag}. Line Start:{lines[i].Start * options.MeshScalingFactor} Line End{lines[i].End * options.MeshScalingFactor}");
                                                                     return false;
                                                                 }
                                                             }
                                                         }
 
-                                                        // per ora embedda la shape nella superficie dov'è il primo vertice
-                                                        int surfaceWhereEmbedShape = -1;
-                                                        for (int i = 0; i < SurfaceTagArray.Length; i++)
-                                                        {
-                                                            int newSurfaceTag = SurfaceTagArray[i];
-                                                            int t = IsInside(lines[0].Start, newSurfaceTag);
-                                                            if (t != -1)
-                                                            {
-                                                                surfaceWhereEmbedShape = t;
-                                                                break;
-                                                            }
-                                                        }
+                                                        // (the surface where the first vertex is was computed here and never used: removed)
+
+                                                        // the surfaces of the embedded shape: the ones given by the Cut of the holes (before, the tag of the surface
+                                                        // before the Cut was used also after it, when the Cut had removed it)
+                                                        int[] embSurfaceTags = new int[] { EmbSurfaceTag };
 
                                                         if (embS.HasHoles)
                                                         {
@@ -1473,28 +1548,30 @@ namespace GPC.Geometry.Meshes.GMesh
                                                                 int holeWireTag = Gmsh.Model.Occ.AddWire(holeLineTags);
                                                                 int holeSurfaceTag = Gmsh.Model.Occ.AddPlaneSurface(new int[1] { holeWireTag });
                                                                 Gmsh.Model.Occ.Synchronize();
-                                                                Gmsh.Model.Occ.Cut(new (int, int)[] { (2, outCuttedSurfaceTags[0].Item2) }, new (int, int)[] { (2, holeSurfaceTag) },
+                                                                // every hole cuts all the surfaces left by the previous holes (before, only the first one)
+                                                                Gmsh.Model.Occ.Cut(outCuttedSurfaceTags, new (int, int)[] { (2, holeSurfaceTag) },
                                                                                     out outCuttedSurfaceTags, out (int, int)[][] resultMap, -1, true, true);
                                                             }
+
+                                                            Gmsh.Model.Occ.Synchronize();
+                                                            embSurfaceTags = (outCuttedSurfaceTags ?? new (int, int)[0]).Where(dimTag => dimTag.Item1 == 2).Select(dimTag => dimTag.Item2).ToArray();
                                                         }
 
-                                                        surfTagBuffer.Add(EmbSurfaceTag);
+                                                        surfTagBuffer.AddRange(embSurfaceTags);
 
                                                         generateMeshStatus.EmbeddedShapes += 1;
                                                         listEmbShape.Add(embS);
 
-                                                        int phgTag = Gmsh.Model.AddPhysicalGroup(2, new int[] { EmbSurfaceTag });
+                                                        int phgTag = Gmsh.Model.AddPhysicalGroup(2, embSurfaceTags);
 
                                                         // aggiungo il tag ai relativi dizionari
-                                                        shapeSurfaceTagAssociation.Add(embS, EmbSurfaceTag);
-                                                        physicalGroupMeshTagAssociation.Add((physicalTag, phgTag, EmbSurfaceTag));
-
-                                                        break;
+                                                        shapeSurfaceTagAssociation.Add(embS, embSurfaceTags);
+                                                        foreach (int embSurfaceTag in embSurfaceTags)
+                                                            physicalGroupMeshTagAssociation.Add((physicalTag, phgTag, embSurfaceTag));
                                                     }
                                                     catch (Exception e)
                                                     {
                                                         generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToEmbedTheShape} {geometry}");
-                                                        Gmsh.Finalize();
                                                         return false;
                                                     }
                                                 }
@@ -1510,7 +1587,6 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, $"Failed to embed the shape");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -1526,6 +1602,9 @@ namespace GPC.Geometry.Meshes.GMesh
                 {
                     if (embeddedGeometries != null)
                     {
+                        // the boundaries of the surfaces, read from Gmsh once (before, for every part of every embedded line)
+                        var boundaries = new SurfaceBoundaries();
+
                         for (int t = 0; t < shapes.Count(); t++)
                         {
                             // Creo una lista splitLine di tutte le linee (linee2d/3d polygon2d/3d) che andrò ad embeddare
@@ -1652,7 +1731,7 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                     for (int i = 0; i < splitLineArray.Length; i++)
                                     {
-                                        Line3d[] lineSplit = splitLineArray[i].Split(splitPoints.ToArray(), toleranceIntersection);        // splitto le linee in base ai punti di intersezione trovati
+                                        Line3d[] lineSplit = splitLineArray[i].Split(splitPointsArray, toleranceIntersection);        // splitto le linee in base ai punti di intersezione trovati (before, ToArray for every line)
                                         if (lineSplit[0] == splitLineArray[i])                                                                // associo la geometria originale alle nuove linee spezzate
                                         {
                                             Line3d[] lineToSplitArray = new Line3d[1] { splitLineArray[i] };
@@ -1669,24 +1748,30 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                 #endregion
 
-                                int physicalTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[t]).First().physicalGroupTag;
+                                int physicalTag = physicalGroupTagSurfacesAssociation[t].physicalGroupTag;
+
+                                // the surfaces of the shape and of the shapes embedded in it (with their current tags: a fragment done for a
+                                // previous shape can have changed them)
+                                List<int> surfaceTagArray = new List<int>(boundaries.Current(physicalGroupTagSurfacesAssociation[t].surfacesTag));
+                                foreach (var embeddedShapeSurface in physicalGroupMeshTagAssociation)
+                                {
+                                    if (embeddedShapeSurface.physicalGroupTag != physicalTag)
+                                        continue;
+                                    foreach (int surface in boundaries.Current(new[] { embeddedShapeSurface.surfaceTag }))
+                                    {
+                                        if (!surfaceTagArray.Contains(surface))
+                                            surfaceTagArray.Add(surface);
+                                    }
+                                }
 
                                 for (int s = 0; s < embeddedGeometries[shapes[t]].Count(); s++)
                                 {
                                     if (!hashSet.Contains(embeddedGeometries[shapes[t]][s]))
                                     {
-                                        for (int count = 0; count < physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[t]).First().surfacesTag.Length; count++)
+                                        // once (before, repeated for every surface of the host shape: the same work, and a polygon was embedded
+                                        // again and its second mapping threw an exception)
+                                        do
                                         {
-                                            int surfaceTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[t]).First().surfacesTag[count];
-                                            var surfTagArray = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[t]);
-                                            var surftagArray2 = physicalGroupMeshTagAssociation.Where(i => i.physicalGroupTag == physicalTag);
-                                            List<int> surfaceTagArray = new List<int>();
-
-                                            foreach (var sT in surfTagArray)
-                                                foreach (int tt in sT.surfacesTag)
-                                                    surfaceTagArray.Add(tt);
-                                            foreach (var ST in surftagArray2)
-                                                surfaceTagArray.Add(ST.surfaceTag);
 
                                             #region POINT
 
@@ -1736,8 +1821,12 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     if (!pointExist && surfaceWhereEmbedPoint != -1)
                                                     {
                                                         int p1 = occw.AddPointAndSync(point);
-                                                        Gmsh.Model.Mesh.Embed(0, new int[1] { p1 }, 2, surfaceWhereEmbedPoint);
-                                                        //Gmsh.Model.Occ.Synchronize();
+
+                                                        // a point on a side becomes a vertex of the side, the other ones are embedded in the surface
+                                                        // (before, a point on a side was embedded in one of the surfaces of the side)
+                                                        p1 = MakeVertexOnSides(point, p1, surfaceTagArray, boundaries, occw, options, toleranceIntersection, out bool onSide);
+                                                        if (!onSide)
+                                                            boundaries.Embed(0, p1, surfaceWhereEmbedPoint);
                                                         generateMeshStatus.EmbeddedPoints += 1;
 
                                                         embeddedGeometriesTagAssociation[physicalTag].Add(embeddedGeometries[shapes[t]][s], new int[1] { p1 });
@@ -1766,224 +1855,15 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     else
                                                         l = new Line3d((Line2d)embeddedGeometries[shapes[t]][s]);
 
-                                                    bool isAdded = true;
-
                                                     if (splitLines.ContainsKey(l) && !embeddedGeometriesTagAssociation[physicalTag].ContainsKey(l))
                                                     {
+                                                        // every part of the line split by the other embedded geometries (see EmbedSegment)
                                                         List<int> lineTagToEmbed = new List<int>();
+                                                        foreach (Line3d line in splitLines[l])
+                                                            lineTagToEmbed.AddRange(EmbedSegment(line, occw, surfaceTagArray, boundaries, options, toleranceMatch, toleranceIntersection, hashSet));
 
-                                                        for (int c = 0; c < splitLines[l].Count(); c++)
-                                                        {
-                                                            Line3d line = splitLines[l][c];
-
-                                                            int surfaceWhereEmbedStart = -1;
-                                                            int surfaceWhereEmbedEnd = -1;
-                                                            int surfaceWhereEmbedMid = -1;
-                                                            bool curveOnBoundary = false;
-                                                            bool isInternal = true;
-
-                                                            var geomCoord = new double[6] { line.Start.X, line.Start.Y, line.Start.Z, line.End.X, line.End.Y, line.End.Z };
-
-                                                            int startPointTag = occw.AddPointAndSync(line.Start, toleranceMatch);
-                                                            int endPointTag = occw.AddPointAndSync(line.End, toleranceMatch);
-
-                                                            double[] startGmshCoord = new double[3] { line.Start.X, line.Start.Y, line.Start.Z };
-                                                            double[] endGmshCoord = new double[3] { line.End.X, line.End.Y, line.End.Z };
-
-                                                            Point3d start = new Point3d(line.Start.X, line.Start.Y, line.Start.Z);
-                                                            Point3d end = new Point3d(line.End.X, line.End.Y, line.End.Z);
-
-                                                            List<int> boundaryCurvesTag = new List<int>();
-
-                                                            for (int k = 0; k < surfaceTagArray.Count; k++)
-                                                            {
-                                                                var boundaryCurvesTagBuffer = Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTagArray[k]) }, false, false, false).Select(i => i.Item2).ToList();
-
-                                                                // Se la curva è su un bordo
-                                                                for (int j = 0; j < boundaryCurvesTagBuffer.Count; j++)
-                                                                {
-                                                                    var boundaryPointTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (1, boundaryCurvesTagBuffer[j]) }, false, false, true).Select(i => i.Item2).ToList();
-
-                                                                    if ((boundaryPointTag[0] == startPointTag && boundaryPointTag[1] == endPointTag) || (boundaryPointTag[1] == startPointTag && boundaryPointTag[0] == endPointTag))
-                                                                    {
-                                                                        // la linea coincide con un bordo
-                                                                        int[] curveBoundaryTag = new int[1] { boundaryCurvesTagBuffer[j] };
-                                                                        lineTagToEmbed.Add(boundaryCurvesTagBuffer[j]);                             // Imposto il tag del bordo come una geometria embd in modo da ottnere la mappatura dei nodi
-                                                                        curveOnBoundary = true;
-                                                                        hashSet.Add(line);
-                                                                        break;
-                                                                    }
-                                                                }
-
-                                                                boundaryCurvesTag.AddRange(boundaryCurvesTagBuffer);
-                                                            }
-
-                                                            if (curveOnBoundary == false)
-                                                            {
-                                                                // trovo le superfici di Start e End 
-                                                                // trovo la superficie dov'è il punto medio della linea. questo lo faccio nel caso di linee embedded dentro shape embedded
-                                                                for (int i = 0; i < surfaceTagArray.Count(); i++)
-                                                                {
-                                                                    if (surfaceWhereEmbedStart == -1)
-                                                                    {
-                                                                        int startSurfaceTag = IsInside(line.Start, surfaceTagArray[i]);
-                                                                        if (startSurfaceTag != -1)
-                                                                        {
-                                                                            surfaceWhereEmbedStart = startSurfaceTag;
-                                                                        }
-                                                                    }
-
-                                                                    if (surfaceWhereEmbedEnd == -1)
-                                                                    {
-                                                                        int endSurfaceTag = IsInside(line.End, surfaceTagArray[i]);
-                                                                        if (endSurfaceTag != -1)
-                                                                        {
-                                                                            surfaceWhereEmbedEnd = endSurfaceTag;
-                                                                        }
-                                                                    }
-
-                                                                    if (surfaceWhereEmbedEnd != -1 && surfaceWhereEmbedStart != -1)
-                                                                    {
-                                                                        break;
-                                                                    }
-                                                                }
-
-                                                                for (int i = 0; i < surfaceTagArray.Count(); i++)
-                                                                {
-                                                                    if (surfaceWhereEmbedMid == -1)
-                                                                    {
-                                                                        int midSurfaceTag = IsInside((line.End + line.Start) / 2, surfaceTagArray[i]);
-                                                                        if (midSurfaceTag != -1)
-                                                                        {
-                                                                            surfaceWhereEmbedMid = midSurfaceTag;
-                                                                        }
-                                                                    }
-
-                                                                    if ((surfaceWhereEmbedMid != surfaceWhereEmbedStart && surfaceWhereEmbedMid != surfaceWhereEmbedEnd && surfaceWhereEmbedMid != -1) ||
-                                                                        (surfaceWhereEmbedStart == surfaceWhereEmbedMid && surfaceWhereEmbedMid == surfaceWhereEmbedEnd))
-
-                                                                    {
-                                                                        break;
-                                                                    }
-                                                                }
-
-                                                                // caso 0 LINEA COMPLETAMENTE ESTERNA
-                                                                if (surfaceWhereEmbedMid == -1 && (surfaceWhereEmbedEnd == -1 && surfaceWhereEmbedStart == -1))
-                                                                {
-                                                                    isAdded = false;
-                                                                }
-
-
-                                                                // caso 1 TRATTO DI LINEA ESTERNO
-                                                                if (surfaceWhereEmbedMid == -1 && (surfaceWhereEmbedEnd != -1 || surfaceWhereEmbedStart != -1))
-                                                                {
-                                                                    isInternal = false;
-                                                                }
-
-                                                                if (isInternal)
-                                                                {
-                                                                    Point3d intersectionPoint = null;
-
-                                                                    // cerco le intersezioni con i bordi => intersectionPoint
-                                                                    for (int j = 0; j < boundaryCurvesTag.Count(); j++)
-                                                                    {
-                                                                        var boundaryPointTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (1, boundaryCurvesTag[j]) }, false, false, false).Select(i => i.Item2).ToList();
-
-                                                                        Gmsh.Model.Occ.GetBoundingBox(0, boundaryPointTag[0], out double x1, out double y1, out double z1, out var _, out var _, out var _);
-                                                                        Gmsh.Model.Occ.GetBoundingBox(0, boundaryPointTag[1], out double x2, out double y2, out double z2, out var _, out var _, out var _);
-
-                                                                        Line3d edgeLine = new Line3d(new Point3d(x1, y1, z1), new Point3d(x2, y2, z2));
-
-                                                                        edgeLine.GetIntersection(line, out Point3d intPoint, toleranceIntersection);
-
-                                                                        if (intPoint != null)
-                                                                        {
-                                                                            double a = intPoint.DistanceTo(line.End);
-                                                                            double b = intPoint.DistanceTo(line.Start);
-                                                                            double tol = ErrorPropagation.ProductTolerance(Math.Pow(a, 2), Math.Max(b, 2), 2.82 * tolerance, 2.82 * tolerance);
-                                                                            tol = tol < 1E-13 ? 1E-13 : tol;
-
-                                                                            if (Math.Abs(a) > tol && Math.Abs(b) > tol)
-                                                                            {
-                                                                                intersectionPoint = intPoint;
-                                                                                break;
-                                                                            }
-                                                                            else
-                                                                                intersectionPoint = null;
-                                                                        }
-                                                                    }
-
-
-                                                                    // caso 2 linea su una sola superficie. sia nel caso tocchi un bordo che nel caso non lo tocchi
-                                                                    if (intersectionPoint == null && surfaceWhereEmbedMid != -1)
-                                                                    {
-                                                                        int l1 = occw.AddLineAndSync(startPointTag, endPointTag);
-
-                                                                        int surf = -1;
-
-                                                                        if (surfaceWhereEmbedStart != -1 && surfaceWhereEmbedEnd != -1)
-                                                                            surf = surfaceWhereEmbedMid;
-
-                                                                        Gmsh.Model.Mesh.Embed(1, new int[1] { l1 }, 2, surf);
-
-                                                                        // TRANSFINITE THE EMBEDDED LINE
-                                                                        if (options.Transfinite)
-                                                                        {
-                                                                            try
-                                                                            {
-                                                                                TransfiniteLine(l1, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                            }
-                                                                            catch (GmshException e)
-                                                                            {
-                                                                                generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{l1}. Line Start:{line.Start * options.MeshScalingFactor} Line End{line.End * options.MeshScalingFactor}");
-                                                                                Gmsh.Finalize();
-                                                                                return false;
-                                                                            }
-                                                                        }
-
-                                                                        lineTagToEmbed.Add(l1);
-                                                                        hashSet.Add(line);
-                                                                    }
-
-
-                                                                    // caso 3 linea su 2 superfici
-                                                                    if (intersectionPoint != null && surfaceWhereEmbedStart != surfaceWhereEmbedEnd)
-                                                                    {
-                                                                        // la retta interseca uno dei bordi e va in un'altra superficie. Spezza la linea e associa ogni parte alla giusta superficie
-                                                                        // aggiungo 1 punto  e creo le 2 linee embeddate nella giusta superficie (stessa procedura del caso semplice)
-
-                                                                        int intersectPoint = occw.AddPointAndSync(intersectionPoint, toleranceMatch);
-                                                                        int l1 = occw.AddLineAndSync(startPointTag, intersectPoint);
-                                                                        int l2 = occw.AddLineAndSync(intersectPoint, endPointTag);
-
-                                                                        Gmsh.Model.Mesh.Embed(1, new int[1] { l1 }, 2, surfaceWhereEmbedStart);
-                                                                        Gmsh.Model.Mesh.Embed(1, new int[1] { l2 }, 2, surfaceWhereEmbedEnd);
-
-                                                                        // TRANSFINITE THE EMBEDDED LINES
-                                                                        if (options.Transfinite)
-                                                                        {
-                                                                            try
-                                                                            {
-                                                                                TransfiniteLine(l1, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                                TransfiniteLine(l2, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                            }
-                                                                            catch (GmshException e)
-                                                                            {
-                                                                                generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{l1} and {l2}. Line Start:{line.Start * options.MeshScalingFactor} Line End{line.End * options.MeshScalingFactor}");
-                                                                                return false;
-                                                                            }
-                                                                        }
-
-                                                                        lineTagToEmbed.Add(l1);
-                                                                        lineTagToEmbed.Add(l2);
-                                                                        hashSet.Add(line);
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            //Gmsh.Fltk.Run();
-                                                        }
-                                                        if (isAdded)
+                                                        // the line is mapped if a part of it is in the surfaces (before, not mapped if a part was out of them)
+                                                        if (lineTagToEmbed.Count > 0)
                                                         {
                                                             embeddedGeometriesTagAssociation[physicalTag].Add(embeddedGeometries[shapes[t]][s], lineTagToEmbed.ToArray());
                                                             generateMeshStatus.EmbeddedLines += 1;
@@ -1993,10 +1873,8 @@ namespace GPC.Geometry.Meshes.GMesh
                                                 catch (Exception e)
                                                 {
                                                     generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToEmbedTheLine} {embeddedGeometries[shapes[t]][s]}");
-                                                    Gmsh.Finalize();
                                                     return false;
                                                 }
-
                                             }
 
                                             #endregion
@@ -2013,229 +1891,21 @@ namespace GPC.Geometry.Meshes.GMesh
                                                     else
                                                         polygon = new Polygon3d((Polygon2d)embeddedGeometries[shapes[t]][s]);
 
+                                                    // the sides are embedded as the lines (before, the same code was duplicated with a different treatment of
+                                                    // the parts out of the surfaces)
                                                     List<int> embeddedPolygonTagAssociation = new List<int>();
-                                                    bool isAdded = true;
-
-                                                    Line3d[] lines = polygon.Explode().ToArray();
-                                                    for (int c = 0; c < lines.Count(); c++)
+                                                    foreach (Line3d side in polygon.Explode())
                                                     {
-                                                        if (splitLines.ContainsKey(lines[c]) && !embeddedGeometriesTagAssociation[physicalTag].ContainsKey(lines[c]))
-                                                        {
-                                                            List<int> lineTagToEmbed = new List<int>();
-
-                                                            for (int m = 0; m < splitLines[lines[c]].Count(); m++)
-                                                            {
-                                                                Line3d line = splitLines[lines[c]][m];
-
-                                                                int surfaceWhereEmbedStart = -1;
-                                                                int surfaceWhereEmbedEnd = -1;
-                                                                int surfaceWhereEmbedMid = -1;
-                                                                bool curveOnBoundary = false;
-                                                                bool isInternal = true;
-
-                                                                var geomCoord = new double[6] { line.Start.X, line.Start.Y, line.Start.Z, line.End.X, line.End.Y, line.End.Z };
-
-                                                                int startPointTag = occw.AddPointAndSync(line.Start, toleranceMatch);
-                                                                int endPointTag = occw.AddPointAndSync(line.End, toleranceMatch);
-
-                                                                double[] startGmshCoord = new double[3] { line.Start.X, line.Start.Y, line.Start.Z };
-                                                                double[] endGmshCoord = new double[3] { line.End.X, line.End.Y, line.End.Z };
-
-                                                                Point3d start = new Point3d(line.Start.X, line.Start.Y, line.Start.Z);
-                                                                Point3d end = new Point3d(line.End.X, line.End.Y, line.End.Z);
-
-                                                                List<int> boundaryCurvesTag = new List<int>();
-
-                                                                for (int k = 0; k < surfaceTagArray.Count; k++)
-                                                                {
-                                                                    var boundaryCurvesTagBuffer = Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTagArray[k]) }, false, false, false).Select(i => i.Item2).ToList();
-
-                                                                    // Se la curva è su un bordo
-                                                                    for (int j = 0; j < boundaryCurvesTagBuffer.Count; j++)
-                                                                    {
-                                                                        var boundaryPointTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (1, boundaryCurvesTagBuffer[j]) }, false, false, true).Select(i => i.Item2).ToList();
-
-                                                                        if ((boundaryPointTag[0] == startPointTag && boundaryPointTag[1] == endPointTag) || (boundaryPointTag[1] == startPointTag && boundaryPointTag[0] == endPointTag))
-                                                                        {
-                                                                            // la linea coincide con un bordo
-                                                                            int[] curveBoundaryTag = new int[1] { boundaryCurvesTagBuffer[j] };
-                                                                            lineTagToEmbed.Add(boundaryCurvesTagBuffer[j]);                             // Imposto il tag del bordo come una geometria embd in modo da ottnere la mappatura dei nodi
-                                                                            curveOnBoundary = true;
-                                                                            hashSet.Add(line);
-                                                                            break;
-                                                                        }
-                                                                    }
-
-                                                                    boundaryCurvesTag.AddRange(boundaryCurvesTagBuffer);
-                                                                }
-
-                                                                if (curveOnBoundary == false)
-                                                                {
-                                                                    // trovo le superfici di Start e End 
-                                                                    for (int i = 0; i < surfaceTagArray.Count(); i++)
-                                                                    {
-                                                                        if (surfaceWhereEmbedStart == -1)
-                                                                        {
-                                                                            int startSurfaceTag = IsInside(line.Start, surfaceTagArray[i]);
-                                                                            if (startSurfaceTag != -1)
-                                                                            {
-                                                                                surfaceWhereEmbedStart = startSurfaceTag;
-                                                                            }
-                                                                        }
-
-                                                                        if (surfaceWhereEmbedEnd == -1)
-                                                                        {
-                                                                            int endSurfaceTag = IsInside(line.End, surfaceTagArray[i]);
-                                                                            if (endSurfaceTag != -1)
-                                                                            {
-                                                                                surfaceWhereEmbedEnd = endSurfaceTag;
-                                                                            }
-                                                                        }
-
-                                                                        if (surfaceWhereEmbedEnd != -1 && surfaceWhereEmbedStart != -1)
-                                                                        {
-                                                                            break;
-                                                                        }
-                                                                    }
-
-                                                                    for (int i = 0; i < surfaceTagArray.Count(); i++)
-                                                                    {
-                                                                        if (surfaceWhereEmbedMid == -1)
-                                                                        {
-                                                                            int midSurfaceTag = IsInside((line.End + line.Start) / 2, surfaceTagArray[i]);
-                                                                            if (midSurfaceTag != -1)
-                                                                            {
-                                                                                surfaceWhereEmbedMid = midSurfaceTag;
-                                                                            }
-                                                                        }
-
-                                                                        if ((surfaceWhereEmbedMid != surfaceWhereEmbedStart && surfaceWhereEmbedMid != surfaceWhereEmbedEnd && surfaceWhereEmbedMid != -1) ||
-                                                                            (surfaceWhereEmbedStart == surfaceWhereEmbedMid && surfaceWhereEmbedMid == surfaceWhereEmbedEnd))
-
-                                                                        {
-                                                                            break;
-                                                                        }
-                                                                    }
-
-
-                                                                    // caso 0 LINEA COMPLETAMENTE ESTERNA
-                                                                    if (surfaceWhereEmbedMid == -1 && (surfaceWhereEmbedEnd == -1 && surfaceWhereEmbedStart == -1))
-                                                                    {
-                                                                        isAdded = false;
-                                                                    }
-
-                                                                    // caso 1 LINEA ESTERNA
-                                                                    if (surfaceWhereEmbedStart == -1 || surfaceWhereEmbedMid == -1 || surfaceWhereEmbedEnd == -1)
-                                                                    {
-                                                                        //Gmsh.Model.Occ.Remove(new (int, int)[] { (0, startPointTag), (0, endPointTag) });
-                                                                        //Gmsh.Model.Occ.Synchronize();
-                                                                        isInternal = false;
-                                                                    }
-
-                                                                    if (isInternal)
-                                                                    {
-                                                                        Point3d intersectionPoint = null;
-
-                                                                        // cerco le intersezioni con i bordi => intersectionPoint
-                                                                        for (int j = 0; j < boundaryCurvesTag.Count(); j++)
-                                                                        {
-                                                                            var boundaryPointTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (1, boundaryCurvesTag[j]) }, false, false, false).Select(i => i.Item2).ToList();
-
-                                                                            Gmsh.Model.Occ.GetBoundingBox(0, boundaryPointTag[0], out double x1, out double y1, out double z1, out var _, out var _, out var _);
-                                                                            Gmsh.Model.Occ.GetBoundingBox(0, boundaryPointTag[1], out double x2, out double y2, out double z2, out var _, out var _, out var _);
-
-                                                                            Line3d edgeLine = new Line3d(new Point3d(x1, y1, z1), new Point3d(x2, y2, z2));
-
-                                                                            edgeLine.GetIntersection(line, out Point3d intPoint, toleranceIntersection);
-
-                                                                            if (intPoint != null)
-                                                                            {
-                                                                                double a = intPoint.DistanceTo(line.End);
-                                                                                double b = intPoint.DistanceTo(line.Start);
-                                                                                double tol = ErrorPropagation.ProductTolerance(Math.Pow(a, 2), Math.Max(b, 2), 2.82 * tolerance, 2.82 * tolerance);
-                                                                                tol = tol < 1E-13 ? 1E-13 : tol;
-
-                                                                                if (Math.Abs(a) > tol && Math.Abs(b) > tol)
-                                                                                {
-                                                                                    intersectionPoint = intPoint;
-                                                                                    break;
-                                                                                }
-                                                                                else
-                                                                                    intersectionPoint = null;
-                                                                            }
-                                                                        }
-
-
-                                                                        // caso 2 linea su una sola superficie. sia nel caso tocchi un bordo che nel caso non lo tocchi
-                                                                        if (intersectionPoint == null && surfaceWhereEmbedMid != -1)
-                                                                        {
-                                                                            int l1 = occw.AddLineAndSync(startPointTag, endPointTag);
-
-                                                                            int surf = -1;
-
-                                                                            if (surfaceWhereEmbedStart != -1 && surfaceWhereEmbedEnd != -1)
-                                                                                surf = surfaceWhereEmbedMid;
-
-                                                                            Gmsh.Model.Mesh.Embed(1, new int[1] { l1 }, 2, surf);
-
-                                                                            // TRANSFINITE THE EMBEDDED LINE
-                                                                            if (options.Transfinite)
-                                                                            {
-                                                                                try
-                                                                                {
-                                                                                    TransfiniteLine(l1, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                                }
-                                                                                catch (GmshException e)
-                                                                                {
-                                                                                    generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{l1}. Line Start:{line.Start * options.MeshScalingFactor} Line End{line.End * options.MeshScalingFactor}");
-                                                                                    Gmsh.Finalize();
-                                                                                    return false;
-                                                                                }
-                                                                            }
-
-                                                                            embeddedPolygonTagAssociation.Add(l1);
-                                                                        }
-
-
-                                                                        // caso 3 linea su 2 superfici
-                                                                        if (intersectionPoint != null && surfaceWhereEmbedStart != surfaceWhereEmbedEnd)
-                                                                        {
-                                                                            // la retta interseca uno dei bordi e va in un'altra superficie. Spezza la linea e associa ogni parte alla giusta superficie
-                                                                            // aggiungo 1 punto  e creo le 2 linee embeddate nella giusta superficie (stessa procedura del caso semplice)
-
-                                                                            int intersectPoint = occw.AddPointAndSync(intersectionPoint, tolerance);
-                                                                            int l1 = occw.AddLineAndSync(startPointTag, intersectPoint);
-                                                                            int l2 = occw.AddLineAndSync(intersectPoint, endPointTag);
-
-                                                                            Gmsh.Model.Mesh.Embed(1, new int[1] { l1 }, 2, surfaceWhereEmbedStart);
-                                                                            Gmsh.Model.Mesh.Embed(1, new int[1] { l2 }, 2, surfaceWhereEmbedEnd);
-
-                                                                            // TRANSFINITE THE EMBEDDED LINES
-                                                                            if (options.Transfinite)
-                                                                            {
-                                                                                try
-                                                                                {
-                                                                                    TransfiniteLine(l1, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                                    TransfiniteLine(l2, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                                                }
-                                                                                catch (GmshException e)
-                                                                                {
-                                                                                    generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToTransfinite} for curveTag:{l1} and {l2}. Line Start:{line.Start * options.MeshScalingFactor} Line End{line.End * options.MeshScalingFactor}");
-                                                                                    return false;
-                                                                                }
-                                                                            }
-
-                                                                            embeddedPolygonTagAssociation.Add(l1);
-                                                                            embeddedPolygonTagAssociation.Add(l2);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
+                                                        if (!splitLines.TryGetValue(side, out Line3d[] parts))
+                                                            continue;
+                                                        foreach (Line3d line in parts)
+                                                            embeddedPolygonTagAssociation.AddRange(EmbedSegment(line, occw, surfaceTagArray, boundaries, options, toleranceMatch, toleranceIntersection, hashSet));
                                                     }
-                                                    if (isAdded)
+
+                                                    // mapped with the input geometry (before, with the Polygon3d made from a Polygon2d)
+                                                    if (embeddedPolygonTagAssociation.Count > 0)
                                                     {
-                                                        embeddedGeometriesTagAssociation[physicalTag].Add(polygon, embeddedPolygonTagAssociation.ToArray().ToArray());
+                                                        embeddedGeometriesTagAssociation[physicalTag].Add(embeddedGeometries[shapes[t]][s], embeddedPolygonTagAssociation.ToArray());
                                                         generateMeshStatus.EmbeddedPolygons += 1;
                                                     }
                                                     hashSet.Add(polygon);
@@ -2243,7 +1913,6 @@ namespace GPC.Geometry.Meshes.GMesh
                                                 catch (Exception e)
                                                 {
                                                     generateMeshStatus.AddException(e, $"{GMeshGenerateMeshStatus.FailedToEmbedThePolygon} {embeddedGeometries[shapes[t]][s]}");
-                                                    Gmsh.Finalize();
                                                     return false;
                                                 }
                                             }
@@ -2260,7 +1929,43 @@ namespace GPC.Geometry.Meshes.GMesh
                                                 throw new NotSupportedException($"Embedded geometry of type {embeddedGeometries[shapes[t]][s].GetType()} is not supported.");
                                             }
                                         }
+                                        while (false);
                                     }
+                                }
+                            }
+                        }
+
+                        if (boundaries.Fragmented)
+                        {
+                            // The surfaces fragmented to put the embedded points on their sides lost their physical groups: the groups are
+                            // defined again, with the new tags of the surfaces (usually the same)
+                            int[] NewTags(IEnumerable<int> tags) => boundaries.Current(tags);
+
+                            Gmsh.Model.RemovePhysicalGroups(new (int, int)[0]); // all the groups
+                            for (int i = 0; i < physicalGroupTagSurfacesAssociation.Count; i++)
+                            {
+                                var association = physicalGroupTagSurfacesAssociation[i];
+                                int[] surfaces = NewTags(association.surfacesTag);
+                                Gmsh.Model.AddPhysicalGroup(association.dim, surfaces, association.physicalGroupTag);
+                                physicalGroupTagSurfacesAssociation[i] = (association.physicalGroupTag, association.dim, surfaces, association.shape);
+                            }
+
+                            var embeddedShapeSurfaces = new List<(int physicalGroupTag, int embPhysicalGroupTag, int surfaceTag)>();
+                            foreach (var embeddedShape in physicalGroupMeshTagAssociation)
+                                foreach (int surface in NewTags(new[] { embeddedShape.surfaceTag }))
+                                    embeddedShapeSurfaces.Add((embeddedShape.physicalGroupTag, embeddedShape.embPhysicalGroupTag, surface));
+                            physicalGroupMeshTagAssociation.Clear();
+                            physicalGroupMeshTagAssociation.AddRange(embeddedShapeSurfaces);
+                            foreach (var group in embeddedShapeSurfaces.GroupBy(i => i.embPhysicalGroupTag))
+                                Gmsh.Model.AddPhysicalGroup(2, group.Select(i => i.surfaceTag).ToArray(), group.Key);
+
+                            // the surfaces of the embedded shapes, used to map their faces
+                            foreach (Dictionary<GeometryBase, int[]> tagsOfGeometries in embeddedGeometriesTagAssociation.Values)
+                            {
+                                foreach (GeometryBase geometry in tagsOfGeometries.Keys.ToArray())
+                                {
+                                    if (geometry is Shape)
+                                        tagsOfGeometries[geometry] = NewTags(tagsOfGeometries[geometry]);
                                 }
                             }
                         }
@@ -2269,7 +1974,6 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, $"Failed to embed the geometries");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -2277,7 +1981,7 @@ namespace GPC.Geometry.Meshes.GMesh
 
                 #endregion 
 
-                DateTime dt6 = DateTime.Now;
+                TimeSpan dt6 = clock.Elapsed;
 
                 //Gmsh.Fltk.Run();
 
@@ -2305,7 +2009,6 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (GmshException gm)
                 {
                     generateMeshStatus.AddException(gm, "Failed to set the mesh size at points");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -2316,95 +2019,45 @@ namespace GPC.Geometry.Meshes.GMesh
                     {
                         for (int s = 0; s < shapes.Length; s++)
                         {
-                            int physicalTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shapes[s]).First().physicalGroupTag;
-                            if (embGeomAssociation.ContainsKey(shapes[s]))
+                            int physicalTag = physicalGroupTagSurfacesAssociation[s].physicalGroupTag;
+                            if (!embGeomAssociation.TryGetValue(shapes[s], out Dictionary<GeometryBase, double> sizes) ||
+                                !embeddedGeometriesTagAssociation.TryGetValue(physicalTag, out Dictionary<GeometryBase, int[]> tagsOfGeometries))
+                                continue;
+
+                            foreach (KeyValuePair<GeometryBase, double> size in sizes)
                             {
-                                foreach (GeometryBase geometry in embGeomAssociation[shapes[s]].Keys)
+                                GeometryBase geometry = size.Key;
+                                bool isPoint = geometry is Point3d || geometry is Point2d;
+                                bool isLine = geometry is Line3d || geometry is Line2d;
+                                bool isPolygon = geometry is Polygon3d || geometry is Polygon2d;
+
+                                if (!isPoint && !isLine && !isPolygon)
                                 {
-                                    if (geometry is Point3d || geometry is Point2d)
+                                    if (geometry is Shape)
+                                        continue;
+                                    throw new ArgumentException($"Geom {geometry.GetType()} not supported");
+                                }
+
+                                // a geometry that has not been embedded (e.g. out of the shape) is skipped (before, KeyNotFoundException:
+                                // the sizes of all the following geometries were not set)
+                                if (!tagsOfGeometries.TryGetValue(geometry, out int[] tags))
+                                    continue;
+
+                                try
+                                {
+                                    for (int j = 0; j < tags.Length; j++)
                                     {
-                                        Point3d point;
-                                        if (geometry is Point3d p)
-                                            point = p;
+                                        if (isPoint)
+                                            Gmsh.Model.Mesh.SetSize(new (int, int)[1] { (0, tags[j]) }, size.Value);
                                         else
-                                            point = new Point3d((Point2d)geometry);
-
-                                        try
-                                        {
-                                            int[] tags = embeddedGeometriesTagAssociation[physicalTag][geometry];
-                                            for (int j = 0; j < embeddedGeometriesTagAssociation[physicalTag][geometry].Count(); j++)
-                                            {
-                                                int tg = tags[j];
-                                                double m = embGeomAssociation[shapes[s]][geometry];
-                                                Gmsh.Model.Mesh.SetSize(new (int, int)[1] { (0, tags[j]) }, embGeomAssociation[shapes[s]][geometry]);
-                                            }
-                                        }
-                                        catch (GmshException)
-                                        {
-                                            string warning = "Warning: fail to set the size in the embed point";
-                                            generateMeshStatus.AddWarning(warning);
-                                        }
+                                            TransfiniteLine(tags[j], size.Value, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
                                     }
-
-                                    else if (geometry is Line3d || geometry is Line2d)
-                                    {
-                                        Line3d line;
-                                        if (geometry is Line3d l)
-                                            line = l;
-                                        else
-                                            line = new Line3d((Line2d)geometry);
-
-                                        try
-                                        {
-                                            double meshSize = embGeomAssociation[shapes[s]][geometry];
-                                            int[] tags;
-                                            tags = embeddedGeometriesTagAssociation[physicalTag][geometry];
-
-                                            for (int j = 0; j < embeddedGeometriesTagAssociation[physicalTag][geometry].Count(); j++)
-                                            {
-                                                TransfiniteLine(tags[j], meshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                            }
-                                        }
-                                        catch (GmshException)
-                                        {
-                                            string warning = "Warning: fail to set the size in the embed line";
-                                            generateMeshStatus.AddWarning(warning);
-                                        }
-                                    }
-
-                                    else if (geometry is Polygon3d || geometry is Polygon2d)
-                                    {
-                                        Polygon3d poly;
-                                        if (geometry is Polygon3d p)
-                                            poly = p;
-                                        else
-                                            poly = new Polygon3d((Polygon2d)geometry);
-
-                                        try
-                                        {
-                                            double meshSize = embGeomAssociation[shapes[s]][geometry];
-                                            int[] tags;
-                                            tags = embeddedGeometriesTagAssociation[physicalTag][geometry];
-
-                                            for (int j = 0; j < embeddedGeometriesTagAssociation[physicalTag][geometry].Count(); j++)
-                                            {
-                                                TransfiniteLine(tags[j], meshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                            }
-                                        }
-                                        catch (GmshException)
-                                        {
-                                            string warning = "Warning: fail to set the size in the embed polygon";
-                                            generateMeshStatus.AddWarning(warning);
-                                        }
-                                    }
-
-                                    else if (geometry is Shape)
-                                    {
-
-                                    }
-
-                                    else
-                                        throw new ArgumentException($"Geom {geometry.GetType()} not supported");
+                                }
+                                catch (GmshException)
+                                {
+                                    string warning = isPoint ? "Warning: fail to set the size in the embed point" :
+                                        isLine ? "Warning: fail to set the size in the embed line" : "Warning: fail to set the size in the embed polygon";
+                                    generateMeshStatus.AddWarning(warning);
                                 }
                             }
                         }
@@ -2428,39 +2081,29 @@ namespace GPC.Geometry.Meshes.GMesh
                             Shape shape = shapes[s];
                             if (!embeddedGeometries.ContainsKey(shape))
                             {
-                                for (int j = 0; j < physicalGroupTagSurfacesAssociation.Where(i => i.shape == shape).First().surfacesTag.Length; j++)
+                                int[] surfacesTag = physicalGroupTagSurfacesAssociation[s].surfacesTag;
+                                for (int j = 0; j < surfacesTag.Length; j++)
                                 {
-                                    int surfaceTag = physicalGroupTagSurfacesAssociation.Where(i => i.shape == shape).First().surfacesTag[j];
-                                    var boundaryPointTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTag) }, true, true, true).Select(i => i.Item2).ToList();
+                                    int surfaceTag = surfacesTag[j];
+                                    // the curves of the boundary, in order (before, recursive = true: the tags of the points were used as tags of curves)
+                                    var boundaryCurveTag = Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTag) }, true, false, false).Select(i => Math.Abs(i.Item2)).ToList();
 
-                                    if (boundaryPointTag.Count == 4)
+                                    if (boundaryCurveTag.Count == 4)
                                     {
                                         try
                                         {
+                                            // the opposite curves (0-2 and 1-3) get the same number of nodes
                                             for (int i = 0; i < 2; i++)
                                             {
-                                                Gmsh.Model.Occ.GetBoundingBox(1, boundaryPointTag[i], out double x1min1, out double y1min1, out double z1min1, out double x1max1, out double y1max1, out double z1max1);
-                                                Point3d start1 = new Point3d(x1min1, y1min1, z1min1);
-                                                Point3d end1 = new Point3d(x1max1, y1max1, z1max1);
-                                                double distance1 = start1.DistanceTo(end1);
-                                                int geometryNumNode1 = (int)Math.Round((distance1 / options.MeshSize), 0, MidpointRounding.AwayFromZero) + 1;
+                                                int node = Math.Min(CurveNodes(boundaryCurveTag[i], options.MeshSize), CurveNodes(boundaryCurveTag[i + 2], options.MeshSize));
 
-                                                Gmsh.Model.Occ.GetBoundingBox(1, boundaryPointTag[i + 2], out double x1min2, out double y1min2, out double z1min2, out double x1max2, out double y1max2, out double z1max2);
-                                                Point3d start2 = new Point3d(x1min2, y1min2, z1min2);
-                                                Point3d end2 = new Point3d(x1max2, y1max2, z1max2);
-                                                double distance2 = start2.DistanceTo(end2);
-                                                int geometryNumNode2 = (int)Math.Round((distance2 / options.MeshSize), 0, MidpointRounding.AwayFromZero) + 1;
-
-                                                int node = Math.Min(geometryNumNode1, geometryNumNode2);
-
-                                                Gmsh.Model.Mesh.SetTransfiniteCurve(boundaryPointTag[i], node, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
-                                                Gmsh.Model.Mesh.SetTransfiniteCurve(boundaryPointTag[i + 2], node, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
+                                                Gmsh.Model.Mesh.SetTransfiniteCurve(boundaryCurveTag[i], node, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
+                                                Gmsh.Model.Mesh.SetTransfiniteCurve(boundaryCurveTag[i + 2], node, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
                                             }
                                         }
                                         catch (GmshException ge)
                                         {
                                             generateMeshStatus.AddException(ge, "Boundary transfinite failed");
-                                            Gmsh.Finalize();
                                             return false;
                                         }
                                         Gmsh.Model.Mesh.SetTransfiniteSurface(surfaceTag);
@@ -2483,10 +2126,9 @@ namespace GPC.Geometry.Meshes.GMesh
                 // MESH GENERATE
                 try
                 {
-                    // MESHATURA  
+                    // MESHATURA
                     Gmsh.Model.Mesh.Generate(1);
                     Gmsh.Model.Mesh.Generate(2);
-
                     //Gmsh.Model.Mesh.RemoveDuplicateNodes(); // NON USARE: crash in caso di recombine
                 }
                 catch (GmshException gm)
@@ -2508,12 +2150,13 @@ namespace GPC.Geometry.Meshes.GMesh
                     else
                         generateMeshStatus.AddException(gm, "Failed to generate the mesh");
 
-                    Gmsh.Finalize();
                     return false;
                 }
                 catch (Exception ex)
                 {
+                    // before, the error was recorded but the generation went on without a mesh
                     generateMeshStatus.AddException(ex, "Failed to generate the mesh");
+                    return false;
                 }
 
                 // REFINE
@@ -2539,7 +2182,6 @@ namespace GPC.Geometry.Meshes.GMesh
                 catch (GmshException gm)
                 {
                     generateMeshStatus.AddException(gm, "Failed to renumber the nodes or elements");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -2552,16 +2194,18 @@ namespace GPC.Geometry.Meshes.GMesh
                         Gmsh.Model.Mesh.Recombine();
                     }
                 }
+                catch (GmshException e) when (RetryRecombineWithSimple(options, e, generateMeshStatus))
+                {
+                    // the recombination has been done with the simple algorithm (warning in the status)
+                }
                 catch (GmshException e)
                 {
                     generateMeshStatus.AddException(e, "Failed to recombine the mesh, try to change the recombine algorithm");
-                    Gmsh.Finalize();
                     return false;
                 }
                 catch (Exception e)
                 {
                     generateMeshStatus.AddException(e, "Failed to recombine the mesh");
-                    Gmsh.Finalize();
                     return false;
                 }
 
@@ -2580,7 +2224,7 @@ namespace GPC.Geometry.Meshes.GMesh
 
                 #endregion
 
-                DateTime dt7 = DateTime.Now;
+                TimeSpan dt7 = clock.Elapsed;
 
                 //Gmsh.Fltk.Run();
 
@@ -2598,13 +2242,13 @@ namespace GPC.Geometry.Meshes.GMesh
 
                 //Gmsh.Model.Mesh.GetElements(out elementTypes, out elementTags, out elementNodeTags);
                 Gmsh.Model.Mesh.GetElements(out int[] elementTypes, out long[][] elementTags, out long[][] elementNodeTags);
+                // Gmsh.Net returns null for an empty result
+                elementTypes = elementTypes ?? new int[0];
 
                 int progressVertexId = 0;
                 int progressPlateId = 0;
                 int progressEdgeId = 0;
 
-                // dizionario di associazione tra meshVertex della nostra mesh e id del vertice di gmsh
-                Dictionary<MeshVertex, int> pointIdAssociation = new Dictionary<MeshVertex, int>();
                 // dizionario di associazione tra id della faccia di gmsh e id della nostra faccia
                 Dictionary<int, int> faceIdAssociation = new Dictionary<int, int>();
 
@@ -2623,278 +2267,131 @@ namespace GPC.Geometry.Meshes.GMesh
 
                     GMesh meshBuffer = new GMesh();
 
-                    DateTime dtV1 = DateTime.Now;
+                    TimeSpan dtV1 = clock.Elapsed;
 
                     // tag del gruppo fisico
                     (int physicalGroupTag, int dim, int[] surfacesTag, Shape shape)[] pairs = physicalGroupTagSurfacesAssociation.Where(i => i.physicalGroupTag == phGTags[p]).ToArray();
                     for (int m = 0; m < pairs.Length; m++)
                     {
-                        Gmsh.Model.Mesh.GetNodesForPhysicalGroup(pairs.ElementAt(m).dim, phGTags[p], out long[] nodeTags, out double[] nodeTagsCoord);
-                        Dictionary<MeshVertex, int> pointIdAssociationBuffer = new Dictionary<MeshVertex, int>();
+                        Gmsh.Model.Mesh.GetNodesForPhysicalGroup(pairs[m].dim, phGTags[p], out long[] nodeTags, out double[] nodeTagsCoord);
+                        nodeTags = nodeTags ?? new long[0]; // null for an empty group
+
+                        // One vertex for every node of Gmsh in the mesh. Before, a node shared by the shape and an embedded shape (their corners)
+                        // got two vertices, merged later by Clean; the search by MeshVertex (whose equality includes the Id) never found a vertex,
+                        // and the vertices "common to other meshes" were never used (pointIdAssociation.Concat discarded the result, and there was
+                        // a break instead of a continue): the vertices are not shared between the meshes, as before
+                        int VertexId(long nodeTag, double[] coordinates, int j)
+                        {
+                            if (vertexIdAssociation.TryGetValue((int)nodeTag, out int id))
+                                return id;
+
+                            Point3d point = new Point3d(coordinates[j * 3], coordinates[j * 3 + 1], coordinates[j * 3 + 2]).Scale(options.MeshScalingFactor);
+                            MeshVertex mv = new MeshVertex(point);
+                            id = options.UseGlobalProgressID ? meshBuffer._vertices.Add(mv, ++progressVertexId) : meshBuffer._vertices.Add(mv);
+
+                            vertexIdAssociation[(int)nodeTag] = id;
+                            nodeTagHashSet.Add((int)nodeTag);
+                            return id;
+                        }
 
                         try
                         {
-                            #region VERTICI                             
+                            #region VERTICI
 
-                            for (int j = 0; j < nodeTags.Count(); j++)
-                            {
-                                Point3d pt = new Point3d(nodeTagsCoord[j * 3], nodeTagsCoord[j * 3 + 1], nodeTagsCoord[j * 3 + 2]);
-                                Point3d point = pt.Scale(options.MeshScalingFactor);
-
-                                // Uso id vertice comune ad altre mesh se esiste, altrimenti un progressivo
-                                bool commonPoint = false;
-                                int vertexId = -1;
-                                MeshVertex mv = new MeshVertex(point);
-
-                                // controllo che il vertice non sia stato aggiunto. nel caso, mi faccio restituire l'id
-                                if (pointIdAssociation.ContainsKey(mv))
-                                {
-                                    vertexId = pointIdAssociation[mv];
-                                    vertexId = meshBuffer._vertices.Add(mv, vertexId);
-                                    commonPoint = true;
-                                    break;
-                                }
-
-                                // se non è stato già aggiunto, lo aggiungo con un nuovo id
-                                if (!commonPoint)
-                                {
-                                    if (!pointIdAssociationBuffer.ContainsKey(mv) && !options.UseGlobalProgressID)
-                                    {
-                                        vertexId = meshBuffer._vertices.Add(mv);
-                                    }
-                                    else if (!pointIdAssociationBuffer.ContainsKey(mv) && options.UseGlobalProgressID)
-                                    {
-                                        ++progressVertexId;
-                                        vertexId = meshBuffer._vertices.Add(mv, progressVertexId);
-                                    }
-                                    else
-                                    {
-                                        vertexId = pointIdAssociationBuffer[mv];
-                                        commonPoint = true;
-                                    }
-                                }
-
-                                if (vertexId == -1)
-                                {
-                                    throw new NotSupportedException("Vertex id not assigned");
-                                }
-
-                                vertexIdAssociation[(int)nodeTags[j]] = vertexId;
-                                nodeTagHashSet.Add((int)nodeTags[j]);
-                                if (!commonPoint)
-                                {
-                                    pointIdAssociationBuffer.Add(mv, vertexId);
-                                }
-                            }
+                            for (int j = 0; j < nodeTags.Length; j++)
+                                VertexId(nodeTags[j], nodeTagsCoord, j);
 
                             #endregion
                         }
                         catch (Exception e)
                         {
                             generateMeshStatus.AddException(e, "Failed to postprocess the mesh vertices");
-                            Gmsh.Finalize();
                             return false;
                         }
 
-                        // se ho una shape embeddata
-                        foreach ((int physicalGroupTag, int embPhysicalGroupTag, int surfaceTag) pgTag in physicalGroupMeshTagAssociation.Where(i => i.physicalGroupTag == phGTags[p]))
+                        // se ho una shape embeddata (one physical group can have more surfaces: read once)
+                        foreach (int embPhysicalGroupTag in physicalGroupMeshTagAssociation.Where(i => i.physicalGroupTag == phGTags[p]).Select(i => i.embPhysicalGroupTag).Distinct())
                         {
-                            Gmsh.Model.Mesh.GetNodesForPhysicalGroup(2, pgTag.embPhysicalGroupTag, out nodeTags, out nodeTagsCoord);
+                            Gmsh.Model.Mesh.GetNodesForPhysicalGroup(2, embPhysicalGroupTag, out nodeTags, out nodeTagsCoord);
+                            nodeTags = nodeTags ?? new long[0];
 
                             try
                             {
                                 #region VERTICI EVENTUALI SHAPES EMBEDDED
 
-                                for (int j = 0; j < nodeTags.Count(); j++)
-                                {
-                                    var pt = new Point3d(nodeTagsCoord[j * 3], nodeTagsCoord[j * 3 + 1], nodeTagsCoord[j * 3 + 2]);
-                                    var point = pt.Scale(options.MeshScalingFactor);
-
-                                    // Uso id vertice comune ad altre mesh se esiste, altrimenti un progressivo
-                                    bool commonPoint = false;
-                                    int vertexId = -1;
-                                    MeshVertex mv = new MeshVertex(point);
-
-                                    if (pointIdAssociation.ContainsKey(mv))
-                                    {
-                                        vertexId = pointIdAssociation[mv];
-                                        vertexId = meshBuffer._vertices.Add(mv, vertexId);
-                                        commonPoint = true;
-                                        break;
-                                    }
-
-                                    if (!commonPoint)
-                                    {
-                                        if (!pointIdAssociationBuffer.ContainsKey(mv) && !options.UseGlobalProgressID)
-                                        {
-                                            vertexId = meshBuffer._vertices.Add(mv);
-                                        }
-                                        else if (!pointIdAssociationBuffer.ContainsKey(mv) && options.UseGlobalProgressID)
-                                        {
-                                            ++progressVertexId;
-                                            vertexId = meshBuffer._vertices.Add(mv, progressVertexId);
-                                        }
-                                        else
-                                        {
-                                            vertexId = pointIdAssociationBuffer[mv];
-                                            commonPoint = true;
-                                        }
-                                    }
-
-                                    if (vertexId == -1)
-                                    {
-                                        throw new NotSupportedException("Vertex id not assigned");
-                                    }
-
-                                    vertexIdAssociation[(int)nodeTags[j]] = vertexId;
-                                    nodeTagHashSet.Add((int)nodeTags[j]);
-                                    if (!commonPoint)
-                                    {
-                                        pointIdAssociationBuffer.Add(mv, vertexId);
-                                    }
-                                }
+                                for (int j = 0; j < nodeTags.Length; j++)
+                                    VertexId(nodeTags[j], nodeTagsCoord, j);
 
                                 #endregion
                             }
                             catch (Exception e)
                             {
                                 generateMeshStatus.AddException(e, "Failed to postprocess the mesh vertices of embedded shape");
-                                Gmsh.Finalize();
                                 return false;
                             }
                         }
 
-                        DateTime dtV2 = DateTime.Now;
+                        TimeSpan dtV2 = clock.Elapsed;
                         nodeTime += (dtV2 - dtV1).TotalSeconds;
 
                         try
                         {
                             #region ELEMENTI - PUNTI, LINEE, PLATE
 
+                            // an edge shared by two faces is added once (before, every face added all its edges)
+                            var edgeKeys = new HashSet<long>();
+                            void AddEdge(int a, int b)
+                            {
+                                long key = a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
+                                if (edgeKeys.Add(key))
+                                    meshBuffer._edges.Add(new MeshEdge(a, b), ++progressEdgeId);
+                            }
+
                             for (int count = 0; count < meshElementParameters.Count; count++)
                             {
-                                if (meshElementParameters[count].ElementType == 2 || meshElementParameters[count].ElementType == 3)
+                                GMeshElementParameters parameters = meshElementParameters[count];
+                                if (parameters.ElementType != 2 && parameters.ElementType != 3)
+                                    continue; // TRI 3 o QUAD4: points and lines are not faces
+
+                                int elementTypeIndex = Array.IndexOf(elementTypes, parameters.ElementType);
+                                if (elementTypeIndex == -1)
+                                    continue;
+
+                                int nodesNumber = parameters.PrimaryNodesNumber;
+                                long[] typeNodeTags = elementNodeTags[elementTypeIndex];
+
+                                for (int i = 0; i < elementTags[elementTypeIndex].Length; i++)
                                 {
-                                    int elementTypeIndex = Array.IndexOf(elementTypes, meshElementParameters[count].ElementType);
+                                    // tag singolo elemento in gmsh: è del gruppo fisico in analisi se lo sono tutti i suoi nodi
+                                    long elTag = elementTags[elementTypeIndex][i];
 
-                                    if (elementTypeIndex != -1)
+                                    bool isInGroup = true;
+                                    for (int k = 0; k < nodesNumber; k++)
                                     {
-                                        for (int i = 0; i < elementTags[elementTypeIndex].Length; i++)
+                                        if (!nodeTagHashSet.Contains((int)typeNodeTags[nodesNumber * i + k]))
                                         {
-                                            // tag singolo elemento in gmsh, non so in che gruppo sia
-                                            long elTag = elementTags[elementTypeIndex][i];
-                                            long[] elNodeTags = null;
-
-                                            if (meshElementParameters[count].PrimaryNodesNumber == 4)
-                                                elNodeTags = new long[] {
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber * i],
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i + 1],
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i + 2],
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i + 3] };
-
-                                            else if (meshElementParameters[count].PrimaryNodesNumber == 3)
-                                                elNodeTags = new long[] {
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i],
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i + 1],
-                                                    elementNodeTags[elementTypeIndex][meshElementParameters[count].PrimaryNodesNumber*i + 2] };
-
-                                            // Controllo che faccia parte del gruppo fisico in analisi
-                                            if (elNodeTags != null)
-                                            {
-                                                bool isInGroup = true;
-                                                for (int item = 0; item < elNodeTags.Length; item++)
-                                                {
-                                                    if (!nodeTagHashSet.Contains((int)elNodeTags[item]))
-                                                    {
-                                                        isInGroup = false;
-                                                        break;
-                                                    }
-                                                }
-
-                                                // creo una faccia e i rispettivi bordi
-                                                if (isInGroup)
-                                                {
-                                                    if (meshElementParameters[count].ElementType == 2 || meshElementParameters[count].ElementType == 3) // TRI 3 o QUAD4
-                                                    {
-                                                        try
-                                                        {
-                                                            faceIdAssociation.Add((int)elTag, progressPlateId);
-                                                        }
-                                                        catch (Exception)
-                                                        {
-                                                            continue;
-                                                        }
-
-                                                        if (meshElementParameters[count].PrimaryNodesNumber == 3)
-                                                        {
-                                                            meshBuffer._faces.Add(new MeshFace(
-                                                                vertexIdAssociation[(int)elNodeTags[0]],
-                                                                vertexIdAssociation[(int)elNodeTags[1]],
-                                                                vertexIdAssociation[(int)elNodeTags[2]]),
-                                                                ++progressPlateId);
-
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[0]],
-                                                                vertexIdAssociation[(int)elNodeTags[1]]),
-                                                                ++progressEdgeId);
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[1]],
-                                                                vertexIdAssociation[(int)elNodeTags[2]]),
-                                                                ++progressEdgeId);
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[2]],
-                                                                vertexIdAssociation[(int)elNodeTags[0]]),
-                                                                ++progressEdgeId);
-                                                        }
-
-                                                        else if (meshElementParameters[count].PrimaryNodesNumber == 4)
-                                                        {
-                                                            meshBuffer._faces.Add(new MeshFace(
-                                                                vertexIdAssociation[(int)elNodeTags[0]],
-                                                                vertexIdAssociation[(int)elNodeTags[1]],
-                                                                vertexIdAssociation[(int)elNodeTags[2]],
-                                                                vertexIdAssociation[(int)elNodeTags[3]]),
-                                                                ++progressPlateId);
-
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[0]],
-                                                                vertexIdAssociation[(int)elNodeTags[1]]),
-                                                                ++progressEdgeId);
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[1]],
-                                                                vertexIdAssociation[(int)elNodeTags[2]]),
-                                                                ++progressEdgeId);
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[2]],
-                                                                vertexIdAssociation[(int)elNodeTags[3]]),
-                                                                ++progressEdgeId);
-                                                            meshBuffer._edges.Add(new MeshEdge(
-                                                                vertexIdAssociation[(int)elNodeTags[3]],
-                                                                vertexIdAssociation[(int)elNodeTags[0]]),
-                                                                ++progressEdgeId);
-                                                        }
-
-                                                        else
-                                                        {
-                                                            throw new NotSupportedException("Node number not supported");
-                                                        }
-
-
-                                                    }
-
-                                                    else if (meshElementParameters[count].ElementType == 1 || meshElementParameters[count].ElementType == 15) // linea2 o punto
-                                                    {
-                                                        continue;
-                                                    }
-
-                                                    else
-                                                    {
-                                                        throw new NotSupportedException("Element type not supported");
-                                                    }
-                                                }
-                                            }
+                                            isInGroup = false;
+                                            break;
                                         }
                                     }
+
+                                    // not of this group, or already in another mesh (before, found by the exception of Dictionary.Add)
+                                    if (!isInGroup || faceIdAssociation.ContainsKey((int)elTag))
+                                        continue;
+
+                                    int[] nodes = new int[nodesNumber];
+                                    for (int k = 0; k < nodesNumber; k++)
+                                        nodes[k] = vertexIdAssociation[(int)typeNodeTags[nodesNumber * i + k]];
+
+                                    // the id of this face (before, the id of the previous face: the faces of the embedded shapes were shifted by one)
+                                    int faceId = ++progressPlateId;
+                                    faceIdAssociation.Add((int)elTag, faceId);
+
+                                    // creo una faccia e i rispettivi bordi
+                                    meshBuffer._faces.Add(nodesNumber == 3 ? new MeshFace(nodes[0], nodes[1], nodes[2]) : new MeshFace(nodes[0], nodes[1], nodes[2], nodes[3]), faceId);
+
+                                    for (int k = 0; k < nodesNumber; k++)
+                                        AddEdge(nodes[k], nodes[(k + 1) % nodesNumber]);
                                 }
                             }
 
@@ -2905,18 +2402,17 @@ namespace GPC.Geometry.Meshes.GMesh
                         catch (Exception e)
                         {
                             generateMeshStatus.AddException(e, "Failed to postprocess the mesh elements");
-                            Gmsh.Finalize();
                             return false;
                         }
 
-                        DateTime dtE2 = DateTime.Now;
+                        TimeSpan dtE2 = clock.Elapsed;
                         elementTime += (dtE2 - dtV2).TotalSeconds;
 
                         try
                         {
                             #region PER OGNI GEOMETRIA EMBEDD mappo i nodi o le facce
 
-                            DateTime dtEmb1 = DateTime.Now;
+                            TimeSpan dtEmb1 = clock.Elapsed;
 
                             if (embeddedGeometriesTagAssociation.Count > 0 && embeddedGeometriesTagAssociation.ContainsKey(phGTags[p]))
                             {
@@ -2924,69 +2420,66 @@ namespace GPC.Geometry.Meshes.GMesh
                                 {
                                     Dictionary<GeometryBase, int[]> embeddedGeometriesSingleMesh = new Dictionary<GeometryBase, int[]>();
 
-                                    for (int k = 0; k < embeddedGeometriesTagAssociation[phGTags[p]].Count; k++)
+                                    // before, ElementAt(k) on the dictionary: O(n^2)
+                                    foreach (KeyValuePair<GeometryBase, int[]> embedded in embeddedGeometriesTagAssociation[phGTags[p]])
                                     {
-                                        GeometryBase geometry = embeddedGeometriesTagAssociation[phGTags[p]].ElementAt(k).Key;
-                                        int[] geometryTag = embeddedGeometriesTagAssociation[phGTags[p]].ElementAt(k).Value;
+                                        GeometryBase geometry = embedded.Key;
+                                        int[] geometryTag = embedded.Value;
 
                                         List<int> nodesBuffer = new List<int>();            // lista temporanea
                                         List<int> nodesBufferOut = new List<int>();         // lista che va in output con i vertici corretti nel giusto ordine
+                                        HashSet<int> nodesInOutput = new HashSet<int>();    // before, nodesBufferOut.Contains: O(n^2)
+
+                                        // the first point of a line or of a polygon, to know the direction of the first curve
+                                        // (before, a Polygon2d was cast to Polygon3d: InvalidCastException)
+                                        Point3d firstPoint = null;
+                                        if (geometry is Line3d l3d)
+                                            firstPoint = l3d.Start;
+                                        else if (geometry is Line2d l2d)
+                                            firstPoint = new Line3d(l2d).Start;
+                                        else if (geometry is Polygon3d p3d)
+                                            firstPoint = p3d[0];
+                                        else if (geometry is Polygon2d p2d)
+                                            firstPoint = new Point3d(p2d[0]);
 
                                         for (int j = 0; j < geometryTag.Length; j++)
                                         {
-                                            if (geometry is Line3d || geometry is Line2d)
+                                            if (firstPoint != null)
                                             {
-                                                // Gmsh.Model.Mesh.GetNodes(out long[] nTags, out double[] coord, out double[] parametricCoord, 1, geometryTag, true, false);
-                                                // Gabriele: messo parametro includeBoundsry a true. restituisce i tag degli estremi però li mette in fondo all'array.
+                                                // Gabriele: messo parametro includeBoundary a true. restituisce i tag degli estremi però li mette in fondo all'array.
                                                 // l'array è ordinato così: tag 1 - 2 - 3 - .... - start - end. lo riscrivo ordinato prima di aggiungerlo alla mappa dei nodi
-                                                // problema: lo restituisce secondo l'ordine interno di gmsh e non quello mio di inserimento. devo flipparlo se nel verso opposto. 
+                                                // problema: lo restituisce secondo l'ordine interno di gmsh e non quello mio di inserimento. devo flipparlo se nel verso opposto.
                                                 // faccio il controllo prima sullo start della linea e poi sull'ultimo tag della lista
+                                                // (the same code was duplicated for lines and polygons)
                                                 Gmsh.Model.Mesh.GetNodes(out long[] nTags, out double[] coord, out double[] parametricCoord, 1, geometryTag[j], true, false);
 
-                                                int[] nodes = new int[nTags.Length];
-
-                                                //if(vertexIdAssociation[(int)nTags[nTags.Length - 2]] != null)
                                                 nodesBuffer.Add(vertexIdAssociation[(int)nTags[nTags.Length - 2]]);
 
                                                 for (int i = 0; i < nTags.Length; i++)
                                                 {
-                                                    if (i == nTags.Length - 2)
-                                                    {
-                                                    }
-                                                    else if (vertexIdAssociation.ContainsKey((int)nTags[i]))
-                                                        nodesBuffer.Add(vertexIdAssociation[(int)nTags[i]]);
+                                                    if (i != nTags.Length - 2 && vertexIdAssociation.TryGetValue((int)nTags[i], out int vertexId))
+                                                        nodesBuffer.Add(vertexId);
                                                 }
 
-                                                Line3d l;
-                                                if (geometry is Line3d l3d)
-                                                    l = l3d;
-                                                else
-                                                    l = new Line3d((Line2d)geometry);
-
-                                                int startTag;
-                                                double[] startCoord;
                                                 if (nodesBufferOut.Count == 0)
                                                 {
-                                                    startTag = geometryTag[j];
-                                                    startCoord = Gmsh.Model.GetValue(1, startTag, new double[] { 0 });
+                                                    double[] startCoord = Gmsh.Model.GetValue(1, geometryTag[j], new double[] { 0 });
 
-                                                    if (!(Math.Abs(l.Start.X - startCoord[0]) < tolerance && Math.Abs(l.Start.Y - startCoord[1]) < tolerance && Math.Abs(l.Start.Z - startCoord[2]) < tolerance))
+                                                    if (!(Math.Abs(firstPoint.X - startCoord[0]) < tolerance && Math.Abs(firstPoint.Y - startCoord[1]) < tolerance && Math.Abs(firstPoint.Z - startCoord[2]) < tolerance))
                                                     {
                                                         // significa che lo start della mia linea NON coincide con lo start della linea di gmsh => è al contrario. la rigiro
                                                         nodesBuffer.Reverse();
                                                     }
                                                 }
-                                                else
+                                                else if (nodesBufferOut[nodesBufferOut.Count - 1] != nodesBuffer[0])
                                                 {
-                                                    startTag = nodesBufferOut.LastOrDefault();
-                                                    if (startTag != nodesBuffer[0])
-                                                        // significa che la lista che ha tirato fuori gmsh è in ordine opposto a quella che vorrei => è al contrario. la rigiro
-                                                        nodesBuffer.Reverse();
+                                                    // significa che la lista che ha tirato fuori gmsh è in ordine opposto a quella che vorrei => è al contrario. la rigiro
+                                                    nodesBuffer.Reverse();
                                                 }
 
-                                                for (int i = 0; i < nodesBuffer.Count(); i++)
+                                                for (int i = 0; i < nodesBuffer.Count; i++)
                                                 {
-                                                    if (!nodesBufferOut.Contains(nodesBuffer[i]))
+                                                    if (nodesInOutput.Add(nodesBuffer[i]))
                                                         nodesBufferOut.Add(nodesBuffer[i]);
                                                 }
                                                 nodesBuffer.Clear();            // lo pulisco almeno evito calcoli inutili
@@ -2994,78 +2487,26 @@ namespace GPC.Geometry.Meshes.GMesh
 
                                             else if (geometry is Point3d || geometry is Point2d)
                                             {
-                                                //Gmsh.Model.Mesh.GetNodes(out long[] nTags, out double[] coord, out double[] parametricCoord, 0, geometryTag, true, false);
-                                                // Giorgio: messo parametro includeBoundsry a fase altrimenti restituiva tag inesistenti
+                                                // Giorgio: messo parametro includeBoundary a false altrimenti restituiva tag inesistenti
                                                 Gmsh.Model.Mesh.GetNodes(out long[] nTags, out double[] coord, out double[] parametricCoord, 0, geometryTag[j], false, false);
 
-                                                int[] nodes = new int[nTags.Length];
-                                                for (int i = 0; i < nTags.Length; i++)
+                                                for (int i = 0; i < (nTags?.Length ?? 0); i++)
                                                 {
                                                     nodesBufferOut.Add(vertexIdAssociation[(int)nTags[i]]);
                                                 }
                                             }
 
-                                            else if (geometry is Polygon2d || geometry is Polygon3d)
-                                            {
-                                                Gmsh.Model.Mesh.GetNodes(out long[] nTags, out double[] coord, out double[] parametricCoord, 1, geometryTag[j], true, false);
-
-                                                int[] nodes = new int[nTags.Length];
-
-                                                nodesBuffer.Add(vertexIdAssociation[(int)nTags[nTags.Length - 2]]);
-
-                                                for (int i = 0; i < nTags.Length; i++)
-                                                {
-                                                    if (i == nTags.Length - 2)
-                                                    {
-                                                    }
-                                                    else if (vertexIdAssociation.ContainsKey((int)nTags[i]))
-                                                        nodesBuffer.Add(vertexIdAssociation[(int)nTags[i]]);
-                                                }
-
-                                                Polygon3d poly = (Polygon3d)geometry;
-
-                                                int startTag;
-                                                double[] startCoord;
-                                                if (nodesBufferOut.Count == 0)
-                                                {
-                                                    startTag = geometryTag[j];
-                                                    startCoord = Gmsh.Model.GetValue(1, startTag, new double[] { 0 });
-
-                                                    if (!(Math.Abs(poly.Explode()[0].Start.X - startCoord[0]) < tolerance && Math.Abs(poly.Explode()[0].Start.Y - startCoord[1]) < tolerance && Math.Abs(poly.Explode()[0].Start.Z - startCoord[2]) < tolerance))
-                                                    {
-                                                        // significa che lo start della mia linea NON coincide con lo start della linea di gmsh => è al contrario. la rigiro
-                                                        nodesBuffer.Reverse();
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    startTag = nodesBufferOut.LastOrDefault();
-                                                    if (startTag != nodesBuffer[0])
-                                                        // significa che la lista che ha tirato fuori gmsh è in ordine opposto a quella che vorrei => è al contrario. la rigiro
-                                                        nodesBuffer.Reverse();
-                                                }
-
-
-                                                for (int i = 0; i < nodesBuffer.Count(); i++)
-                                                {
-                                                    if (!nodesBufferOut.Contains(nodesBuffer[i]))
-                                                        nodesBufferOut.Add(nodesBuffer[i]);
-                                                }
-                                                nodesBuffer.Clear();            // lo pulisco almeno evito calcoli inutili
-                                            }
-
                                             else if (geometry is Shape)
                                             {
+                                                // the faces of the embedded shape (elementTag[0] => facce triangolari, elementTag[1] => facce quadrangolari)
                                                 Gmsh.Model.Mesh.GetElements(out int[] elementType, out long[][] elementTag, out long[][] nTags, 2, geometryTag[j]);
-                                                for (int i = 0; i < elementTag.Length; i++)
+                                                for (int i = 0; i < (elementTag?.Length ?? 0); i++)
                                                 {
-                                                    for (int h = 0; h < elementTag[i].Length; h++)
+                                                    for (int h = 0; h < (elementTag[i]?.Length ?? 0); h++)
                                                     {
-                                                        if (!nodesBufferOut.Contains(faceIdAssociation[Convert.ToInt32(elementTag[i][h])]))
-                                                            nodesBufferOut.Add(faceIdAssociation[Convert.ToInt32(elementTag[i][h])]);
-
-                                                        // elementTag[0] => facce triangolari
-                                                        // elementTag[1] => facce quadrangolari
+                                                        int faceId = faceIdAssociation[Convert.ToInt32(elementTag[i][h])];
+                                                        if (nodesInOutput.Add(faceId))
+                                                            nodesBufferOut.Add(faceId);
                                                     }
                                                 }
                                             }
@@ -3099,21 +2540,19 @@ namespace GPC.Geometry.Meshes.GMesh
                         catch (Exception e)
                         {
                             generateMeshStatus.AddException(e, "Failed to postprocess the embedded geometries");
-                            Gmsh.Finalize();
                             return false;
                         }
 
-                        pointIdAssociation.Concat(pointIdAssociationBuffer);
                         meshes.Add(meshBuffer);
 
-                        DateTime dtEmb2 = DateTime.Now;
+                        TimeSpan dtEmb2 = clock.Elapsed;
                         embTime += (dtEmb2 - dtE2).TotalSeconds;
                     }
                 }
 
                 #endregion
 
-                DateTime dt8 = DateTime.Now;
+                TimeSpan dt8 = clock.Elapsed;
 
                 #region EXECUTION TIME
 
@@ -3139,14 +2578,12 @@ namespace GPC.Geometry.Meshes.GMesh
             catch (Exception e)
             {
                 generateMeshStatus.AddException(e, "Generic exception");
-                Gmsh.Finalize();
                 return false;
             }
 
             //Gmsh.Logger.Stop();
-            Gmsh.Finalize();
 
-            generateMeshStatus.AddExecutionTimeMessage(GMeshGenerateMeshStatus.TotalTime, (DateTime.Now - dt0).TotalSeconds);
+            generateMeshStatus.AddExecutionTimeMessage(GMeshGenerateMeshStatus.TotalTime, (clock.Elapsed - dt0).TotalSeconds);
 
 
             return true;
@@ -3203,33 +2640,513 @@ namespace GPC.Geometry.Meshes.GMesh
         }
 
         /// <summary>
+        /// Embeds a segment of an embedded line or polygon in the surfaces <paramref name="surfaceTags"/>: the segment is split where it crosses the
+        /// boundaries of the surfaces and every part is embedded in the surface that contains its midpoint (the parts out of the surfaces are skipped).
+        /// A segment that is a side of a surface is not added again: the curve of the side is returned
+        /// </summary>
+        /// <returns>The tags of the curves of the segment (empty if the segment is out of the surfaces)</returns>
+        /// <remarks>Before (the code was duplicated for lines and polygons):
+        /// <list type="bullet">
+        /// <item>only the first crossing was considered: a segment through three surfaces, or going out and back in the same surface, was embedded
+        /// across a boundary ("Unable to recover the edge") or not embedded at all;</item>
+        /// <item>a segment with an end not recognized inside a surface was embedded in the surface -1 (exception);</item>
+        /// <item>a line with the midpoint out of the surfaces (e.g. across a hole) was not embedded, a polygon side with an end out of them neither;</item>
+        /// <item>the crossings near the ends were ignored with the tolerance ProductTolerance(a^2, Math.Max(b, 2), ...): Math.Max instead of Math.Pow
+        /// and, anyway, a quantity proportional to the fourth power of the lengths (about 70 for segments of 500)</item>
+        /// </list></remarks>
+        private static List<int> EmbedSegment(Line3d line, OpenCascadeWrapper occw, List<int> surfaceTags, SurfaceBoundaries boundaries,
+            GMeshGenerateOptions options, double toleranceMatch, double toleranceIntersection, HashSet<GeometryBase> processed)
+        {
+            var curves = new List<int>();
+
+            int startPointTag = occw.AddPointAndSync(line.Start, toleranceMatch);
+            int endPointTag = occw.AddPointAndSync(line.End, toleranceMatch);
+
+            // the segment is a side of a surface: its curve is used for the mapping of the nodes
+            var boundaryCurves = new List<int>();
+            foreach (int surfaceTag in surfaceTags)
+            {
+                foreach (int curve in boundaries.Curves(surfaceTag))
+                {
+                    (int a, int b) = boundaries.CurveEnds(curve);
+                    if ((a == startPointTag && b == endPointTag) || (a == endPointTag && b == startPointTag))
+                    {
+                        processed.Add(line);
+                        curves.Add(curve);
+                        return curves;
+                    }
+                    if (!boundaryCurves.Contains(curve))
+                        boundaryCurves.Add(curve);
+                }
+            }
+
+            // the crossings with the boundaries, not at the ends of the segment, sorted from the start; tag = the vertex of the boundary
+            // at the crossing, -1 if the crossing is inside a side
+            var crossings = new List<(double distance, Point3d point, int tag)>();
+            void AddCrossing(Point3d point, int tag)
+            {
+                double toEnd = point.DistanceTo(line.End);
+                double toStart = point.DistanceTo(line.Start);
+                double tolerance = ErrorPropagation.ProductTolerance(toEnd, toStart, toleranceIntersection, toleranceIntersection);
+                if (toEnd <= tolerance || toStart <= tolerance)
+                    return;
+
+                if (!crossings.Any(c => c.point.DistanceTo(point) <= toleranceIntersection))
+                    crossings.Add((toStart, point, tag));
+            }
+
+            // first the vertices of the boundaries on the segment: the segment passes through a vertex. Before, only the intersections
+            // with the sides were considered, and GetIntersection does not find an intersection less than the tolerance from an end of
+            // the side but not on it (a vertex moved by a previous fragment): the segment was not split there and was embedded across two
+            // surfaces (degenerate faces)
+            foreach (int curve in boundaryCurves)
+            {
+                Line3d side = boundaries.CurveLine(curve);
+                if (side is null)
+                    continue;
+
+                (int a, int b) = boundaries.CurveEnds(curve);
+                if (line.IsPointOnLine(side.Start, toleranceIntersection))
+                    AddCrossing(side.Start, a);
+                if (line.IsPointOnLine(side.End, toleranceIntersection))
+                    AddCrossing(side.End, b);
+            }
+
+            foreach (int curve in boundaryCurves)
+            {
+                Line3d side = boundaries.CurveLine(curve);
+                if (side is null || !side.GetIntersection(line, out Point3d point, toleranceIntersection) || point is null)
+                    continue;
+
+                AddCrossing(point, -1);
+            }
+            crossings.Sort((x, y) => x.distance.CompareTo(y.distance));
+
+            var points = new List<Point3d> { line.Start };
+            points.AddRange(crossings.Select(c => c.point));
+            points.Add(line.End);
+
+            var pointTags = new List<int> { startPointTag };
+            foreach ((double _, Point3d point, int tag) in crossings)
+                pointTags.Add(tag != -1 ? tag : occw.AddPointAndSync(point, toleranceMatch));
+            pointTags.Add(endPointTag);
+
+            // a point on a side of a surface (a crossing, or an end on the side) must be a vertex of the side (before, the part ended on the side
+            // without a vertex there: "Unable to recover the edge", or Gmsh did not end)
+            int fragments = boundaries.Fragments;
+            for (int i = 0; i < points.Count; i++)
+                pointTags[i] = MakeVertexOnSides(points[i], pointTags[i], surfaceTags, boundaries, occw, options, toleranceIntersection);
+
+            // a fragment can have renumbered the points of the segment made vertices before: they are found again among the OCC points
+            if (boundaries.Fragments != fragments)
+            {
+                int[] tags = occw.FindOccPoints(points, toleranceIntersection);
+                for (int i = 0; i < points.Count; i++)
+                {
+                    if (tags[i] != -1)
+                        pointTags[i] = tags[i];
+                }
+            }
+
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                int surface = FindSurface(new Line3d(points[i], points[i + 1]).GetMidPoint(), surfaceTags);
+                if (surface == -1)
+                    continue; // part out of the surfaces
+
+                int curve = occw.AddLineAndSync(pointTags[i], pointTags[i + 1]);
+                boundaries.Embed(1, curve, surface);
+
+                if (options.Transfinite)
+                    TransfiniteLine(curve, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
+
+                curves.Add(curve);
+            }
+
+            if (curves.Count > 0)
+                processed.Add(line);
+
+            return curves;
+        }
+
+        /// <summary>
+        /// Makes <paramref name="point"/> a vertex of the sides of <paramref name="surfaceTags"/> where it is (not at their ends): the surfaces of the side
+        /// are fragmented with the point (Mesh.Embed does not accept points in curves). The fragmented surfaces get new sides (the transfinite
+        /// is set again) and lose their embedded entities (they are embedded again)
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="pointTag">The tag of the point</param>
+        /// <param name="surfaceTags">The surfaces</param>
+        /// <param name="boundaries">The boundaries of the surfaces (updated after the fragment)</param>
+        /// <param name="occw">The OpenCASCADE entities</param>
+        /// <param name="options">The options (transfinite)</param>
+        /// <param name="toleranceIntersection">The tolerance on the distance of the point from the sides</param>
+        /// <returns>The tag of the point after the fragment</returns>
+        private static int MakeVertexOnSides(Point3d point, int pointTag, List<int> surfaceTags, SurfaceBoundaries boundaries, OpenCascadeWrapper occw, GMeshGenerateOptions options,
+            double toleranceIntersection)
+        {
+            return MakeVertexOnSides(point, pointTag, surfaceTags, boundaries, occw, options, toleranceIntersection, out _);
+        }
+
+        /// <summary>
+        /// Makes <paramref name="point"/> a vertex of the sides of <paramref name="surfaceTags"/> where it is (see the overload without <paramref name="onSide"/>)
+        /// </summary>
+        /// <param name="point">The point</param>
+        /// <param name="pointTag">The tag of the point</param>
+        /// <param name="surfaceTags">The surfaces</param>
+        /// <param name="boundaries">The boundaries of the surfaces (updated after the fragment)</param>
+        /// <param name="occw">The OpenCASCADE entities</param>
+        /// <param name="options">The options (transfinite)</param>
+        /// <param name="toleranceIntersection">The tolerance on the distance of the point from the sides</param>
+        /// <param name="onSide">True if the point was on a side (it is now a vertex of the surfaces: it must not be embedded)</param>
+        /// <returns>The tag of the point after the fragment</returns>
+        private static int MakeVertexOnSides(Point3d point, int pointTag, List<int> surfaceTags, SurfaceBoundaries boundaries, OpenCascadeWrapper occw, GMeshGenerateOptions options,
+            double toleranceIntersection, out bool onSide)
+        {
+            onSide = false;
+            bool fragmented;
+            int fragments = 0;
+            do
+            {
+                // a point is on a few sides: the limit only protects from a loop without end if Gmsh does not make it a vertex
+                if (++fragments > 64)
+                    throw new InvalidOperationException($"The point {point} cannot be made a vertex of the sides of the surfaces");
+
+                fragmented = false;
+                foreach (int surfaceTag in surfaceTags.ToArray())
+                {
+                    foreach (int curve in boundaries.Curves(surfaceTag))
+                    {
+                        (int a, int b) = boundaries.CurveEnds(curve);
+                        if (pointTag == a || pointTag == b)
+                            continue;
+
+                        Line3d side = boundaries.CurveLine(curve);
+                        if (side is null || !side.IsPointOnLine(point, toleranceIntersection))
+                            continue;
+
+                        // the point is an end of the side, with another tag (a point added at the place of a vertex): the vertex is used
+                        // (before, the side was fragmented with the point: a side of length ~0 when the vertex had been moved by a fragment)
+                        if (side.Start.DistanceTo(point) <= toleranceIntersection || side.End.DistanceTo(point) <= toleranceIntersection)
+                        {
+                            pointTag = side.Start.DistanceTo(point) <= side.End.DistanceTo(point) ? a : b;
+                            onSide = true;
+                            continue;
+                        }
+
+                        // the point exactly on the side, projected on the curve of Gmsh (a crossing computed with a tolerance can be 1e-6 from
+                        // it, more than the tolerance of OpenCascade: the fragment would not divide the side; the ends of the side can be moved
+                        // by the previous fragments, so the segment between them is not the curve)
+                        Gmsh.Model.GetClosestPoint(1, curve, new double[] { point.X, point.Y, point.Z }, out double[] closest, out _);
+                        Point3d onTheSide = closest != null && closest.Length == 3 ? new Point3d(closest[0], closest[1], closest[2]) : ClosestPoint(side, point);
+                        if (onTheSide.DistanceTo(point) > 0)
+                        {
+                            Gmsh.Model.Occ.Translate(new (int, int)[] { (0, pointTag) }, onTheSide.X - point.X, onTheSide.Y - point.Y, onTheSide.Z - point.Z);
+                            Gmsh.Model.Occ.Synchronize();
+                            point = onTheSide;
+                        }
+
+                        // all the surfaces of the side, also of the other shapes: a side shared by the surfaces of two shapes must be divided
+                        // for all of them (otherwise the meshes of the two shapes are not conforming)
+                        (int, int)[] adjacent = (Gmsh.Model.GetEntities(2) ?? new (int, int)[0]).Select(dimTag => dimTag.Item2)
+                            .Where(s => boundaries.Curves(s).Contains(curve)).Select(s => (2, s)).ToArray();
+                        Gmsh.Model.Occ.Fragment(adjacent, new (int, int)[] { (0, pointTag) }, out _, out (int, int)[][] resultMap, -1, true, true);
+                        Gmsh.Model.Occ.Synchronize();
+
+                        // the new tags of the surfaces (usually the same) and of the point; Gmsh.Net returns null for an empty map
+                        (int, int)[] Map(int k) => resultMap != null && k < resultMap.Length && resultMap[k] != null ? resultMap[k] : new (int, int)[0];
+                        for (int k = 0; k < adjacent.Length; k++)
+                        {
+                            int[] newTags = Map(k).Where(dimTag => dimTag.Item1 == 2).Select(dimTag => dimTag.Item2).ToArray();
+                            boundaries.Replace(adjacent[k].Item2, newTags, surfaceTags);
+
+                            if (options.Transfinite && !options.TransfiniteSurface)
+                            {
+                                foreach (int newSurface in newTags)
+                                    foreach (int newSide in boundaries.Curves(newSurface))
+                                        TransfiniteLine(newSide, options.MeshSize, options.TransfiniteLineType.ToString(), options.TransfiniteFactor);
+                            }
+                        }
+
+                        int[] newPoint = Map(adjacent.Length).Where(dimTag => dimTag.Item1 == 0).Select(dimTag => dimTag.Item2).ToArray();
+                        if (newPoint.Length > 0)
+                            pointTag = newPoint[0];
+
+                        // the vertices of the fragmented surfaces can have been renumbered: the map of the points is rebuilt (before, the
+                        // following fragments used the old tags: "Unknown OpenCASCADE entity of dimension 0")
+                        occw.RebuildObjectTags();
+
+                        fragmented = true;
+                        onSide = true;
+                        break;
+                    }
+
+                    if (fragmented)
+                        break;
+                }
+            }
+            while (fragmented);
+
+            return pointTag;
+        }
+
+        /// <returns>The point of the segment <paramref name="line"/> closest to <paramref name="point"/></returns>
+        private static Point3d ClosestPoint(Line3d line, Point3d point)
+        {
+            double dx = line.End.X - line.Start.X, dy = line.End.Y - line.Start.Y, dz = line.End.Z - line.Start.Z;
+            double length2 = dx * dx + dy * dy + dz * dz;
+            if (length2 == 0)
+                return new Point3d(line.Start.X, line.Start.Y, line.Start.Z);
+
+            double t = ((point.X - line.Start.X) * dx + (point.Y - line.Start.Y) * dy + (point.Z - line.Start.Z) * dz) / length2;
+            t = Math.Max(0, Math.Min(1, t));
+            return new Point3d(line.Start.X + t * dx, line.Start.Y + t * dy, line.Start.Z + t * dz);
+        }
+
+        /// <returns>The first surface of <paramref name="surfaceTags"/> that contains <paramref name="point"/>, -1 if there is none</returns>
+        private static int FindSurface(Point3d point, List<int> surfaceTags)
+        {
+            foreach (int surfaceTag in surfaceTags)
+            {
+                if (IsInside(point, surfaceTag) != -1)
+                    return surfaceTag;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// The boundaries of the surfaces, read from Gmsh once, and the entities embedded in the surfaces. When a surface is fragmented to add a
+        /// vertex on a side (see <see cref="MakeVertexOnSides(Point3d, int, List{int}, SurfaceBoundaries, OpenCascadeWrapper, GMeshGenerateOptions, double, out bool)"/>), its sides are read again and its embedded entities are embedded again
+        /// </summary>
+        private sealed class SurfaceBoundaries
+        {
+            /// <summary>
+            /// The curves of the boundary of each surface
+            /// </summary>
+            private readonly Dictionary<int, int[]> _curves = new Dictionary<int, int[]>();
+            /// <summary>
+            /// The end points of each curve
+            /// </summary>
+            private readonly Dictionary<int, (int, int)> _curveEnds = new Dictionary<int, (int, int)>();
+            /// <summary>
+            /// The segment between the ends of each curve
+            /// </summary>
+            private readonly Dictionary<int, Line3d> _curveLines = new Dictionary<int, Line3d>();
+            /// <summary>
+            /// The entities embedded in each surface
+            /// </summary>
+            private readonly Dictionary<int, List<(int dim, int tag)>> _embedded = new Dictionary<int, List<(int dim, int tag)>>();
+
+            /// <summary>
+            /// True if some surfaces have been fragmented: their physical groups must be defined again
+            /// </summary>
+            public bool Fragmented => Fragments > 0;
+
+            /// <summary>
+            /// The number of fragments done
+            /// </summary>
+            public int Fragments { get; private set; }
+
+            /// <summary>
+            /// The surfaces whose tag has been changed by a fragment: old tag -> new tags
+            /// </summary>
+            public Dictionary<int, int[]> Renamed { get; } = new Dictionary<int, int[]>();
+
+            /// <returns>The current tags of the surfaces <paramref name="tags"/> (they can have been changed by a fragment)</returns>
+            public int[] Current(IEnumerable<int> tags)
+            {
+                var result = new List<int>();
+                foreach (int tag in tags)
+                {
+                    if (Renamed.TryGetValue(tag, out int[] renamed))
+                        result.AddRange(Current(renamed));
+                    else
+                        result.Add(tag);
+                }
+                return result.ToArray();
+            }
+
+            /// <summary>
+            /// Embeds the entity in the surface and records it
+            /// </summary>
+            public void Embed(int dim, int tag, int surfaceTag)
+            {
+                Gmsh.Model.Mesh.Embed(dim, new int[1] { tag }, 2, surfaceTag);
+                if (!_embedded.TryGetValue(surfaceTag, out List<(int dim, int tag)> entities))
+                    _embedded[surfaceTag] = entities = new List<(int dim, int tag)>();
+                entities.Add((dim, tag));
+            }
+
+            /// <summary>
+            /// The surface <paramref name="oldTag"/> has been fragmented into <paramref name="newTags"/>: its sides are read again, its embedded
+            /// entities are embedded again in the first new surface (a surface fragmented with a point on a side is not divided), the list
+            /// <paramref name="surfaceTags"/> is updated
+            /// </summary>
+            public void Replace(int oldTag, int[] newTags, List<int> surfaceTags)
+            {
+                Fragments++;
+
+                // the fragment renumbers the sides and reuses the tags of the removed ones: all the sides are read again
+                _curves.Clear();
+                _curveEnds.Clear();
+                _curveLines.Clear();
+
+                if (newTags.Length != 1 || newTags[0] != oldTag)
+                {
+                    Renamed[oldTag] = newTags;
+                    int index = surfaceTags.IndexOf(oldTag);
+                    if (index >= 0)
+                    {
+                        surfaceTags.RemoveAt(index);
+                        surfaceTags.InsertRange(index, newTags);
+                    }
+                }
+
+                if (newTags.Length > 0 && _embedded.TryGetValue(oldTag, out List<(int dim, int tag)> entities))
+                {
+                    _embedded.Remove(oldTag);
+                    foreach ((int dim, int tag) in entities)
+                        Embed(dim, tag, newTags[0]);
+                }
+            }
+
+            /// <summary>
+            /// The curves of the boundary of a surface (read from Gmsh the first time)
+            /// </summary>
+            /// <param name="surfaceTag">The tag of the surface</param>
+            /// <returns>The tags of the curves (positive)</returns>
+            public int[] Curves(int surfaceTag)
+            {
+                if (!_curves.TryGetValue(surfaceTag, out int[] curves))
+                {
+                    // Gmsh.Net returns null for an empty result
+                    curves = (Gmsh.Model.GetBoundary(new (int, int)[1] { (2, surfaceTag) }, false, false, false) ?? new (int, int)[0])
+                        .Select(i => Math.Abs(i.Item2)).ToArray();
+                    _curves[surfaceTag] = curves;
+                }
+                return curves;
+            }
+
+            /// <summary>
+            /// The end points of a curve (read from Gmsh the first time)
+            /// </summary>
+            /// <param name="curveTag">The tag of the curve</param>
+            /// <returns>The tags of the two end points; (-1, -1) if the curve has not two ends</returns>
+            public (int, int) CurveEnds(int curveTag)
+            {
+                if (!_curveEnds.TryGetValue(curveTag, out (int, int) ends))
+                {
+                    int[] points = (Gmsh.Model.GetBoundary(new (int, int)[1] { (1, curveTag) }, false, false, true) ?? new (int, int)[0]).Select(i => i.Item2).ToArray();
+                    ends = points.Length >= 2 ? (points[0], points[1]) : (-1, -1);
+                    _curveEnds[curveTag] = ends;
+                }
+                return ends;
+            }
+
+            /// <returns>The segment between the ends of the curve, null if the curve is closed</returns>
+            public Line3d CurveLine(int curveTag)
+            {
+                if (!_curveLines.TryGetValue(curveTag, out Line3d curveLine))
+                {
+                    (int a, int b) = CurveEnds(curveTag);
+                    if (a != -1 && b != -1 && a != b)
+                    {
+                        Gmsh.Model.Occ.GetBoundingBox(0, a, out double x1, out double y1, out double z1, out _, out _, out _);
+                        Gmsh.Model.Occ.GetBoundingBox(0, b, out double x2, out double y2, out double z2, out _, out _, out _);
+                        curveLine = new Line3d(new Point3d(x1, y1, z1), new Point3d(x2, y2, z2));
+                    }
+                    _curveLines[curveTag] = curveLine;
+                }
+                return curveLine;
+            }
+        }
+
+        /// <summary>
         /// Check if the input point is inside the input surface
         /// </summary>
         /// <param name="point">Point to test</param>
         /// <param name="surfaceTag">The tag of the surface</param>
         /// <returns>The surface tag if the point is inside, -1 if it's outside</returns>
+        /// <remarks>The point is tested with its coordinates: for a plane face Gmsh computes the winding number on the edges of the face, so the
+        /// face cut by Fragment or by holes is considered. Before, the parametric coordinates were tested against the parametric bounds of the
+        /// surface: after Fragment every part of a shape has the surface of the whole shape, so a point was inside all the parts and the embedded
+        /// geometries were put in the wrong part (or not embedded)</remarks>
         private static int IsInside(Point3d point, int surfaceTag)
         {
             try
             {
-                double[] startParametricCoord = Gmsh.Model.GetParametrization(2, surfaceTag, new double[3] { point.X, point.Y, point.Z });
-
-                if (startParametricCoord != null)
-                {
-                    int isInsideStart = Gmsh.Model.IsInside(2, surfaceTag, startParametricCoord, true);
-
-                    if (isInsideStart != 0) // significa che abbiamo beccato la superficie dove sta il punto 
-                    {
-                        return surfaceTag;
-                    }
-                }
+                if (Gmsh.Model.IsInside(2, surfaceTag, new double[3] { point.X, point.Y, point.Z }, false) != 0) // significa che abbiamo beccato la superficie dove sta il punto
+                    return surfaceTag;
             }
-            catch (ArgumentNullException)
+            catch (GmshException)
             {
-                // vuol dire che non è dentro newSurfaceTag. il try/catch è stato messo perchè  GetParametrization non vuole punti esterni alla superficie. noi vogliamo però usarlo per capire se il punto è sulla superficie,
-                // quindi non deve andare in eccezione se l'argomento è nullo. Lo gestiamo mandandolo nel caso di punto esterno
+                // entity where the test is not available: the point is considered outside
             }
             return -1;
+        }
+
+        /// <summary>
+        /// The Blossom recombinations of Gmsh can fail ("Perfect Match failed in quadrangulation, try something else") where the simple ones work:
+        /// the mesh is recombined with the simple algorithm of the same kind (Blossom -> Simple, Blossom Full-Quad -> Simple Full-Quad).
+        /// After the failure Gmsh does not recombine the same mesh again (the call does nothing): the mesh is generated again with the same steps
+        /// (the generation is deterministic)
+        /// </summary>
+        /// <returns>True if the recombination with the simple algorithm has been done (a warning is added to <paramref name="status"/>),
+        /// false if the algorithm was already simple or the second recombination failed too</returns>
+        private static bool RetryRecombineWithSimple(GMeshGenerateOptions options, GmshException exception, GMeshGenerateMeshStatus status)
+        {
+            GMeshGenerateOptions.RecombinationMeshAlgorithm simple;
+            if (options.RecombinationAlgorithm == GMeshGenerateOptions.RecombinationMeshAlgorithm.Blossom)
+                simple = GMeshGenerateOptions.RecombinationMeshAlgorithm.Simple;
+            else if (options.RecombinationAlgorithm == GMeshGenerateOptions.RecombinationMeshAlgorithm.BlossomFullQuad)
+                simple = GMeshGenerateOptions.RecombinationMeshAlgorithm.SimpleFullQuad;
+            else
+                return false;
+
+            try
+            {
+                Gmsh.Option.SetNumber("Mesh.RecombinationAlgorithm", (int)simple);
+
+                Gmsh.Model.Mesh.Clear(new (int, int)[0]);
+                Gmsh.Model.Mesh.Generate(1);
+                Gmsh.Model.Mesh.Generate(2);
+                try
+                {
+                    if (options.Refine)
+                        Gmsh.Model.Mesh.Refine();
+                }
+                catch (GmshException)
+                {
+                    // as in the first generation: the mesh is not refined (the warning is already in the status)
+                }
+                if (options.Renumber)
+                {
+                    Gmsh.Model.Mesh.RenumberNodes();
+                    Gmsh.Model.Mesh.RenumberElements();
+                }
+
+                Gmsh.Model.Mesh.SplitQuadrangles(options.MinQuality, -1);
+                Gmsh.Model.Mesh.Recombine();
+            }
+            catch (GmshException)
+            {
+                return false;
+            }
+            finally
+            {
+                Gmsh.Option.SetNumber("Mesh.RecombinationAlgorithm", (int)options.RecombinationAlgorithm);
+            }
+
+            status.AddWarning($"The recombination {options.RecombinationAlgorithm} failed ({exception.Message.Trim()}): the mesh has been recombined with {simple}");
+            return true;
+        }
+
+        /// <returns>The number of nodes of a straight curve divided in parts not longer than <paramref name="meshSize"/> (at least the two ends)</returns>
+        private static int CurveNodes(int curveTag, double meshSize)
+        {
+            Gmsh.Model.Occ.GetBoundingBox(1, curveTag, out double x1, out double y1, out double z1, out double x2, out double y2, out double z2);
+            double length = new Point3d(x1, y1, z1).DistanceTo(new Point3d(x2, y2, z2));
+            return Math.Max(2, (int)Math.Round(length / meshSize, 0, MidpointRounding.AwayFromZero) + 1);
         }
 
         /// <summary>
@@ -3245,7 +3162,8 @@ namespace GPC.Geometry.Meshes.GMesh
             Point3d p1 = new Point3d(x1, y1, z1);
             Point3d p2 = new Point3d(x2, y2, z2);
             double l1lenght = p1.DistanceTo(p2);
-            int geometryNumNodel1 = (int)Math.Round((l1lenght / meshSize), 0, MidpointRounding.AwayFromZero) + 1;
+            // at least the two ends (before, a curve shorter than half the mesh size had 1 node)
+            int geometryNumNodel1 = Math.Max(2, (int)Math.Round((l1lenght / meshSize), 0, MidpointRounding.AwayFromZero) + 1);
 
             Gmsh.Model.Mesh.SetTransfiniteCurve(lineTag, geometryNumNodel1, transfiniteLineType, transfiniteFactor);
         }
@@ -3257,18 +3175,65 @@ namespace GPC.Geometry.Meshes.GMesh
         #region Nested classes
 
         /// <summary>
+        /// Equality by reference, for dictionaries whose keys (shapes) are modified after they have been added
+        /// </summary>
+        private sealed class ReferenceComparer<T> : IEqualityComparer<T> where T : class
+        {
+            /// <summary>
+            /// The shared instance (the comparer has no state)
+            /// </summary>
+            public static readonly ReferenceComparer<T> Instance = new ReferenceComparer<T>();
+
+            /// <summary>
+            /// Equality by reference
+            /// </summary>
+            /// <param name="x">The first object</param>
+            /// <param name="y">The second object</param>
+            /// <returns>True if they are the same instance</returns>
+            public bool Equals(T x, T y) => ReferenceEquals(x, y);
+
+            /// <summary>
+            /// The hash code of the instance (not of its content)
+            /// </summary>
+            /// <param name="obj">The object</param>
+            /// <returns>The hash code</returns>
+            public int GetHashCode(T obj) => RuntimeHelpers.GetHashCode(obj);
+        }
+
+        /// <summary>
         /// Struct to collect the Gmesh element parameters
         /// </summary>
         private struct GMeshElementParameters
         {
+            /// <summary>
+            /// The name of the element type
+            /// </summary>
             public string ElementName;
+            /// <summary>
+            /// The Gmsh element type
+            /// </summary>
             public int ElementType;
+            /// <summary>
+            /// The number of nodes
+            /// </summary>
             public int NodesNumber;
+            /// <summary>
+            /// The number of primary (corner) nodes
+            /// </summary>
             public int PrimaryNodesNumber;
+            /// <summary>
+            /// The dimension of the element
+            /// </summary>
             public int Dimension;
+            /// <summary>
+            /// The order of the element
+            /// </summary>
             public int Order;
         }
 
+        /// <summary>
+        /// The options of the generation with Gmsh (most of them are Gmsh options, see the Gmsh reference manual)
+        /// </summary>
         [Serializable]
         public sealed class GMeshGenerateOptions : GenerateOptions, ICloneable
         {
@@ -3438,61 +3403,98 @@ namespace GPC.Geometry.Meshes.GMesh
             #endregion
 
             #region Public enums
+            /// <summary>
+            /// The 2D mesh algorithms of Gmsh (option Mesh.Algorithm)
+            /// </summary>
             public enum MeshAlgorithm
             {
+                /// <summary>MeshAdapt (1)</summary>
                 MeshAdapt = 1,
+                /// <summary>Automatic (2)</summary>
                 Automatic = 2,
+                /// <summary>Initial mesh only (3): only the points of the boundary</summary>
                 InitialMeshOnly = 3,
+                /// <summary>Delaunay (5)</summary>
                 Delaunay = 5,
+                /// <summary>Frontal-Delaunay (6)</summary>
                 [Description("Frontal-Delaunay")]
                 FrontalDelaunay = 6,
+                /// <summary>BAMG (7)</summary>
                 BAMG = 7,
+                /// <summary>Frontal-Delaunay for quads (8)</summary>
                 [Description("Frontal-Delaunay for Quads")]
                 FrontalDelaunayForQuads = 8,
+                /// <summary>Packing of parallelograms (9); with Gmsh 4.15.2 Frontal-Delaunay for quads is used instead (native crash with embedded surfaces)</summary>
                 [Description("Packing of Parallelograms")]
                 PackingOfParallelograms = 9,
+                /// <summary>Quasi-structured quad (11)</summary>
                 [Description("Quasi-structured Quad")]
                 QuasiStructuredQuad = 11,
             }
 
+            /// <summary>
+            /// The recombination algorithms of Gmsh (option Mesh.RecombinationAlgorithm)
+            /// </summary>
             public enum RecombinationMeshAlgorithm
             {
+                /// <summary>Simple (0)</summary>
                 Simple = 0,
+                /// <summary>Blossom (1)</summary>
                 Blossom = 1,
+                /// <summary>Simple full-quad (2)</summary>
                 [Description("Simple Full-Quad")]
                 SimpleFullQuad = 2,
+                /// <summary>Blossom full-quad (3)</summary>
                 [Description("Blossom Full-Quad")]
                 BlossomFullQuad = 3,
             }
 
+            /// <summary>
+            /// The distributions of the nodes of the transfinite curves
+            /// </summary>
             public enum TransfiniteType
             {
-                [Description("Progression")]            // geometrical progression with power coef (ogni curva ha il numero delle suddivisioni della precedente moltiplicato per coef)
+                /// <summary>Geometrical progression: every segment is the previous one multiplied by the factor</summary>
+                [Description("Progression")]
                 Progression = 0,
-                [Description("Bump")]                   // refinement toward both extremities of the curve
+                /// <summary>Refinement toward both extremities of the curve</summary>
+                [Description("Bump")]
                 Bump = 1,
             }
 
+            /// <summary>
+            /// The optimization methods of Gmsh (Gmsh.Model.Mesh.Optimize)
+            /// </summary>
             public enum MeshOptimize
             {
+                /// <summary>The default optimizer of the tetrahedra</summary>
                 [Description("")]
                 Tetrahedral = 0,
+                /// <summary>Netgen optimizer</summary>
                 [Description("Netgen")]
                 Netgen = 1,
+                /// <summary>Optimization of the high order elements</summary>
                 [Description("HighOrder")]
                 HighOrder = 2,
+                /// <summary>Elastic optimization of the high order elements</summary>
                 [Description("HighOrderElastic")]
                 HighOrderElastic = 3,
+                /// <summary>Fast curving of the high order elements</summary>
                 [Description("HighOrderFastCurving")]
                 HighOrderFastCurving = 4,
+                /// <summary>Relocation of the 2D nodes</summary>
                 [Description("Relocate2D")]
                 Relocate2D = 5,
+                /// <summary>Relocation of the 3D nodes</summary>
                 [Description("Relocate3D")]
                 Relocate3D = 6,
             }
 
             #endregion
 
+            /// <summary>
+            /// The default options: Frontal-Delaunay for quads with Simple Full-Quad recombination, no size limit, transfinite curves, healing of the shapes
+            /// </summary>
             public GMeshGenerateOptions()
             {
                 // Mesh
@@ -3538,6 +3540,10 @@ namespace GPC.Geometry.Meshes.GMesh
 
             }
 
+            /// <summary>
+            /// Creates a copy of the options
+            /// </summary>
+            /// <returns>The copy</returns>
             public override object Clone()
             {
                 GMeshGenerateOptions clone = new GMeshGenerateOptions
@@ -3563,6 +3569,7 @@ namespace GPC.Geometry.Meshes.GMesh
                     RefineSteps = RefineSteps,
                     MinQuality = MinQuality,
                     RandomFactor = RandomFactor,
+                    TransfiniteSurface = TransfiniteSurface, // it was not copied
 
                     HealShapes = HealShapes,
                     MatchGeomAndMesh = MatchGeomAndMesh,
@@ -3583,62 +3590,138 @@ namespace GPC.Geometry.Meshes.GMesh
             }
         }
 
+        /// <summary>
+        /// The result of the generation with Gmsh: errors, warnings, times and the vertices of the embedded geometries
+        /// </summary>
         [Serializable]
         public sealed class GMeshGenerateMeshStatus : GenerateMeshStatus
         {
+            /// <summary>
+            /// The description of the total time of the generation
+            /// </summary>
             public const string TotalTime = "Total time";
+            /// <summary>
+            /// Error message: the transfinite constraint failed
+            /// </summary>
             public const string FailedToTransfinite = "GmshException: Failed to set transfinite";
+            /// <summary>
+            /// Error message: the shape can not be created
+            /// </summary>
             public const string FailedToCreateTheShape = "Failed to create the shape";
+            /// <summary>
+            /// Error message: a line can not be embedded
+            /// </summary>
             public const string FailedToEmbedTheLine = "Failed to embed the line";
+            /// <summary>
+            /// Error message: a point can not be embedded
+            /// </summary>
             public const string FailedToEmbedThePoint = "Failed to embed the point";
+            /// <summary>
+            /// Error message: a polygon can not be embedded
+            /// </summary>
             public const string FailedToEmbedThePolygon = "Failed to embed the polygon";
+            /// <summary>
+            /// Error message: a shape can not be embedded
+            /// </summary>
             public const string FailedToEmbedTheShape = "Failed to embed the shape";
+            /// <summary>
+            /// Gmsh error: an edge of a curve can not be recovered
+            /// </summary>
             public const string UnableToRecover = "GmshException: Mesh.Generate Unable to recover the edge on curve";
+            /// <summary>
+            /// Gmsh error: identical points in the triangulation
+            /// </summary>
             public const string IdenticalPoints = "GmshException: Identical points in triangulation";
+            /// <summary>
+            /// Gmsh error: singular 3x3 matrix
+            /// </summary>
             public const string SingularMatrix = "GmshException: Singular matrix 3x3";
 
+            /// <summary>
+            /// For each mesh, the ids of its vertices on each embedded geometry
+            /// </summary>
             private readonly Dictionary<Mesh, Dictionary<GeometryBase, int[]>> _embeddedGeometriesVertexMap;
 
+            /// <summary>
+            /// The number of embedded points
+            /// </summary>
             private int _embeddedPoints;
+            /// <summary>
+            /// The number of embedded lines
+            /// </summary>
             private int _embeddedLines;
+            /// <summary>
+            /// The number of embedded polygons
+            /// </summary>
             private int _embeddedPolygons;
+            /// <summary>
+            /// The number of embedded shapes
+            /// </summary>
             private int _embeddedShapes;
 
+            /// <summary>
+            /// For each mesh, the ids of its vertices on each embedded geometry
+            /// </summary>
             public Dictionary<Mesh, Dictionary<GeometryBase, int[]>> EmbeddedGeometriesVertexMap => _embeddedGeometriesVertexMap;
 
+            /// <summary>
+            /// The number of embedded points
+            /// </summary>
             public int EmbeddedPoints { get => _embeddedPoints; set => _embeddedPoints = value; }
 
+            /// <summary>
+            /// The number of embedded lines
+            /// </summary>
             public int EmbeddedLines { get => _embeddedLines; set => _embeddedLines = value; }
 
+            /// <summary>
+            /// The number of embedded polygons
+            /// </summary>
             public int EmbeddedPolygons { get => _embeddedPolygons; set => _embeddedPolygons = value; }
 
+            /// <summary>
+            /// The number of embedded shapes
+            /// </summary>
             public int EmbeddedShapes { get => _embeddedShapes; set => _embeddedShapes = value; }
 
+            /// <summary>
+            /// Creates an empty status
+            /// </summary>
             public GMeshGenerateMeshStatus()
                 : base()
             {
                 _embeddedGeometriesVertexMap = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>();
             }
 
+            /// <summary>
+            /// Sets the vertices of the embedded geometries of a mesh
+            /// </summary>
+            /// <param name="mesh">The mesh</param>
+            /// <param name="embeddedGeometries">The ids of the vertices of the mesh on each embedded geometry</param>
             public void AddEmbeddedGeometries(Mesh mesh, Dictionary<GeometryBase, int[]> embeddedGeometries)
             {
                 _embeddedGeometriesVertexMap[mesh] = embeddedGeometries;
             }
         }
 
+        /// <summary>
+        /// The OpenCASCADE entities created through Gmsh: the points are created once and reused (map point -> tag)
+        /// </summary>
         private sealed class OpenCascadeWrapper
         {
+            /// <summary>
+            /// The tags of the points already created
+            /// </summary>
             private Dictionary<Point3d, int> _pointTag;
-            private Dictionary<Line3d, int> _lineTag;
 
+            // (the map line -> tag was only written, and AddLineAndSync(int, int) read the bounding box of every line to build its key: removed)
 
             /// <summary>
-            /// This Class use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling any of its methods
+            /// This Class use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling any of its methods
             /// </summary>
             public OpenCascadeWrapper()
             {
                 _pointTag = new Dictionary<Point3d, int>();
-                _lineTag = new Dictionary<Line3d, int>();
             }
 
             /// <summary>
@@ -3646,13 +3729,11 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             /// <param name="point">Point to Add</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPoint(Point3d point)
             {
-                if (_pointTag.ContainsKey(point))
-                {
-                    return _pointTag[point];
-                }
+                if (_pointTag.TryGetValue(point, out int tag))
+                    return tag;
 
                 int t = Gmsh.Model.Occ.AddPoint(point.X, point.Y, point.Z);
                 return _pointTag[point] = t;
@@ -3663,13 +3744,11 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             /// <param name="point">Point to Add</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPointAndSync(Point3d point)
             {
-                if (_pointTag.ContainsKey(point))
-                {
-                    return _pointTag[point];
-                }
+                if (_pointTag.TryGetValue(point, out int tag))
+                    return tag;
 
                 int t = Gmsh.Model.Occ.AddPoint(point.X, point.Y, point.Z);
                 Gmsh.Model.Occ.Synchronize();
@@ -3682,7 +3761,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <param name="point">Point to Add</param>
             /// <param name="tolerance">Tolerance</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPoint(Point3d point, double tolerance)
             {
                 int tag = GetPointTag(point, tolerance);
@@ -3702,7 +3781,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <param name="point">Point to Add</param>
             /// <param name="tolerance">Tolerance</param>
             /// <returns>Point tag inside OCC</returns>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method </remarks>
             public int AddPointAndSync(Point3d point, double tolerance)
             {
                 int tag = GetPointTag(point, tolerance);
@@ -3725,19 +3804,16 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <returns>The tag of the line</returns>
             public int AddLineAndSync(Line3d line, double tolerance)
             {
-                int startTag;
-                int endTag;
-
-                startTag = AddPoint(line.Start, tolerance);
-                endTag = AddPoint(line.End, tolerance);
+                int startTag = AddPoint(line.Start, tolerance);
+                int endTag = AddPoint(line.End, tolerance);
 
                 int t = Gmsh.Model.Occ.AddLine(startTag, endTag);
                 Gmsh.Model.Occ.Synchronize();
-                return _lineTag[line] = t;
+                return t;
             }
 
             /// <summary>
-            /// Add a line to OCC and return the tag. If start or end points exist, use the existing point tags
+            /// Add a line to OCC and return the tag
             /// </summary>
             /// <param name="startTag">Start line gmsh tag</param>
             /// <param name="endTag">End line gmsh tag</param>
@@ -3746,10 +3822,7 @@ namespace GPC.Geometry.Meshes.GMesh
             {
                 int t = Gmsh.Model.Occ.AddLine(startTag, endTag);
                 Gmsh.Model.Occ.Synchronize();
-
-                Gmsh.Model.GetBoundingBox(1, t, out double x1, out double y1, out double z1, out double x2, out double y2, out double z2);
-                Line3d line = new Line3d(new Point3d(x1, y1, z1), new Point3d(x2, y2, z2));
-                return _lineTag[line] = t;
+                return t;
             }
 
             /// <summary>
@@ -3759,14 +3832,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <returns>Point tag inside OCC if already added. If the point does not exist return -1</returns>
             public int GetPointTag(Point3d point)
             {
-                if (_pointTag.ContainsKey(point))
-                {
-                    return _pointTag[point];
-                }
-                else
-                {
-                    return -1;
-                }
+                return _pointTag.TryGetValue(point, out int tag) ? tag : -1;
             }
 
             /// <summary>
@@ -3775,105 +3841,118 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <param name="point">Point to Add</param>
             /// <param name="tolerance">The tolerance of matching</param>
             /// <returns>Point tag inside OCC if already added. If the point does not exist return -1</returns>
+            /// <remarks>The first point within the tolerance, in the order of insertion. Before, a Parallel.For with ElementAt on the dictionary
+            /// (O(n^2) for every call) where every thread wrote the same variable: the tag returned was not deterministic</remarks>
             public int GetPointTag(Point3d point, double tolerance)
             {
-                int tag = -1;
+                if (_pointTag.TryGetValue(point, out int tag))
+                    return tag;
 
-                if (_pointTag.ContainsKey(point))
+                foreach (KeyValuePair<Point3d, int> pointTag in _pointTag)
                 {
-                    return _pointTag[point];
+                    if (IsSamePoint(point.DistanceTo(pointTag.Key), tolerance))
+                        return pointTag.Value;
                 }
 
-                Parallel.For(0, _pointTag.Keys.Count, (i, state) =>
+                return -1;
+            }
+
+            /// <summary>
+            /// The criterion of <see cref="GetPointTag(Point3d, double)"/>: the square root of the distance lower than the square root of the propagated
+            /// tolerance of the product distance * distance (the distance lower than <paramref name="tolerance"/> for the small distances)
+            /// </summary>
+            private static bool IsSamePoint(double distance, double tolerance)
+            {
+                double dist = Math.Sqrt(distance);
+                return dist < Math.Sqrt(ErrorPropagation.ProductTolerance(dist, dist, tolerance, tolerance));
+            }
+
+            /// <returns>The coordinates of the OCC points <paramref name="tags"/>: one call to Gmsh for every point</returns>
+            private static Point3d[] OccPoints((int, int)[] tags)
+            {
+                var points = new Point3d[tags.Length];
+                for (int j = 0; j < tags.Length; j++)
                 {
-                    double dist = Math.Sqrt(point.DistanceTo(_pointTag.ElementAt((int)i).Key));
-                    double tol = Math.Sqrt(ErrorPropagation.ProductTolerance(dist, dist, tolerance, tolerance));
+                    Gmsh.Model.Occ.GetBoundingBox(0, tags[j].Item2, out double x, out double y, out double z, out _, out _, out _);
+                    points[j] = new Point3d(x, y, z);
+                }
+                return points;
+            }
 
-                    if (Math.Abs(dist) < tol)
+            /// <returns>For every point of <paramref name="points"/>, the tag of the closest OCC point if it is not farther than <paramref name="tolerance"/>,
+            /// -1 otherwise (the coordinates of the OCC points are read once)</returns>
+            public int[] FindOccPoints(IList<Point3d> points, double tolerance)
+            {
+                (int, int)[] tags = Gmsh.Model.Occ.GetEntities(0) ?? new (int, int)[0];
+                Point3d[] occPoints = OccPoints(tags);
+
+                var result = new int[points.Count];
+                for (int i = 0; i < points.Count; i++)
+                {
+                    int j = Closest(occPoints, points[i], out double squareDistance);
+                    result[i] = j != -1 && Math.Sqrt(squareDistance) <= tolerance ? tags[j].Item2 : -1;
+                }
+                return result;
+            }
+
+            /// <returns>The index of the point of <paramref name="points"/> closest to <paramref name="point"/> (the first one if more are at the same distance),
+            /// -1 if <paramref name="points"/> is empty</returns>
+            private static int Closest(Point3d[] points, Point3d point, out double squareDistanceMin)
+            {
+                int indexMin = -1;
+                squareDistanceMin = double.MaxValue;
+                for (int j = 0; j < points.Length; j++)
+                {
+                    double squareDistance = points[j].SquareDistanceTo(point);
+                    if (squareDistance < squareDistanceMin)
                     {
-                        tag = _pointTag[_pointTag.ElementAt((int)i).Key];
-                        state.Break();
+                        indexMin = j;
+                        squareDistanceMin = squareDistance;
                     }
-                });
-
-                return tag;
+                }
+                return indexMin;
             }
 
             /// <summary>
             /// Rebuild the objects tag associations inside OpenCascadeWrapper
             /// </summary>
             /// <param name="surfaceTag">If is set, rebuilt only the points of the selected surface (the input is the surfaceTag). Otherwise rebuilt all the points of the model</param>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize( char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method.
+            /// The coordinates of the OCC points are read once (before, once for every point of the map: n * m calls to Gmsh, and ElementAt on the dictionary)</remarks>
             public void RebuildObjectTags(int surfaceTag = -1)
             {
                 Dictionary<Point3d, int> pointsTagCopy = _pointTag;
                 _pointTag = new Dictionary<Point3d, int>(); // Reset della mappa
-                (int, int)[] tags;
 
                 if (surfaceTag == -1)
                 {
-                    tags = Gmsh.Model.Occ.GetEntities(0); // Recupero tutte le entità
+                    (int, int)[] tags = Gmsh.Model.Occ.GetEntities(0); // Recupero tutte le entità
+                    Point3d[] occPoints = OccPoints(tags);
 
-                    for (int i = 0; i < pointsTagCopy.Keys.Count; i++)
+                    foreach (Point3d point in pointsTagCopy.Keys)
                     {
-                        int indexMin = -1;
-                        double dMin = Double.MaxValue;
-                        for (int j = 0; j < tags.Length; j++)
-                        {
-                            Gmsh.Model.Occ.GetBoundingBox(0, tags.ElementAt(j).Item2, out double x, out double y, out double z, out _, out _, out _);
-                            Point3d pointToTest = new Point3d(x, y, z);
-                            double squareDistance = pointToTest.SquareDistanceTo(pointsTagCopy.ElementAt(i).Key);
-
-                            if (Math.Abs(squareDistance) < dMin)
-                            {
-                                indexMin = tags.ElementAt(j).Item2;
-                                dMin = squareDistance;
-                            }
-                        }
-
-                        try
-                        {
-                            _pointTag.Add(pointsTagCopy.ElementAt(i).Key, indexMin); // Ricostruisco mappa 
-                        }
-                        catch (Exception) { }
+                        int j = Closest(occPoints, point, out _);
+                        if (!_pointTag.ContainsKey(point))
+                            _pointTag.Add(point, j == -1 ? -1 : tags[j].Item2); // Ricostruisco mappa
                     }
                 }
                 else
                 {
-                    tags = Gmsh.Model.GetBoundary(new (int, int)[] { (2, surfaceTag) }, false, false, true);
+                    (int, int)[] tags = Gmsh.Model.GetBoundary(new (int, int)[] { (2, surfaceTag) }, false, false, true);
+                    Point3d[] occPoints = OccPoints(tags);
+                    Point3d[] points = pointsTagCopy.Keys.ToArray();
 
                     for (int i = 0; i < tags.Length; i++)
                     {
-                        int indexMin = -1;
-                        double dMin = Double.MaxValue;
-                        Point3d pointMatched = null;
-                        Gmsh.Model.Occ.GetBoundingBox(0, tags.ElementAt(i).Item2, out double x, out double y, out double z, out _, out _, out _);
-                        Point3d pointToMatch = new Point3d(x, y, z);
-
-                        for (int j = 0; j < pointsTagCopy.Keys.Count; j++)
-                        {
-                            double squareDistance = pointsTagCopy.ElementAt(j).Key.SquareDistanceTo(pointToMatch);
-
-                            if (Math.Abs(squareDistance) < dMin)
-                            {
-                                indexMin = tags.ElementAt(i).Item2;
-                                dMin = squareDistance;
-                                pointMatched = pointsTagCopy.ElementAt(j).Key;
-                            }
-                        }
-                        try
-                        {
-                            _pointTag.Add(pointMatched, indexMin); // Ricostruisco mappa
-                        }
-                        catch (Exception) { }
+                        int j = Closest(points, occPoints[i], out _);
+                        if (j != -1 && !_pointTag.ContainsKey(points[j]))
+                            _pointTag.Add(points[j], tags[i].Item2); // Ricostruisco mappa
                     }
 
-                    for (int p = 0; p < pointsTagCopy.Keys.Count; p++)
+                    foreach (KeyValuePair<Point3d, int> pointTag in pointsTagCopy)
                     {
-                        if (!_pointTag.ContainsKey(pointsTagCopy.ElementAt(p).Key))
-                        {
-                            _pointTag.Add(pointsTagCopy.ElementAt(p).Key, pointsTagCopy[pointsTagCopy.ElementAt(p).Key]);
-                        }
+                        if (!_pointTag.ContainsKey(pointTag.Key))
+                            _pointTag.Add(pointTag.Key, pointTag.Value);
                     }
                 }
             }
@@ -3881,52 +3960,30 @@ namespace GPC.Geometry.Meshes.GMesh
             /// <summary>
             /// Rebuild the objects tag associations inside OpenCascadeWrapper and check if each point exist
             /// </summary>
-            /// <remarks>This method use <see cref="Gmsh"/> then <see cref="Gmsh.Initialize(char[], bool)"/> needs to be called before calling this method </remarks>
+            /// <remarks>This method use <see cref="Gmsh"/> then <c>Gmsh.Initialize</c> needs to be called before calling this method.
+            /// A point exists if the closest OCC point is within the tolerance of <see cref="GetPointTag(Point3d, double)"/>, otherwise it is added again.
+            /// Before, the tolerance was computed from the distance of the last OCC point of the list (not the closest one), with the square root of a
+            /// distance used as distance</remarks>
             public void RebuildObjectTagsAndCheck(double tolerance)
             {
                 Dictionary<Point3d, int> pointsTagCopy = _pointTag;
                 _pointTag = new Dictionary<Point3d, int>(); // Reset della mappa
 
-                double toll = ErrorPropagation.DefaultProductTolerance(2.82 * tolerance);
-
                 (int, int)[] tags = Gmsh.Model.Occ.GetEntities(0); // Recupero tutte le entità
+                Point3d[] occPoints = OccPoints(tags);
 
-                for (int i = 0; i < pointsTagCopy.Keys.Count; i++)
+                foreach (Point3d point in pointsTagCopy.Keys)
                 {
-                    int indexMin = -1;
-                    double dMin = Double.MaxValue;
+                    int j = Closest(occPoints, point, out double squareDistance);
 
-                    for (int j = 0; j < tags.Length; j++)
+                    if (j != -1 && IsSamePoint(Math.Sqrt(squareDistance), tolerance))
                     {
-                        Gmsh.Model.Occ.GetBoundingBox(0, tags.ElementAt(j).Item2, out double x, out double y, out double z, out _, out _, out _);
-                        Point3d pointToTest = new Point3d(x, y, z);
-                        double squareDistance = pointToTest.DistanceTo(pointsTagCopy.ElementAt(i).Key);
-                        double distance = Math.Sqrt(squareDistance);
-
-                        toll = ErrorPropagation.ProductTolerance(distance, distance, tolerance, tolerance);
-                        toll = toll < 1E-13 ? 1E-13 : toll;
-
-                        if (Math.Abs(squareDistance) < dMin)
-                        {
-                            indexMin = tags.ElementAt(j).Item2;
-                            dMin = squareDistance;
-                        }
+                        if (!_pointTag.ContainsKey(point))
+                            _pointTag.Add(point, tags[j].Item2); // Ricostruisco mappa
                     }
-
-                    if (dMin < toll)
-                    {
-                        try
-                        {
-                            _pointTag.Add(pointsTagCopy.ElementAt(i).Key, indexMin); // Ricostruisco mappa
-                        }
-                        catch { }
-                    }
-
                     else
                     {
-                        _pointTag.Remove(pointsTagCopy.ElementAt(i).Key);
-                        int t = Gmsh.Model.Occ.AddPoint(pointsTagCopy.ElementAt(i).Key.X, pointsTagCopy.ElementAt(i).Key.Y, pointsTagCopy.ElementAt(i).Key.Z);
-                        _pointTag.Add(pointsTagCopy.ElementAt(i).Key, t);
+                        _pointTag[point] = Gmsh.Model.Occ.AddPoint(point.X, point.Y, point.Z);
                     }
                 }
             }

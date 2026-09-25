@@ -4,42 +4,78 @@ using System.Runtime.Serialization;
 
 namespace GPC.Geometry
 {
+    /// <summary>
+    /// A segment in the XY plane from <see cref="Start"/> to <see cref="End"/>. Two segments are equal if their ends are equal within the
+    /// tolerance, also with the opposite direction
+    /// </summary>
     [Serializable]
     public sealed class Line2d : GeometryBase, ISerializable, IEquatable<Line2d>, ICloneable
     {
         #region Variables
 
+        /// <summary>
+        /// The start point
+        /// </summary>
         private Point2d _start;
+        /// <summary>
+        /// The end point
+        /// </summary>
         private Point2d _end;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The start point (the instance is kept, not copied)
+        /// </summary>
         public Point2d Start { get =>  _start; set => _start = value; }
 
+        /// <summary>
+        /// The end point (the instance is kept, not copied)
+        /// </summary>
         public Point2d End { get => _end; set => _end = value; }
 
+        /// <summary>
+        /// A new point in the middle of the segment
+        /// </summary>
         public Point2d Mid => GetMidPoint();
 
+		/// <summary>
+		/// The length of the segment
+		/// </summary>
 		public double Length => GetLength();
 
         #endregion
 
         #region Public Constructors
 
+        /// <summary>
+        /// Creates a segment (the point instances are kept, not copied)
+        /// </summary>
+        /// <param name="start">The start point</param>
+        /// <param name="end">The end point</param>
         public Line2d(Point2d start, Point2d end)
         {
             _start = start;
             _end = end;
         }
 
+        /// <summary>
+        /// Creates a copy of a segment, with copies of its points
+        /// </summary>
+        /// <param name="line">The segment to copy</param>
         public Line2d(Line2d line)
         {
             _start = new Point2d(line.Start);
             _end = new Point2d(line.End);
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the ends (the saved <see cref="BaseObject.Guid"/> is not read)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private Line2d(SerializationInfo info, StreamingContext context)
         {
             _start = (Point2d)info.GetValue("Start", typeof(Point2d));
@@ -53,6 +89,7 @@ namespace GPC.Geometry
         /// <summary>
         /// Get the line length
         /// </summary>
+        /// <returns>The distance between the ends</returns>
         public double GetLength()
         {
             return _start.DistanceTo(_end);
@@ -61,19 +98,19 @@ namespace GPC.Geometry
         /// <summary>
         /// Get the line mid point
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A new point in the middle of the segment</returns>
         public Point2d GetMidPoint()
         {
 			return new Point2d((_start.X + _end.X) * 0.5, (_start.Y + _end.Y) * 0.5);
 		}
 
         /// <summary>
-        /// Get the intersection with another line
+        /// Get the intersection with another segment (see <see cref="Line3d.GetIntersection(Line3d, out Point3d, double)"/>)
         /// </summary>
-        /// <param name="line">The other line</param>
-        /// <param name="intersection">The intersection point</param>
-        /// <param name="tol"></param>
-        /// <returns>True if the lines have an intersection</returns>
+        /// <param name="line">The other segment</param>
+        /// <param name="intersection">The intersection point, null if there is none</param>
+        /// <param name="tol">The tolerance</param>
+        /// <returns>True if the segments have a single intersection point</returns>
         public bool GetIntersection(Line2d line, out Point2d intersection, double tol = GeometryBase.Tolerance)
         {
             intersection = null;
@@ -94,12 +131,12 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Get the intersection with another line
+        /// Get the intersection of the infinite lines through the two segments (see <see cref="Line3d.GetIntersectionWithInfiniteLine"/>)
         /// </summary>
         /// <param name="line">The other line</param>
-        /// <param name="intersection">The intersection point</param>
-        /// <param name="tol"></param>
-        /// <returns>True if the lines have an intersection</returns>
+        /// <param name="intersection">The intersection point, null if there is none</param>
+        /// <param name="tol">The tolerance</param>
+        /// <returns>True if the lines have a single intersection point (they are not parallel)</returns>
         public bool GetIntersectionWithInfiniteLine(Line2d line, out Point2d intersection, double tol = GeometryBase.Tolerance)
         {
             intersection = null;
@@ -120,11 +157,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Rotate the line by a given angle around a given point
+        /// Rotates the segment in place by a given angle around a given point
         /// </summary>
-        /// <param name="point">point around which the line rotates</param>
-        /// <param name="angle">angle of rotation (radians)</param>
-        /// <returns></returns>
+        /// <param name="point">The center of rotation</param>
+        /// <param name="angle">The angle of rotation (radians, counterclockwise)</param>
         public void Rotate(Point2d point, double angle)
         {
             _start.Rotate(point, angle);
@@ -132,20 +168,20 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Get the distance from the line to the given point
+        /// Get the distance from the segment to the given point
         /// </summary>
         /// <param name="point">The given point</param>
-        /// <returns>The distance</returns>
+        /// <returns>The distance from the nearest point of the segment (see <see cref="PointDistanceTo"/>)</returns>
         public double DistanceTo(Point2d point)
         {
             return Math.Sqrt(SquareDistanceTo(point));
         }
 
         /// <summary>
-        /// Get the sqare distance from the line to the given point
+        /// Get the square of the distance from the segment to the given point
         /// </summary>
         /// <param name="point">The given point</param>
-        /// <returns>The distance</returns>
+        /// <returns>The square of the distance from the nearest point of the segment</returns>
         public double SquareDistanceTo(Point2d point)
         {
             var distPoint = PointDistanceTo(point);
@@ -155,10 +191,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Get nearest point in line from another point.
+        /// Get the nearest point of the segment to another point
         /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="point">The point</param>
+        /// <returns>A new point: the projection of <paramref name="point"/> on the segment, or the nearest end if the projection is outside</returns>
         public Point2d PointDistanceTo(Point2d point)
         {
             // https://stackoverflow.com/a/6853926
@@ -197,11 +233,12 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Distance with sign, on the left the sign is positive, on the right the sign is negative.
+        /// Distance with sign of a point from the infinite line through the segment: positive on the left, negative on the right
         /// </summary>
-        /// <param name="P"></param>
-        /// <param name="distanceTolerance"></param>
-        /// <returns></returns>
+        /// <param name="P">The point</param>
+        /// <param name="distanceTolerance">The relative tolerance: the distance is 0 if it is smaller than <paramref name="distanceTolerance"/> times the
+        /// length of the segment</param>
+        /// <returns>The distance with sign</returns>
         public double OrientedDistFromSegment2D(Point2d P, double distanceTolerance = GeometryBase.Tolerance)
         {
             var Pi = _start;
@@ -216,7 +253,8 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Boundary integration over 2D line.
+        /// Boundary integration over 2D line: adds the contribution of the segment, as a side of a polygon, to the integrals of the region of the
+        /// polygon (Green's theorem). Summed over the sides of a counterclockwise polygon they give the exact integrals of its region
         /// </summary>
         /// <param name="A_l">Area.</param>
         /// <param name="S_X_l">Static moment relative to the X axis.</param>
@@ -244,6 +282,11 @@ namespace GPC.Geometry
             I_XY_l += 1.0 / 24.0 * cYm * (cXXp * cYp + 2.0 * cXp * cXYp);
         }
 
+        /// <summary>
+        /// A copy of the segment translated by a vector
+        /// </summary>
+        /// <param name="movement">The translation</param>
+        /// <returns>The new segment</returns>
         public Line2d CloneAndMove(Vector2d movement)
         {
             var p = (Line2d)Clone();
@@ -251,6 +294,13 @@ namespace GPC.Geometry
             return p;
         }
 
+        /// <summary>
+        /// Tell if a point is on the segment
+        /// </summary>
+        /// <param name="point">The point (its Z coordinate is ignored)</param>
+        /// <param name="tolerance">The tolerance on the distance</param>
+        /// <returns>True if the distance of the point from the segment, in the XY plane, is smaller than <paramref name="tolerance"/></returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="point"/> is null</exception>
         public bool IsPointOnLine(Point3d point, double tolerance = GeometryBase.Tolerance)
         {
             if (point == null)
@@ -258,32 +308,16 @@ namespace GPC.Geometry
                 throw new ArgumentNullException("Point can not be null");
             }
 
-            // http://www.ambrsoft.com/TrigoCalc/Line3D/LineColinear.htm#:~:text=Collinear%203%20dimentional%20lines&text=Collinear%20points%20are%20all%20located%20on%20the%20same%20line.&text=Another%20way%20of%20checking%20whether,then%20the%20points%20are%20collinear.
-            // If the cross product of the vectors n1 and n2 is zero in all directions then the points are collinear, 
-            // n1 and n2 are the vectors connecting one point to the other two points
-
-            double crossProductZ = ((_end.X - _start.X) * (point.Y - _start.Y) - (point.X - _start.X) * (_end.Y - _start.Y));
-            double L1 = _start.DistanceTo(point);
-            double L2 = _end.DistanceTo(point);
-            double L = GetLength();
-
-            double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(crossProductZ, crossProductZ, tolerance, tolerance);
-
-            if (Math.Abs(crossProductZ) < tol && L1 <= L && L2 <= L)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // The point is on the segment if its distance from the segment (in the XY plane) is lower than the tolerance.
+            // The previous check on the cross product used a tolerance proportional to the cross product itself, i.e. almost zero
+            return SquareDistanceTo(new Point2d(point.X, point.Y)) < tolerance * tolerance;
         }
 
         /// <summary>
-        /// Scale the line respect <see cref="Point2d.Origin"/> point
+        /// A copy of the segment scaled respect to the origin
         /// </summary>
-        /// <param name="factor"></param>
-        /// <returns></returns>
+        /// <param name="factor">The scale factor</param>
+        /// <returns>The new segment</returns>
         public Line2d Scale(double factor)
         {
             Point3d start = this.Start;
@@ -296,17 +330,17 @@ namespace GPC.Geometry
         /// <summary>
         /// Get the line slope
         /// </summary>
-        /// <returns></returns>
+        /// <returns>dY / dX (infinite for a vertical segment)</returns>
         public double GetSlope()
         {
             return ((_end.Y - _start.Y) / (_end.X - _start.X));
         }
 
         /// <summary>
-        /// Split line by a array of points.
+        /// Split the segment by an array of points (see <see cref="Line3d.Split(Point3d[], double)"/>)
         /// </summary>
-        /// <param name="points">The list of 3d points</param>
-        /// <param name="line">The list of resultant lines</param>
+        /// <param name="points">The points on the segment</param>
+        /// <param name="line">The resultant segments</param>
         /// <param name="tolerance">Tolerance</param>
         public void Split(Point2d[] points, out Line2d[] line, double tolerance = GeometryBase.Tolerance)
         {
@@ -323,11 +357,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Split the line by parameters
+        /// Split the segment by parameters (see <see cref="Line3d.Split(double[], double)"/>)
         /// </summary>
-        /// <param name="parameters">The imput parameters (0 - start, 1 - end)</param>
+        /// <param name="parameters">The input parameters (0 - start, 1 - end)</param>
+        /// <param name="line">The resultant segments</param>
         /// <param name="tolerance">The tolerance</param>
-        /// <param name="line">The list of resultant lines</param>
         public void Split(double[] parameters, out Line2d[] line, double tolerance = GeometryBase.Tolerance)
         {
             Line3d line3d = new Line3d(Start, End);
@@ -339,11 +373,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Split the line in <paramref name="subdivision"/> parts
+        /// Split the segment in <paramref name="subdivision"/> equal parts
         /// </summary>
-        /// <param name="subdivision"></param>
-        /// <param name="line"></param>
-        /// <param name="tolerance"></param>
+        /// <param name="subdivision">The number of parts (0: no segment, 1: this segment)</param>
+        /// <param name="line">The resultant segments</param>
+        /// <param name="tolerance">The tolerance</param>
         public void Split(int subdivision, out Line2d[] line, double tolerance = GeometryBase.Tolerance)
         {
             if (subdivision == 0)
@@ -365,19 +399,19 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Converts the line on a Vector3d
+        /// Converts the segment to a vector
         /// </summary>
-        /// <returns>The vector from Start to End of the line</returns>
+        /// <returns>The vector from Start to End of the segment</returns>
         public Vector2d ToVector()
         {
             return _end - _start;
         }
 
 		/// <summary>
-		/// Check if <paramref name="other"/> is one of the ends of the line
+		/// Check if <paramref name="other"/> is one of the ends of the segment
 		/// </summary>
 		/// <param name="other">Point to check</param>
-		/// <returns></returns>
+		/// <returns>True if <paramref name="other"/> is equal (within the tolerance of the points) to one of the ends</returns>
 		public bool VertexExists(Point2d other)
         {
             if (Start.Equals(other) == true || End.Equals(other) == true)            
@@ -387,11 +421,11 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Check if <paramref name="other"/> is one of the ends of the line
+		/// Check if <paramref name="other"/> is one of the ends of the segment
 		/// </summary>
 		/// <param name="other">Point to check</param>
-        /// <param name="tolerance">Matching tolerance</param>
-		/// <returns></returns>
+		/// <param name="tolerance">Matching tolerance</param>
+		/// <returns>True if <paramref name="other"/> is equal to one of the ends or closer than <paramref name="tolerance"/></returns>
 		public bool VertexExists(Point2d other, double tolerance)
 		{
 			if (Start.Equals(other) == true || End.Equals(other) == true)
@@ -403,11 +437,11 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Move line by an given increment dx, dy
+		/// Moves the segment by the given increments
 		/// </summary>
 		/// <param name="dx">The X coordinate increment</param>
 		/// <param name="dy">The Y coordinate increment</param>
-		/// <param name="dz"></param>
+		/// <param name="dz">Ignored: the segment is in the XY plane</param>
 		public override void Move(double dx, double dy, double dz = 0)
         {
             _start.Move(dx, dy);
@@ -415,7 +449,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move line by a given vector
+        /// Moves the segment by a vector (its Z component is ignored)
         /// </summary>
         /// <param name="movement">Displacement vector</param>
         public override void Move(Vector3d movement)
@@ -428,6 +462,12 @@ namespace GPC.Geometry
 
         #region Operators overrides
 
+        /// <summary>
+        /// Equality: true if the segments are the same object, both null or equal (<see cref="Equals(Line2d)"/>)
+        /// </summary>
+        /// <param name="line1">The first segment</param>
+        /// <param name="line2">The second segment</param>
+        /// <returns>True if the segments are equal</returns>
         public static bool operator ==(Line2d line1, Line2d line2)
         {
             if (ReferenceEquals(line1, line2))
@@ -439,6 +479,12 @@ namespace GPC.Geometry
             return line1.Equals(line2);
         }
 
+        /// <summary>
+        /// Inequality (see the equality operator)
+        /// </summary>
+        /// <param name="line1">The first segment</param>
+        /// <param name="line2">The second segment</param>
+        /// <returns>True if the segments are different</returns>
         public static bool operator !=(Line2d line1, Line2d line2)
         {
             return !(line1 == line2);
@@ -448,6 +494,11 @@ namespace GPC.Geometry
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Serializes the segment: the <see cref="BaseObject.Guid"/> and the ends
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -455,21 +506,31 @@ namespace GPC.Geometry
             info.AddValue("End", _end, typeof(Point2d));
         }
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Line2d)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal segment</returns>
         public override bool Equals(object obj)
         {
             return Equals(obj as Line2d);
         }
 
         /// <summary>
-        /// 
+        /// Equality of the ends within the tolerance, in either direction
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">The segment to compare</param>
         /// <returns>True if Start and End of line and otherLine are equals. True also if otherLine is flipped (line.Start == otherLine.End AND line.End == otherLine.Start)</returns>
         public bool Equals(Line2d other)
         {
             return !(other is null) && ((_start == other.Start && _end == other.End) || (_start == other.End && _end == other.Start));
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(Line2d)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal segment</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Line2d line)
@@ -479,7 +540,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// 
+        /// The hash code, independent of the direction
         /// </summary>
         /// <returns>The hashCode. If (line.Start == otherLine.End AND line.End == otherLine.Start), line and otherLine returns the same hashcode</returns>
         public override int GetHashCode()
@@ -496,6 +557,10 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// Creates a copy of the segment, with copies of its points
+        /// </summary>
+        /// <returns>The copy</returns>
         public override object Clone()
         {
             return new Line2d(this);

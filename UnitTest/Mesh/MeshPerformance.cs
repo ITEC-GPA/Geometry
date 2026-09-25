@@ -111,17 +111,22 @@ namespace Meshes
 			Mesh mesh = CreateSimpleMesh3(40, 40, 25, 60, new Point2d(0, 0));
 			Debug.WriteLine($"Starting clone test of a mesh of {mesh.VerticesCount} vertices");
 
-			Stopwatch stopWatch = new Stopwatch();
-			stopWatch.Start();
-
-			Mesh mesh2 = (Mesh)mesh.Clone();
-
-			stopWatch.Stop();
-			Debug.WriteLine(stopWatch.Elapsed, "Elapsed time");
-			Debug.WriteLine("Finished");
-
-			Assert.IsTrue(stopWatch.ElapsedMilliseconds <= 5, $"Too slow, {stopWatch.ElapsedMilliseconds} ms");
-			Assert.IsTrue(mesh.Equals(mesh2));
+			// Exclude first-use JIT cost and a single scheduling/GC pause, while
+			// retaining the existing 5 ms budget and checking every returned clone.
+			Assert.IsTrue(mesh.Equals((Mesh)mesh.Clone()));
+			var samples = new double[7];
+			for (int i = 0; i < samples.Length; i++)
+			{
+				Stopwatch stopWatch = Stopwatch.StartNew();
+				Mesh copy = (Mesh)mesh.Clone();
+				stopWatch.Stop();
+				samples[i] = stopWatch.Elapsed.TotalMilliseconds;
+				Assert.IsTrue(mesh.Equals(copy));
+				Assert.AreNotSame(mesh, copy);
+			}
+			Array.Sort(samples);
+			double median = samples[samples.Length / 2];
+			Assert.IsTrue(median <= 5, $"Too slow, median {median:F3} ms");
 		}
 
 		[TestMethod]

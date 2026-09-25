@@ -178,7 +178,11 @@ namespace Meshes.GMsh
 
             GMesh.Generate(shapes, embeddedGeometries, null, options, out List <Mesh> meshes, out GMesh.GMeshGenerateMeshStatus generateMeshStatus);
             MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
-            CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus,4);
+            // A triangle between crossing constraints has area proportional to sin(angle).
+            // Keep the edge-length limits; use the prescribed angle for the face-area limit.
+            double crossingAreaFactor = Math.Abs(Math.Sin(l1.ToVector().AngleTo(l2.ToVector())));
+            CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus, 4, minimumFaceAreaFactor: crossingAreaFactor);
+            Assert.AreEqual(20000, meshes[0].Faces.Sum(f => meshes[0].GetFaceArea(f)), 1e-6);
         }
 
         [TestMethod]

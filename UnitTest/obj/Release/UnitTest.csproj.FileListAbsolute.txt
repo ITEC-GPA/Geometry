@@ -59,7 +59,6 @@ C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\MathNet.Num
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\Microsoft.VisualStudio.TestPlatform.TestFramework.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\System.ValueTuple.dll
-C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnsafeEx.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\DelaunayMesh.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\GMesh.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\GPCGeometry.pdb
@@ -88,4 +87,9 @@ C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\obj\Release\UnitTest.cs
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\obj\Release\UnitTest.dll
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\obj\Release\UnitTest.pdb
 C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\GMsh.Net.pdb
-C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnsafeEx.pdb
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.TestPlatform.AdapterUtilities.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.TestPlatform.CoreUtilities.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\gmsh-4.15.dll

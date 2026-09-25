@@ -9,29 +9,54 @@ using GPC.Utilities.Extensions;
 namespace GPC.Geometry
 {
     /// <summary>
-    /// Shape 3d is a planar shape on the (x,y,z) space
+    /// A planar shape in the space: an outer polygon (<see cref="Fill"/>), the polygons of its holes and the shapes inside the holes
+    /// (<see cref="Childs"/>). The holes are oriented as the fill when the shape is created from polygons
     /// </summary>
     [Serializable]
     public class Shape : GeometryBase, ISerializable, ICloneable, IEquatable<Shape>
     {
         #region Variables
 
+        /// <summary>
+        /// The outer polygon
+        /// </summary>
         protected Polygon3d _fill;
+        /// <summary>
+        /// The holes; null if the shape has no holes
+        /// </summary>
         protected Polygon3d[] _holes;
+        /// <summary>
+        /// The shapes inside the holes; null if the shape has no children
+        /// </summary>
         protected Shape[] _childs;
 
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// The outer polygon (the instance of the shape)
+        /// </summary>
         public Polygon3d Fill { get => _fill; set { _fill = value; } }
 
+        /// <summary>
+        /// The holes (the array of the shape); null if the shape has no holes
+        /// </summary>
         public Polygon3d[] Holes { get => _holes; set { _holes = value; } }
 
+        /// <summary>
+        /// True if the array of the holes is not null
+        /// </summary>
         public bool HasHoles => _holes != null;
 
+        /// <summary>
+        /// The shapes inside the holes (the array of the shape); null if the shape has no children
+        /// </summary>
         public Shape[] Childs { get => _childs; set { _childs = value; } }
 
+        /// <summary>
+        /// True if the array of the children is not null
+        /// </summary>
         public bool HasChilds => _childs != null;
 
         #endregion
@@ -39,12 +64,14 @@ namespace GPC.Geometry
         #region Public constructor
 
         /// <summary>
-        /// Create a new shape from a 3d planar polygon for fill, 3d planar polygons for holes and shape for childs
+        /// Create a new shape from a 3d planar polygon for fill, 3d planar polygons for holes and shape for childs (the instances are kept, not copied).
+        /// The holes not oriented as the fill are reversed in place
         /// </summary>
-        /// <param name="fill">The polygon 3d fill</param>
-        /// <param name="holes">The polygon 3d hollow</param>
-        /// <param name="childs">the shape child</param>
-        /// <param name="tolerance">The tolerance</param>
+        /// <param name="fill">The outer polygon</param>
+        /// <param name="holes">The holes; null: no holes</param>
+        /// <param name="childs">The shapes inside the holes; null: no children</param>
+        /// <param name="tolerance">The tolerance of the normals</param>
+        /// <exception cref="NotSupportedException">If the fill or a hole has not three distinct and not aligned points</exception>
         public Shape(Polygon3d fill, Polygon3d[] holes = null, Shape[] childs = null, double tolerance = GeometryBase.Tolerance)
         {
             _fill = fill;
@@ -66,12 +93,14 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Create a new shape from a 2d planar polygon for fill, 2d planar polygons for holes and shape for childs
+        /// Create a new shape on the plane z = 0 from 2d polygons for fill and holes (copied) and 2d shapes for childs (the instances are kept).
+        /// The holes and the children not oriented as the fill are reversed (the children in place)
         /// </summary>
-        /// <param name="fill">The polygon 3d fill</param>
-        /// <param name="holes">The polygon 3d hollow</param>
-        /// <param name="childs">the shape child</param>
-        /// <param name="tolerance">The tolerance</param>
+        /// <param name="fill">The outer polygon</param>
+        /// <param name="holes">The holes; null: no holes</param>
+        /// <param name="childs">The shapes inside the holes; null: no children</param>
+        /// <param name="tolerance">The tolerance of the normals</param>
+        /// <exception cref="NotSupportedException">If the fill or a hole has not three distinct and not aligned points</exception>
         public Shape(Polygon2d fill, Polygon2d[] holes = null, Shape2d[] childs = null, double tolerance = GeometryBase.Tolerance)
         {
             _fill = new Polygon3d(fill, tolerance);
@@ -100,14 +129,9 @@ namespace GPC.Geometry
                 }
             }
 
-			if (childs != null)
-			{
-				_childs = new Shape[childs.Length];
-				for (int u = 0; u < childs.Length; u++)
-				{
-					_childs[u] = new Shape(childs[u]);
-				}
-			}
+			// The childs are kept as Shape2d instances (Shape2d.Childs2d casts them), as for the holes of the Polygon3d constructor
+			// the childs with opposite orientation are reversed in place
+			_childs = childs;
 
 			if (_childs != null)
 			{
@@ -119,15 +143,15 @@ namespace GPC.Geometry
 					}
 				}
 			}
-
-			_childs = childs;
         }
 
         /// <summary>
-        ///  Create a new shape from a shape
+        /// Creates a copy of the shape (fill, holes and children), checking the planarity of the polygons with <paramref name="tolerance"/>.
+        /// The children keep their type (<see cref="Shape2d"/> or <see cref="Shape"/>)
         /// </summary>
-        /// <param name="shape">The shape</param>
-        /// <param name="tolerance">The tolerance</param>
+        /// <param name="shape">The shape to copy</param>
+        /// <param name="tolerance">The tolerance of the planarity check</param>
+        /// <exception cref="ArgumentException">If a polygon is not planar within <paramref name="tolerance"/></exception>
         public Shape(Shape shape, double tolerance = GeometryBase.Tolerance)
         {
             _fill = new Polygon3d(shape._fill, tolerance);
@@ -139,20 +163,20 @@ namespace GPC.Geometry
                     _holes[i] = new Polygon3d(shape._holes[i], tolerance);
                 }
             }
-            if (_childs != null)
+            if (shape._childs != null)
             {
                 _childs = new Shape[shape._childs.Length];
                 for (int i = 0; i < shape._childs.Length; i++)
                 {
-                    _childs[i] = new Shape(shape._childs[i], tolerance);
+                    _childs[i] = shape._childs[i] is Shape2d child2d ? new Shape2d(child2d, tolerance) : new Shape(shape._childs[i], tolerance); // keep the type of the child
                 }
             }
         }
 
 		/// <summary>
-		///  Create a new shape from a shape
+		/// Creates a copy of the shape (fill, holes and children, with copies of the vertices). The children keep their type
 		/// </summary>
-		/// <param name="shape">The shape</param>
+		/// <param name="shape">The shape to copy</param>
 		public Shape(Shape shape)
 		{
 			_fill = new Polygon3d(shape._fill);
@@ -164,21 +188,21 @@ namespace GPC.Geometry
 					_holes[i] = new Polygon3d(shape._holes[i]);
 				}
 			}
-			if (_childs != null)
+			if (shape._childs != null)
 			{
 				_childs = new Shape[shape._childs.Length];
 				for (int i = 0; i < shape._childs.Length; i++)
 				{
-					_childs[i] = new Shape(shape._childs[i]);
+					_childs[i] = shape._childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape._childs[i]); // keep the type of the child
 				}
 			}
 		}
 
 		/// <summary>
-		/// Create a new shape from a shape 2d
+		/// Creates a shape (not a <see cref="Shape2d"/>) that is a copy of a 2d shape; the planarity of the fill is checked with <paramref name="tolerance"/>
 		/// </summary>
-		/// <param name="shape2d"></param>
-		/// <param name="tolerance">The tolerance</param>
+		/// <param name="shape2d">The shape to copy</param>
+		/// <param name="tolerance">The tolerance of the planarity check of the fill</param>
 		public Shape(Shape2d shape2d, double tolerance = GeometryBase.Tolerance)
         {
             _fill = new Polygon3d(shape2d.Fill, tolerance);
@@ -190,20 +214,20 @@ namespace GPC.Geometry
                     _holes[i] = new Polygon3d(shape2d.Holes[i]);
                 }
             }
-            if (_childs != null)
+            if (shape2d.Childs != null)
             {
                 _childs = new Shape[shape2d.Childs.Length];
                 for (int i = 0; i < shape2d.Childs.Length; i++)
                 {
-                    _childs[i] = new Shape(shape2d.Childs[i]);
+                    _childs[i] = shape2d.Childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape2d.Childs[i]); // keep the type of the child
                 }
             }
         }
 
 		/// <summary>
-		/// Create a new shape from a shape 2d
+		/// Creates a shape (not a <see cref="Shape2d"/>) that is a copy of a 2d shape
 		/// </summary>
-		/// <param name="shape2d"></param>
+		/// <param name="shape2d">The shape to copy</param>
 		public Shape(Shape2d shape2d)
 		{
 			_fill = new Polygon3d(shape2d.Fill);
@@ -215,16 +239,21 @@ namespace GPC.Geometry
 					_holes[i] = new Polygon3d(shape2d.Holes[i]);
 				}
 			}
-			if (_childs != null)
+			if (shape2d.Childs != null)
 			{
 				_childs = new Shape[shape2d.Childs.Length];
 				for (int i = 0; i < shape2d.Childs.Length; i++)
 				{
-					_childs[i] = new Shape(shape2d.Childs[i]);
+					_childs[i] = shape2d.Childs[i] is Shape2d child2d ? new Shape2d(child2d) : new Shape(shape2d.Childs[i]); // keep the type of the child
 				}
 			}
 		}
 
+		/// <summary>
+		/// Deserialization constructor: reads fill, holes and children (the saved <see cref="BaseObject.Guid"/> is not read)
+		/// </summary>
+		/// <param name="info">The serialization data</param>
+		/// <param name="context">The serialization context</param>
 		protected Shape(SerializationInfo info, StreamingContext context)
         {
             _fill = (Polygon3d)info.GetValue("Fill", typeof(Polygon3d));
@@ -253,11 +282,11 @@ namespace GPC.Geometry
         #region Public methods
 
         /// <summary>
-        /// Move shape by an given increment
+        /// Move shape by an given increment (in place: fill, holes and children)
         /// </summary>
-        /// <param name="dx"></param>
-        /// <param name="dy"></param>
-        /// <param name="dz"></param>
+        /// <param name="dx">The X coordinate increment</param>
+        /// <param name="dy">The Y coordinate increment</param>
+        /// <param name="dz">The Z coordinate increment</param>
         public override void Move(double dx, double dy, double dz)
         {
             _fill.Move(dx, dy, dz);
@@ -278,16 +307,16 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move shape by an given vector
+        /// Move shape by an given vector (in place)
         /// </summary>
-        /// <param name="vector"></param>
+        /// <param name="vector">The displacement</param>
         public override void Move(Vector3d vector)
         {
             Move(vector.X, vector.Y, vector.Z);
         }
 
         /// <summary>
-        /// Move the Shape to the min of the Bounding Box
+        /// Move the shape (in place) so that the minimum corner of its bounding box goes to the origin of the axes
         /// </summary>
         public void MoveToMin()
         {
@@ -296,25 +325,34 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Get the mirror point about the plane defined by the equation ax + by + cz + d = 0
+		/// The mirror shape about a line (see <see cref="Shape2d.Mirror(double, double, double, double)"/>): not implemented for the shapes in the space
 		/// </summary>
 		/// <param name="a">The 'a' parameter of the equation</param>
 		/// <param name="b">The 'b' parameter of the equation</param>
 		/// <param name="c">The 'c' parameter of the equation</param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
+		/// <param name="tolerance">The tolerance</param>
+		/// <returns>The mirror shape</returns>
+		/// <exception cref="NotImplementedException">Always, for a <see cref="Shape"/></exception>
 		public virtual Shape Mirror(double a, double b, double c, double tolerance = GeometryBase.Tolerance)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Creates a copy of the shape (see <see cref="Shape(Shape)"/>)
+        /// </summary>
+        /// <returns>The copy</returns>
         public override object Clone()
         {
             return new Shape(this);
         }
 
-        /// <returns>The area of the shape</returns>
-        /// <remarks>The area is positive if the shape isrightOriented </remarks>
+        /// <summary>
+        /// The area of the shape: area of the fill, minus the areas of the holes, plus the areas of the children
+        /// </summary>
+        /// <param name="tolerance">Not used</param>
+        /// <returns>The area of the shape (not negative)</returns>
+        /// <exception cref="ArgumentException">If the result is negative (holes larger than the fill)</exception>
         public double GetArea(double tolerance = GeometryBase.Tolerance)
         {
             double area = _fill.GetSignedArea(tolerance);
@@ -355,6 +393,9 @@ namespace GPC.Geometry
             return area;
         }
 
+        /// <summary>
+        /// The bounding box of the fill and of the holes (the children are inside the holes)
+        /// </summary>
         /// <returns>The bounding box of the shape in the global coordinates</returns>
         public BoundingBox3d GetBoundingBox()
         {
@@ -370,30 +411,22 @@ namespace GPC.Geometry
             return bbox;
         }
 
+        /// <summary>
+        /// The unit normal of the shape: the normal of the fill (see <see cref="Polygon3d.GetNormalVector(double)"/>)
+        /// </summary>
+        /// <param name="tolerance">The tolerance</param>
         /// <returns>A unitized vector normal to the shape</returns>
         /// <exception cref="NotSupportedException">Thrown when Number of unique points not sufficient to create a normal vector</exception>
         public virtual Vector3d GetNormalVector(double tolerance = GeometryBase.Tolerance)
         {
-            var p = (Polygon3d)Fill.Clone();
-            p.RemoveDuplicatedPoints(tolerance);
-            p.RemoveAlignedPoints(tolerance);
-
-            if (p.Count < 3)
-                throw new NotSupportedException("Number of unique points not sufficient to create a normal vector");
-
-            var v1 = p[0].VectorTo(p[1]);
-            var v2 = p[0].VectorTo(p[2]);
-
-            var normal = v1.CrossProduct(v2);
-            normal.Unitize();
-
-            return normal;
+            return Fill.GetNormalVector(tolerance);
         }
 
         /// <summary>
-        /// Get the coordinate of the shape. Generated from first 3 points (not aligned, not duplicated) of the shape. 
+        /// Get the coordinate system of the shape. Generated from first 3 points (not aligned, not duplicated) of the fill.
         /// Origin in first point, X axis on the first side, Z axis on the normal, Y to complete the triad.
         /// </summary>
+        /// <param name="tolerance">The tolerance of the removal of the duplicated and aligned points</param>
         /// <returns>Coordinate system generated from first three points of the fill polygon. Duplicate and aligned points are not considered</returns>
         /// <exception cref="NotSupportedException">Thrown when Number of unique points not sufficient to create a coordinate system</exception>
         public CoordinateSystem GetCoordinateSystem(double tolerance = GeometryBase.Tolerance)
@@ -401,6 +434,10 @@ namespace GPC.Geometry
             return Fill.GetCoordinateSystem(tolerance);
         }
 
+        /// <summary>
+        /// The vertices of the fill, of the holes and, recursively, of the children
+        /// </summary>
+        /// <returns>The vertices (the instances of the polygons)</returns>
         public Point3d[] GetPoints()
         {
             List<Point3d> points = new List<Point3d>();
@@ -424,9 +461,27 @@ namespace GPC.Geometry
             return points.ToArray();
         }
 
-        /// <inheritdoc cref="Plane(Point3d,Point3d,Point3d, double)"/>
+        /// <summary>
+        /// The plane of the fill: through its first vertex, with the Newell normal (right hand rule on the vertices order, also for concave
+        /// fills) and the first axis on the first side. For a degenerate fill (area close to zero) the plane of the first three vertices, after
+        /// removing the aligned and the duplicated points. Before, always the plane of the first three vertices: with a concave first vertex
+        /// the normal was reversed
+        /// </summary>
+        /// <param name="tolerance">The tolerance of the removal of the points and of the plane</param>
+        /// <returns>The plane of the shape</returns>
+        /// <exception cref="ArgumentException">If the three points are aligned</exception>
         public Plane GetPlane(double tolerance = GeometryBase.Tolerance)
         {
+            if (Fill.TryGetUnitNormal(tolerance, out Vector3d normal))
+            {
+                for (int i = 1; i < Fill.Count; i++)
+                {
+                    Vector3d side = Fill[0].VectorTo(Fill[i]);
+                    if (side.Length > tolerance)
+                        return new Plane(Fill[0], side, normal.CrossProduct(side));
+                }
+            }
+
             var fill = (Polygon3d)Fill.Clone();
 
             fill.RemoveAlignedPoints(tolerance);
@@ -436,9 +491,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move the shape to local coordinate system
+        /// Move the shape to its local coordinate system (see <see cref="GetCoordinateSystem"/>)
         /// </summary>
-        /// <returns>A new shape in local coordinate system</returns>
+        /// <param name="tolerance">The tolerance of the coordinate system</param>
+        /// <returns>A new shape in local coordinate system, on its XY plane</returns>
         public Shape2d ToLocal(double tolerance = GeometryBase.Tolerance)
         {
             CoordinateSystem newCoordSystem = GetCoordinateSystem(tolerance);
@@ -446,8 +502,9 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Move the shape to global coordinate system
+        /// Move the shape from a local coordinate system to the global one
         /// </summary>
+        /// <param name="coordinateSystem">The coordinate system where the shape is defined</param>
         /// <returns>A new shape in global coordinate system</returns>
         public Shape ToGlobal(CoordinateSystem coordinateSystem)
         {
@@ -455,24 +512,17 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Check if the point is on shape
+        /// Check if the point is on shape: on the plane of the fill, inside the fill or on its border, not strictly inside a hole
+        /// (the border of the holes belongs to the shape), or inside a child
         /// </summary>
+        /// <param name="pointToTest">The point to test</param>
+        /// <param name="tolerance">The tolerance on the distances</param>
         /// <returns>True if the point is on shape</returns>
         public bool IsPointInside(Point3d pointToTest, double tolerance = GeometryBase.Tolerance)
         {
-            Polygon3d polygon = new Polygon3d();                    // creo una copia del poligono da cui deriva la shape
-
-            for(int i = 0; i < _fill.Count; i++)                   // gli assegno i punti e rimuovo gli allineati e i duplicati
-                polygon.AddWithoutChecks(_fill[i]);                                 // in modo da avere un piano correto            
-
-            polygon.RemoveDuplicatedPoints(tolerance);
-            polygon.RemoveAlignedPoints(tolerance);
-
             bool isPointInHole = false;
 
-            Plane ShapePlane = new Plane(polygon[0], polygon[1], polygon[2], tolerance);
-
-            if (ShapePlane.IsPointOnPlane(pointToTest, tolerance))                 // controllo che sia sul piano
+            if (IsPointOnFillPlane(pointToTest, tolerance))                 // controllo che sia sul piano
             {
                 if (!_fill.PointExists(pointToTest, tolerance))                    // controllo che il punto non sia uno spigolo 
                 {
@@ -526,7 +576,36 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Check if the line is inside the shape
+        /// Tell if the point is on the plane of the fill. The plane is given by the Newell normal of the fill (no copies of the polygon);
+        /// only for a degenerate fill it is built on the first three points, without duplicated and aligned points
+        /// </summary>
+        /// <param name="point">The point to test</param>
+        /// <param name="tolerance">The tolerance on the distance from the plane</param>
+        /// <returns>True if the point is on the plane</returns>
+        private bool IsPointOnFillPlane(Point3d point, double tolerance)
+        {
+            if (_fill.TryGetUnitNormal(tolerance, out Vector3d normal))
+            {
+                Point3d origin = _fill[0];
+                double distance = normal.X * (point.X - origin.X) + normal.Y * (point.Y - origin.Y) + normal.Z * (point.Z - origin.Z);
+                return Math.Abs(distance) < tolerance;
+            }
+
+            Polygon3d polygon = new Polygon3d();
+            for (int i = 0; i < _fill.Count; i++)
+                polygon.AddWithoutChecks(_fill[i]);
+
+            polygon.RemoveDuplicatedPoints(tolerance);
+            polygon.RemoveAlignedPoints(tolerance);
+
+            Plane plane = new Plane(polygon[0], polygon[1], polygon[2], tolerance);
+            return plane.IsPointOnPlane(point, tolerance);
+        }
+
+        /// <summary>
+        /// Check if the segment is inside the shape: both the ends inside (see <see cref="IsPointInside(Point3d, double)"/>) and no crossing
+        /// of the edges of fill and holes other than at the ends. With holes an even number of crossings is accepted; a segment inside a child is inside.
+        /// The check is only on the crossings: a segment joining two points of the border that passes outside without crossing edges is considered inside
         /// </summary>
         /// <param name="lineToTest">Line to test</param>
         /// <param name="tolerance">The tolerance</param>
@@ -617,7 +696,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Check if the polygon is inside the shape
+        /// Check if the polygon is inside the shape: all its edges are inside (see <see cref="IsLineInside(Line3d, double)"/>)
         /// </summary>
         /// <param name="polygonToTest">Polygon to test</param>
         /// <param name="tolerance">The tolerance</param>
@@ -635,10 +714,11 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Check if the two shapes are equals but with a shifted order of points. Dont't check holes and childs. 
+        /// Check if the fills of the two shapes are equal also with a shifted order of the vertices (see <see cref="Polygon3d.EqualsShifted"/>).
+        /// The holes and the children are not compared
         /// </summary>
         /// <param name="other">The shape to test</param>
-        /// <returns>true if the two shapes are equals</returns>
+        /// <returns>True if the fills are equal</returns>
         public bool EqualsShifted(Shape other)
         {
             if (ReferenceEquals(this, other))
@@ -674,31 +754,33 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Scale the shape respect to the origin 
+        /// Scale the shape respect to the origin of the axes
         /// </summary>
         /// <param name="factor">Scale factor</param>
-        /// <param name="tol">The tolerance</param>
+        /// <param name="tol">The tolerance, multiplied by the factor for the new shape</param>
+        /// <returns>A new shape scaled</returns>
         public virtual Shape Scale(double factor, double tol = GeometryBase.Tolerance)
         {
             return Scale(factor, factor, factor, tol);
         }
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to the origin of the axes
 		/// </summary>
 		/// <param name="factor">Scale factor</param>
+		/// <returns>A new shape scaled</returns>
 		public virtual Shape Scale(double factor)
 		{
 			return Scale(factor, factor, factor);
 		}
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to the origin of the axes, with a factor for each axis
 		/// </summary>
-		/// <param name="factorX"></param>
-		/// <param name="factorY"></param>
-		/// <param name="factorZ"></param>
-		/// <param name="tol">The tolerance</param>
+		/// <param name="factorX">The scale factor along X</param>
+		/// <param name="factorY">The scale factor along Y</param>
+		/// <param name="factorZ">The scale factor along Z</param>
+		/// <returns>A new shape scaled (fill, holes and children)</returns>
 		public virtual Shape Scale(double factorX, double factorY, double factorZ)
         {
 			Polygon3d fillScaled = _fill.Scale(factorX, factorY, factorZ);
@@ -740,12 +822,13 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to the origin of the axes, with a factor for each axis
 		/// </summary>
-		/// <param name="factorX"></param>
-		/// <param name="factorY"></param>
-		/// <param name="factorZ"></param>
-		/// <param name="tol">The tolerance</param>
+		/// <param name="factorX">The scale factor along X</param>
+		/// <param name="factorY">The scale factor along Y</param>
+		/// <param name="factorZ">The scale factor along Z</param>
+		/// <param name="tol">The tolerance, multiplied by the largest factor for the new shape</param>
+		/// <returns>A new shape scaled (fill, holes and children)</returns>
 		public virtual Shape Scale(double factorX, double factorY, double factorZ, double tol = GeometryBase.Tolerance)
 		{
 			double tolerance = tol * Math.Max(factorX, Math.Max(factorY, factorZ));
@@ -789,31 +872,37 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to a point
 		/// </summary>
-		/// <param name="factor"></param>
-		/// <param name="tol">The tolerance</param>
+		/// <param name="center">The fixed point of the scaling</param>
+		/// <param name="factor">Scale factor</param>
+		/// <param name="tol">The tolerance, multiplied by the factor for the new shape</param>
+		/// <returns>A new shape scaled</returns>
 		public virtual Shape Scale(Point3d center, double factor, double tol = GeometryBase.Tolerance)
 		{
             return Scale(center, factor, factor, factor, tol);
 		}
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to a point
 		/// </summary>
-		/// <param name="factor"></param>
+		/// <param name="center">The fixed point of the scaling</param>
+		/// <param name="factor">Scale factor</param>
+		/// <returns>A new shape scaled</returns>
 		public virtual Shape Scale(Point3d center, double factor)
 		{
 			return Scale(center, factor, factor, factor);
 		}
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to a point, with a factor for each axis
 		/// </summary>
-		/// <param name="factorX"></param>
-		/// <param name="factorY"></param>
-		/// <param name="factorZ"></param>
-		/// <param name="tol">The tolerance</param>
+		/// <param name="center">The fixed point of the scaling</param>
+		/// <param name="factorX">The scale factor along X</param>
+		/// <param name="factorY">The scale factor along Y</param>
+		/// <param name="factorZ">The scale factor along Z</param>
+		/// <param name="tol">The tolerance, multiplied by the largest factor for the new shape</param>
+		/// <returns>A new shape scaled (fill, holes and children)</returns>
 		public virtual Shape Scale(Point3d center, double factorX, double factorY, double factorZ, double tol = GeometryBase.Tolerance)
 		{
 			double tolerance = tol * Math.Max(factorX, Math.Max(factorY, factorZ));
@@ -857,12 +946,13 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Scale the shape respect to the origin 
+		/// Scale the shape respect to a point, with a factor for each axis
 		/// </summary>
-		/// <param name="factorX"></param>
-		/// <param name="factorY"></param>
-		/// <param name="factorZ"></param>
-		/// <param name="tol">The tolerance</param>
+		/// <param name="center">The fixed point of the scaling</param>
+		/// <param name="factorX">The scale factor along X</param>
+		/// <param name="factorY">The scale factor along Y</param>
+		/// <param name="factorZ">The scale factor along Z</param>
+		/// <returns>A new shape scaled (fill, holes and children)</returns>
 		public virtual Shape Scale(Point3d center, double factorX, double factorY, double factorZ)
 		{
 			Polygon3d fillScaled = _fill.Scale(center, factorX, factorY, factorZ);
@@ -904,9 +994,9 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Add a hole to the shape
+		/// Add a hole to the shape (the instance is kept), if an equal hole is not already present. The orientation and the position are not checked
 		/// </summary>
-		/// <param name="hole"></param>
+		/// <param name="hole">The hole to add</param>
 		public virtual void AddHole(Polygon3d hole)
         {
             List<Polygon3d> p = new List<Polygon3d>();
@@ -923,45 +1013,46 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Reverse the normal of the shape
+        /// Reverse the normal of the shape IN PLACE: the vertices order of fill, holes and childs is reversed
         /// </summary>
-        /// <returns></returns>
+        /// <returns>This same shape (not a copy), to allow chaining. To keep the original use <c>new Shape(shape).Reverse()</c></returns>
         public Shape Reverse()
         {
-            Polygon3d fill = new Polygon3d(_fill.Reverse());
-            List<Polygon3d> holes = new List<Polygon3d>();
-            List<Shape> childs = new List<Shape>();
+            _fill.Reverse();
 
             if (_holes != null)
                 for (int u = 0; u < _holes.Length; u++)
-                    holes[u] = new Polygon3d(_holes[u].Reverse());
+                    _holes[u].Reverse();
 
             if (_childs != null)
                 for (int u = 0; u < _childs.Length; u++)
-                    childs[u] = new Shape(_childs[u].Reverse());
+                    _childs[u].Reverse();
 
-            if (_holes != null && _childs != null)
-                return new Shape(fill, holes.ToArray(), childs.ToArray());
-
-            else if (_holes != null && _childs == null)
-                return new Shape(fill, holes.ToArray(), null);
-
-            else if (_holes == null && _childs != null)
-                return new Shape(fill, null, childs.ToArray());
-
-            else
-                return new Shape(fill, null, null);
+            return this;
         }
 
+        /// <summary>
+        /// The shape in its local coordinate system. Each polygon is moved to its own coordinate system (see <see cref="Polygon3d.GetPolygon2d"/>):
+        /// the holes and the children are right only if their systems are the same of the fill
+        /// </summary>
+        /// <param name="tolerance">The tolerance of the coordinate systems</param>
+        /// <returns>The 2d shape</returns>
         internal Shape2d GetShape2d(double tolerance = GeometryBase.Tolerance)
         {
-            return new Shape2d(_fill.GetPolygon2d(tolerance), _holes.Select(i => i.GetPolygon2d(tolerance)).ToArray(), _childs.Select(i => i.GetShape2d(tolerance)).ToArray());
+            return new Shape2d(_fill.GetPolygon2d(tolerance),
+                _holes?.Select(i => i.GetPolygon2d(tolerance)).ToArray(),
+                _childs?.Select(i => i.GetShape2d(tolerance)).ToArray());
         }
 
         #endregion
 
         #region Operator ovverride 
 
+        /// <summary>
+        /// Serializes the shape: the <see cref="BaseObject.Guid"/>, the fill, the holes and the children
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
@@ -984,6 +1075,11 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Shape)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is an equal shape</returns>
         public override bool Equals(object obj)
         {
             if (obj is null)
@@ -995,6 +1091,11 @@ namespace GPC.Geometry
                 return false;    
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(Shape)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is an equal shape</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Shape shape)
@@ -1003,6 +1104,11 @@ namespace GPC.Geometry
             return false;
         }
 
+        /// <summary>
+        /// Equality of the fills (same vertices in the same order) and of the holes and of the children in any order
+        /// </summary>
+        /// <param name="other">The shape to compare</param>
+        /// <returns>True if the shapes are equal</returns>
         public bool Equals(Shape other)
         {
             if (other is null)
@@ -1059,6 +1165,10 @@ namespace GPC.Geometry
             return condition;
         }
 
+        /// <summary>
+        /// The hash code of the exact coordinates of fill, holes and children (independent of the order of holes and children)
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -1089,6 +1199,12 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// Equality operator (see <see cref="Equals(Shape)"/>); two null shapes are equal
+        /// </summary>
+        /// <param name="obj1">The first shape</param>
+        /// <param name="obj2">The second shape</param>
+        /// <returns>True if the shapes are equal</returns>
         public static bool operator ==(Shape obj1, Shape obj2)
         {
             if (ReferenceEquals(obj1, obj2))
@@ -1100,6 +1216,12 @@ namespace GPC.Geometry
             return obj1.Equals(obj2);
         }
 
+        /// <summary>
+        /// Inequality operator (see <see cref="Equals(Shape)"/>)
+        /// </summary>
+        /// <param name="obj1">The first shape</param>
+        /// <param name="obj2">The second shape</param>
+        /// <returns>True if the shapes are different</returns>
         public static bool operator !=(Shape obj1, Shape obj2)
         {
             return !(obj1 == obj2);
@@ -1110,13 +1232,15 @@ namespace GPC.Geometry
 		#region CLIPPER
 
 		/// <summary>
-		/// Compute the boolean union between the array of shapes <paramref name="a"/> e the array of shape <paramref name="b"/>
+		/// Compute the boolean union between the array of shapes <paramref name="a"/> and the array of shapes <paramref name="b"/>. The shapes must
+		/// lie on the plane of the first shape of <paramref name="a"/>: the operation is done in its local coordinate system (Clipper, even-odd rule)
 		/// </summary>
-		/// <param name="a">The first array of shapes</param>
+		/// <param name="a">The first array of shapes (not empty)</param>
 		/// <param name="b">The second array of shapes</param>
-		/// <param name="outShapeGlobal">The array of shapes unite</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist an union between the 2 input arrays. As out, the array of shapes unite</returns>
+		/// <param name="outShapeGlobal">The shapes of the result (outer polygons with their holes; the islands inside the holes are separate
+		/// shapes; the children of the inputs are ignored): empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded, false if Clipper throws a <see cref="ClipperException"/></returns>
 		public static bool Union(Shape[] a, Shape[] b, out Shape[] outShapeGlobal, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1132,7 +1256,7 @@ namespace GPC.Geometry
                 for (int i = 0; i < b.Count(); i++)
                     newB[i] = newCoord.ToLocal(b[i]);
 
-                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctUnion);
+                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctUnion) ?? new Shape[0]; // null when the result is empty
                 outShapeGlobal = new Shape[outShapeLocal.Count()];
 
                 for (int i = 0; i < outShapeLocal.Count(); i++)
@@ -1148,13 +1272,13 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean union between the shape <paramref name="a"/> e the shape <paramref name="b"/>
+		/// Compute the boolean union between the shape <paramref name="a"/> and the shape <paramref name="b"/> (see <see cref="Union(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
 		/// <param name="a">The first shape</param>
 		/// <param name="b">The second shape</param>
-		/// <param name="shapes">The array of shapes unite</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist an union between the 2 input arrays. As out, the array of shapes unite</returns>
+		/// <param name="shapes">The shapes of the result: empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded</returns>
 		public static bool Union(Shape a, Shape b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1169,13 +1293,14 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean difference between the array of shapes <paramref name="a"/> e the array of shape <paramref name="b"/>
+		/// Compute the boolean difference <paramref name="a"/> minus <paramref name="b"/>, in the local coordinate system of the first shape of <paramref name="a"/>
+		/// (see <see cref="Union(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
-		/// <param name="a">The first array of shapes</param>
-		/// <param name="b">The second array of shapes</param>
-		/// <param name="shapes">The array of shapes difference</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a difference between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="a">The shapes to subtract from (not empty)</param>
+		/// <param name="b">The shapes to subtract</param>
+		/// <param name="shapes">The shapes of the result; null if the result is empty or Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the result is not empty (unlike the other operations, an empty result gives false)</returns>
 		public static bool Difference(Shape[] a, Shape[] b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1215,13 +1340,13 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean difference between the shape <paramref name="a"/> e the shape <paramref name="b"/>
+		/// Compute the boolean difference <paramref name="a"/> minus <paramref name="b"/> (see <see cref="Difference(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
-		/// <param name="a">The first shape</param>
-		/// <param name="b">The second shape</param>
-		/// <param name="shapes">The array of shapes difference</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a difference between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="a">The shape to subtract from</param>
+		/// <param name="b">The shape to subtract</param>
+		/// <param name="shapes">The shapes of the result; null if the result is empty or Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the result is not empty</returns>
 		public static bool Difference(Shape a, Shape b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1236,13 +1361,14 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean intersection between the array of shapes <paramref name="a"/> e the array of shape <paramref name="b"/>
+		/// Compute the boolean intersection between the array of shapes <paramref name="a"/> and the array of shapes <paramref name="b"/>, in the
+		/// local coordinate system of the first shape of <paramref name="a"/> (see <see cref="Union(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
-		/// <param name="a">The first array of shapes</param>
+		/// <param name="a">The first array of shapes (not empty)</param>
 		/// <param name="b">The second array of shapes</param>
-		/// <param name="shapes">The array of shapes intersection</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a intersection between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="shapes">The shapes of the result: empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded</returns>
 		public static bool Intersection(Shape[] a, Shape[] b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1278,13 +1404,13 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean intersection between the shape <paramref name="a"/> e the shape <paramref name="b"/>
+		/// Compute the boolean intersection between the shape <paramref name="a"/> and the shape <paramref name="b"/> (see <see cref="Intersection(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
 		/// <param name="a">The first shape</param>
 		/// <param name="b">The second shape</param>
-		/// <param name="shapes">The array of shapes intersection</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a intersection between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="shapes">The shapes of the result: empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded</returns>
 		public static bool Intersection(Shape a, Shape b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1299,13 +1425,14 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean notIntersection between the array of shapes <paramref name="a"/> e the array of shape <paramref name="b"/>
+		/// Compute the boolean exclusive or (the areas inside only one of the groups) between the array of shapes <paramref name="a"/> and the array of
+		/// shapes <paramref name="b"/>, in the local coordinate system of the first shape of <paramref name="a"/> (see <see cref="Union(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
-		/// <param name="a">The first array of shapes</param>
+		/// <param name="a">The first array of shapes (not empty)</param>
 		/// <param name="b">The second array of shapes</param>
-		/// <param name="shapes">The array of shapes notIntersection</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a notIntersection between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="shapes">The shapes of the result: empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded</returns>
 		public static bool NotIntersection(Shape[] a, Shape[] b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1321,7 +1448,7 @@ namespace GPC.Geometry
                 for (int i = 0; i < b.Count(); i++)
                     newB[i] = newCoord.ToLocal(b[i]);
 
-                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctXor);
+                Shape[] outShapeLocal = Boolean(newA, newB, ClipType.ctXor) ?? new Shape[0]; // null when the result is empty
                 shapes = new Shape[outShapeLocal.Count()];
 
                 for (int i = 0; i < outShapeLocal.Count(); i++)
@@ -1337,13 +1464,13 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Compute the boolean not intersection between the shape <paramref name="a"/> e the shape <paramref name="b"/>
+		/// Compute the boolean exclusive or between the shape <paramref name="a"/> and the shape <paramref name="b"/> (see <see cref="NotIntersection(Shape[], Shape[], out Shape[], double)"/>)
 		/// </summary>
 		/// <param name="a">The first shape</param>
-		/// <param name="b">The second array of shapes</param>
-		/// <param name="shapes">The array of shapes notIntersection</param>
-		/// <param name="tolerance"></param>
-		/// <returns>True if exist a notIntersection between the 2 input arrays. As out, the array of shapes</returns>
+		/// <param name="b">The second shape</param>
+		/// <param name="shapes">The shapes of the result: empty if the result is empty, null if Clipper fails</param>
+		/// <param name="tolerance">The tolerance of the coordinate system</param>
+		/// <returns>True if the operation succeeded</returns>
 		public static bool NotIntersection(Shape a, Shape b, out Shape[] shapes, double tolerance = GeometryBase.Tolerance)
         {
             try
@@ -1358,23 +1485,27 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Execute a boolean operation beetween shapes using the Clipper class
+        /// Execute a boolean operation beetween shapes on the XY plane using the Clipper class (even-odd fill rule; the children are ignored)
         /// </summary>
-        /// <param name="a">First array of 2d shape</param>
-        /// <param name="b">Second array of 2d shape</param>
-        /// <param name="code"></param>
-        /// <param name="factor"></param>
-        /// <returns></returns>
-        protected static Shape[] Boolean(Shape[] a, Shape[] b, ClipType code, int factor = 1000)
+        /// <param name="a">The subject shapes</param>
+        /// <param name="b">The clip shapes</param>
+        /// <param name="code">The operation</param>
+        /// <param name="factor">Scale of the coordinates; not positive (default): automatic, see <see cref="ClipperScale"/>
+        /// (before, always 1000 with the coordinates truncated)</param>
+        /// <returns>The shapes of the result; null if the result is empty or Clipper returns false</returns>
+        /// <exception cref="NotSupportedException">If the root of the result of Clipper has a contour</exception>
+        protected static Shape[] Boolean(Shape[] a, Shape[] b, ClipType code, int factor = 0)
         {
+            double scale = factor > 0 ? factor : ClipperScale.Factor(ClipperScale.MaxAbsCoordinate(a, b));
+
             Clipper clipper = new Clipper();
             foreach (Shape shape in a)
             {
-                AddToPath(shape, factor, clipper, PolyType.ptSubject);
+                AddToPath(shape, scale, clipper, PolyType.ptSubject);
             }
             foreach (Shape shape in b)
             {
-                AddToPath(shape, factor, clipper, PolyType.ptClip);
+                AddToPath(shape, scale, clipper, PolyType.ptClip);
             }
 
             PolyTree polyTree = new PolyTree();
@@ -1389,7 +1520,7 @@ namespace GPC.Geometry
                     List<Shape> result = new List<Shape>();
                     foreach (PolyNode node in polyTree.Childs)
                     {
-                        result.Add(GetShapeFromPolyNode(node, factor));
+                        AddShapesFromPolyNode(node, scale, result);
                     }
                     return result.ToArray();
                 }
@@ -1398,11 +1529,28 @@ namespace GPC.Geometry
             return null;
         }
 
+        /// <summary>
+        /// The shape of the outer polygon node and, as separate shapes, the islands inside its holes (before, they were lost)
+        /// </summary>
+        /// <param name="outer">The node of an outer polygon</param>
+        /// <param name="factor">The scale factor for converting the integer coordinates back to doubles</param>
+        /// <param name="result">The list where the shapes are added</param>
+        private static void AddShapesFromPolyNode(PolyNode outer, double factor, List<Shape> result)
+        {
+            result.Add(GetShapeFromPolyNode(outer, factor));
+            for (int i = 0; i < outer.ChildCount; i++)
+            {
+                PolyNode hole = outer.Childs[i];
+                for (int j = 0; j < hole.ChildCount; j++)
+                    AddShapesFromPolyNode(hole.Childs[j], factor, result);
+            }
+        }
+
 		/// <summary>
-		/// Support function that add the shape polygons to the Clipper object for the boolean operations
+		/// Support function that add the shape polygons (fill and holes, not the children; Z is ignored) to the Clipper object for the boolean operations
 		/// </summary>
 		/// <param name="shape">The source shape</param>
-		/// <param name="factor">The scale factor for double to integer conversion for the coorinates</param>
+		/// <param name="factor">The scale factor for double to integer conversion for the coordinates</param>
 		/// <param name="clipper">The clipper object for the boolean operations</param>
 		/// <param name="type">Tell if the shape polygon is a Subject or Clip polygon</param>
 		protected static void AddToPath(Shape shape, double factor, Clipper clipper, PolyType type)
@@ -1428,11 +1576,12 @@ namespace GPC.Geometry
         }
 
 		/// <summary>
-		/// Converts back the Clipper.PolyNode to Shape2d array
+		/// Converts back a Clipper.PolyNode of an outer polygon to a shape on the plane z = 0: the contour is the fill, the contours of the
+		/// children nodes are the holes
 		/// </summary>
 		/// <param name="polyNode">The PolyNode to convert</param>
 		/// <param name="factor">The scale factor for converting the integer coordinates back to doubles</param>
-		/// <returns></returns>
+		/// <returns>The shape</returns>
 		private static Shape GetShapeFromPolyNode(PolyNode polyNode, double factor)
         {
             Polygon2d contour = new Polygon2d();

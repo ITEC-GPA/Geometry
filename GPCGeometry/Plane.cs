@@ -7,38 +7,78 @@ using System.Runtime.Serialization;
 namespace GPC.Geometry
 {
     /// <summary>
-    /// Plane is a planar two-dimensional surface on the (x,y,z) space. Plane is uniquely determined by 3 Points
+    /// A plane in the space, described by three points <see cref="P1"/> (the origin), <see cref="P2"/>, <see cref="P3"/> and by the unit
+    /// normal (P2 - P1) × (P3 - P1). Two planes are equal if they are the same geometric plane (the origin of one on the other and parallel normals)
     /// </summary>
     [Serializable]
     public sealed class Plane : GeometryBase, IEquatable<Plane>, ISerializable
     {
         #region Variables
 
+        /// <summary>
+        /// The first point (the origin)
+        /// </summary>
         private Point3d _p1;
+        /// <summary>
+        /// The second point
+        /// </summary>
         private Point3d _p2;
+		/// <summary>
+		/// The third point
+		/// </summary>
 		private Point3d _p3;
+        /// <summary>
+        /// The unit normal
+        /// </summary>
         private Vector3d _normal;
 
         #endregion 
 
         #region Properties
 
+        /// <summary>
+        /// The first point, the origin of the plane. Changing the points does not update <see cref="Normal"/>
+        /// </summary>
         public Point3d P1 { get => _p1; set => _p1 = value; }
 
+        /// <summary>
+        /// The second point (the direction P2 - P1 is the X axis of <see cref="GetCoordinateSystem"/>)
+        /// </summary>
         public Point3d P2 { get => _p2; set => _p2 = value; }
 
+        /// <summary>
+        /// The third point
+        /// </summary>
         public Point3d P3 { get => _p3; set => _p3 = value; }
 
+        /// <summary>
+        /// The unit normal of the plane
+        /// </summary>
         public Vector3d Normal => _normal;
 
+        /// <summary>
+        /// The origin of the plane: the same as <see cref="P1"/>
+        /// </summary>
         public Point3d Origin { get => _p1; set => _p1 = value; }
 
+        /// <summary>
+        /// The coefficient A of the equation A x + B y + C z + D = 0 (the X component of the unit normal)
+        /// </summary>
         public double A => _normal.X;
 
+        /// <summary>
+        /// The coefficient B of the equation A x + B y + C z + D = 0 (the Y component of the unit normal)
+        /// </summary>
         public double B => _normal.Y;
 
+        /// <summary>
+        /// The coefficient C of the equation A x + B y + C z + D = 0 (the Z component of the unit normal)
+        /// </summary>
         public double C => _normal.Z;
 
+        /// <summary>
+        /// The coefficient D of the equation A x + B y + C z + D = 0: minus the distance with sign of the origin of the axes along the normal
+        /// </summary>
         public double D => -_normal.X * _p1.X - _normal.Y * _p1.Y - _normal.Z * _p1.Z;
 
         #endregion 
@@ -80,14 +120,26 @@ namespace GPC.Geometry
         /// </summary>
         /// <param name="point">The origin point</param>
         /// <param name="normal">The normal vector</param>
+        /// <exception cref="ArgumentException">If <paramref name="normal"/> has zero length</exception>
         public Plane(Point3d point, Vector3d normal)
         {
-            _normal = normal ?? throw new ArgumentNullException(nameof(normal));
-            _normal.Unitize();
+            if (normal is null)
+                throw new ArgumentNullException(nameof(normal));
+
+            _normal = new Vector3d(normal); // the vector of the caller must not be modified
+            UnitizeNormal();
             _p1 = point ?? throw new ArgumentNullException(nameof(point));
             ComputePointsFromOriginAndNormal();
         }
 
+        /// <summary>
+        /// Plane by origin and two directions lying on the plane. The two directions must not be parallel, but they can be not orthogonal
+        /// </summary>
+        /// <param name="origin">The origin (the instance is kept)</param>
+        /// <param name="xAxis">The first direction (not changed)</param>
+        /// <param name="yAxis">The second direction (not changed)</param>
+        /// <exception cref="ArgumentException">If the two directions are parallel</exception>
+        /// <exception cref="ArgumentNullException">If a parameter is null</exception>
         public Plane(Point3d origin, Vector3d xAxis, Vector3d yAxis)
         {
             if (xAxis is null)
@@ -96,13 +148,15 @@ namespace GPC.Geometry
             if (yAxis is null)
                 throw new ArgumentNullException(nameof(yAxis));
 
-            xAxis.Unitize();
-            yAxis.Unitize();
+            // copies: the vectors of the caller must not be modified
+            Vector3d x = Vector3d.Unitize(xAxis);
+            Vector3d y = Vector3d.Unitize(yAxis);
 
-            _normal = xAxis.CrossProduct(yAxis);
+            _normal = x.CrossProduct(y);
+            UnitizeNormal(); // x and y are unit vectors but not necessarily orthogonal
             _p1 = origin ?? throw new ArgumentNullException(nameof(origin));
-            _p2 = _p1 + xAxis;
-            _p3 = _p1 + yAxis;
+            _p2 = _p1 + x;
+            _p3 = _p1 + y;
         }
 
         /// <summary>
@@ -112,15 +166,21 @@ namespace GPC.Geometry
         /// <param name="b">Parameter "B" in general plane equation.</param>
         /// <param name="c">Parameter "C" in general plane equation.</param>
         /// <param name="d">Parameter "D" in general plane equation.</param>
+        /// <exception cref="ArgumentException">If a, b and c are all zero</exception>
         public Plane(double a, double b, double c, double d)
         {
-            if (Math.Abs(a) > Math.Abs(b) && Math.Abs(a) > Math.Abs(c))
+            // the origin is taken on the axis with the largest coefficient, so the division is never by zero
+            if (Math.Abs(a) >= Math.Abs(b) && Math.Abs(a) >= Math.Abs(c) && a != 0)
                 _p1 = new Point3d(-d / a, 0, 0);
-            else if (Math.Abs(b) > Math.Abs(a) && Math.Abs(b) > Math.Abs(c))
+            else if (Math.Abs(b) >= Math.Abs(c) && b != 0)
                 _p1 = new Point3d(0, -d / b, 0);
-            else
+            else if (c != 0)
                 _p1 = new Point3d(0, 0, -d / c);
+            else
+                throw new ArgumentException("The coefficients a, b and c cannot be all zero");
+
             _normal = new Vector3d(a, b, c);
+            UnitizeNormal(); // the normal must be unitized, IsPointOnPlane and D rely on it
             ComputePointsFromOriginAndNormal();
         }
 
@@ -136,6 +196,11 @@ namespace GPC.Geometry
             _normal = new Vector3d(plane._normal);
         }
 
+        /// <summary>
+        /// Deserialization constructor: reads the points and the normal (the saved <see cref="BaseObject.Guid"/> is not read)
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         private Plane(SerializationInfo info, StreamingContext context)
             : base()
         {
@@ -148,6 +213,18 @@ namespace GPC.Geometry
         #endregion
 
         #region Private methods
+
+        /// <summary>
+        /// Makes the normal a unit vector
+        /// </summary>
+        /// <exception cref="ArgumentException">If the normal has zero length</exception>
+        private void UnitizeNormal()
+        {
+            if (_normal.Length == 0)
+                throw new ArgumentException("Fail to create the plane: the normal vector has zero length");
+
+            _normal.Unitize();
+        }
 
         /// <summary>
         /// Calculate 3 points on plane starting from the plane origin and normal
@@ -174,8 +251,8 @@ namespace GPC.Geometry
         /// Tell if a point is on Plane
         /// </summary>
         /// <param name="point">The point to test</param>
-        /// <param name="tolerance">Tollerance to calculate plane equation</param>
-        /// <returns>True if the point is on plane</returns>
+        /// <param name="tolerance">The tolerance on the distance from the plane</param>
+        /// <returns>True if the distance of the point from the plane is smaller than <paramref name="tolerance"/></returns>
         public bool IsPointOnPlane(Point3d point, double tolerance = GeometryBase.Tolerance)
         {
             return Math.Abs(_normal.X * point.X + _normal.Y * point.Y + _normal.Z * point.Z + D) < tolerance;
@@ -192,10 +269,10 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// The calculate the angle of a point on plane
+        /// The angle, on the plane, between the direction P1 → P2 and the direction P1 → <paramref name="point"/>
         /// </summary>
         /// <param name="point">The point</param>
-        /// <returns>The angle</returns>
+        /// <returns>The angle in radians, from 0 to pi (without sign); NaN if the point is not on the plane</returns>
         public double AngleOnPlane(Point3d point)
         {
             if (!IsPointOnPlane(point))
@@ -209,24 +286,30 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Angle between vector and plane in radians (0 &lt; angle &lt; Pi/2)
+        /// Angle between vector and plane in radians (0 &lt;= angle &lt;= Pi/2)
         /// </summary>
+        /// <param name="v">The vector</param>
+        /// <returns>The angle</returns>
         public double AngleTo(Vector3d v)
         {
             return Math.Abs(Math.PI / 2 - _normal.AngleTo(v));
         }
 
         /// <summary>
-        /// Angle between line and plane in radians (0 &lt; angle &lt; Pi/2)
+        /// Angle between line and plane in radians (0 &lt;= angle &lt;= Pi/2)
         /// </summary>
+        /// <param name="l">The line</param>
+        /// <returns>The angle</returns>
         public double AngleTo(Line3d l)
         {
             return Math.Abs(Math.PI / 2 - _normal.AngleTo(l.ToVector()));
         }
 
         /// <summary>
-        /// Angle between two planes in radians (0 &lt; angle &lt; Pi/2)
+        /// Angle between two planes in radians (0 &lt;= angle &lt;= Pi/2)
         /// </summary>
+        /// <param name="s">The other plane</param>
+        /// <returns>The angle</returns>
         public double AngleTo(Plane s)
         {
             double ang = _normal.AngleTo(s.Normal);
@@ -240,7 +323,7 @@ namespace GPC.Geometry
         /// Calculate the square distance of a point from the plane
         /// </summary>
         /// <param name="point">The point to test</param>
-        /// <returns>The distance</returns>
+        /// <returns>The square of the distance (computed from the three points)</returns>
         public double SquareDistanceToPlane(Point3d point)
         {
             double a1 = _p2.X - _p1.X;
@@ -275,6 +358,13 @@ namespace GPC.Geometry
             return Math.Sqrt(DistancePointToPlanePow2);
         }
 
+        /// <summary>
+        /// The intersection of the plane with the infinite line through a segment
+        /// </summary>
+        /// <param name="line">The segment that defines the line</param>
+        /// <param name="intersectionPoint">The intersection point; a point at the origin if there is none</param>
+        /// <param name="tolerance">The tolerance on the product of the normal and the direction (parallel line)</param>
+        /// <returns>False if the line is parallel to the plane</returns>
         public bool IntersectWithRay(Line3d line, out Point3d intersectionPoint, double tolerance = GeometryBase.Tolerance)
         {
             Vector3d direction = new Vector3d(line.End.X - line.Start.X, line.End.Y - line.Start.Y, line.End.Z - line.Start.Z);
@@ -300,6 +390,13 @@ namespace GPC.Geometry
             return true;
         }
 
+        /// <summary>
+        /// The intersection of the plane with the infinite line through a segment (see <see cref="IntersectWithRay"/>)
+        /// </summary>
+        /// <param name="line">The segment that defines the line</param>
+        /// <param name="intersectionPoint">The intersection point; a point at the origin if there is none</param>
+        /// <param name="tolerance">The tolerance on the product of the normal and the direction (parallel line)</param>
+        /// <returns>False if the line is parallel to the plane</returns>
         public bool Intersect(Line3d line, out Point3d intersectionPoint, double tolerance = GeometryBase.Tolerance)
         {
             if (IntersectWithRay(line, out Point3d p, tolerance))
@@ -314,6 +411,10 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// The coordinate system of the plane: origin P1, X axis along P2 - P1, XY plane through P3
+        /// </summary>
+        /// <returns>The coordinate system</returns>
         public CoordinateSystem GetCoordinateSystem()
         {
             return new CoordinateSystem(_p1, _p2, _p3);
@@ -342,6 +443,10 @@ namespace GPC.Geometry
             _p3.Move(vector);
         }
 
+        /// <summary>
+        /// Creates a copy of the plane, with copies of its points and of the normal
+        /// </summary>
+        /// <returns>The copy</returns>
         public override object Clone()
         {
             return new Plane(this);
@@ -353,14 +458,14 @@ namespace GPC.Geometry
 
         /// <summary>
         /// Given a plane surface given by three points (triangle) and a ray, find the point of intersection in parametric coordinates.
-        /// Plane surface: r(u, v) = p1 + (p2 - p1) * u + (p3 + p1) * v
+        /// Plane surface: r(u, v) = p1 + (p2 - p1) * u + (p3 - p1) * v
         /// Ray passing through origin: t(s) = q2 * s
         /// Ray: t(s) = q1 + (q2 - q1) * s
-        /// 
+        ///
         /// The three points defining the plane can also define a triangle and the parameters u and v can tell whether the
-        /// point of intersection is inside or outside the triangle with the comparisons: u > 0; v > 0; u+v < 1.
+        /// point of intersection is inside or outside the triangle with the comparisons: u &gt; 0; v &gt; 0; u+v &lt; 1.
         /// Points p1, p2 and p3 must be not overlapped or aligned, no check are made inside this method.
-        /// 
+        ///
         /// Obtained with Octave:
         /// syms u v s
         /// syms Q1_1 Q1_2 Q1_3 Q2_1 Q2_2 Q2_3 P1_1 P1_2 P1_3 P2_1 P2_2 P2_3 P3_1 P3_2 P3_3 real
@@ -441,22 +546,40 @@ namespace GPC.Geometry
 
         #region Public Methods Override
 
+        /// <summary>
+        /// Equality of the geometric planes: the origin of <paramref name="other"/> is on this plane and the normals are parallel (also opposite)
+        /// </summary>
+        /// <param name="other">The plane to compare</param>
+        /// <returns>True if the planes are the same geometric plane</returns>
         public bool Equals(Plane other)
         {
             if (ReferenceEquals(this, other))
                 return true;
 
+            if (other is null)
+                return false;
+
             //return other._p1.Equals(_p1) && other._p2.Equals(_p2) && other._p3.Equals(_p3);
             return IsPointOnPlane(other.Origin) && other.Normal.IsParallelTo(_normal);
         }
 
+        /// <summary>
+        /// Equality with another object (see <see cref="Equals(Plane)"/>)
+        /// </summary>
+        /// <param name="obj">The object to compare</param>
+        /// <returns>True if <paramref name="obj"/> is the same plane</returns>
         public override bool Equals(object obj)
         {
             if (obj is Plane plane)
                 return Equals(plane);
-            return Equals(obj);
+            return false;
         }
 
+        /// <summary>
+        /// Equality with another geometry (see <see cref="Equals(Plane)"/>)
+        /// </summary>
+        /// <param name="geometryBase">The geometry to compare</param>
+        /// <returns>True if <paramref name="geometryBase"/> is the same plane</returns>
         public override bool Equals(GeometryBase geometryBase)
         {
             if (geometryBase is Plane plane)
@@ -465,6 +588,11 @@ namespace GPC.Geometry
             return false;
         }
 
+        /// <summary>
+        /// The hash code of the exact origin and normal: planes equal for <see cref="Equals(Plane)"/> (another origin on the plane, opposite
+        /// normal) can have different hash codes
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -480,6 +608,11 @@ namespace GPC.Geometry
             }
         }
 
+        /// <summary>
+        /// Serializes the plane: the <see cref="BaseObject.Guid"/>, the points and the normal
+        /// </summary>
+        /// <param name="info">The serialization data</param>
+        /// <param name="context">The serialization context</param>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
