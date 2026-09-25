@@ -304,6 +304,43 @@ namespace Geometry
                 Assert.AreEqual(i, collection.GetElementById(ids[i]).Point.X);
         }
 
+        [TestMethod]
+        public void MeshExportWritesInvariantNumbersAndTheTagOfEveryMesh()
+        {
+            Mesh Square()
+            {
+                var mesh = new Mesh();
+                mesh.AddFaceMesh(new[] { P(0, 0), P(1.5, 0), P(1.5, 1.5), P(0, 1.5) });
+                return mesh;
+            }
+            // two equal meshes: before, meshes.IndexOf (Mesh.Equals) gave the tag of the first one to both
+            var meshes = new List<Mesh> { Square(), Square() };
+            string path = System.IO.Path.GetTempFileName();
+            System.Globalization.CultureInfo culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("it-IT");
+
+                // before, the version 1 wrote the numbers with the culture of the thread ("1,5")
+                MeshExport.ExportToMshFormatv1(path, meshes);
+                string[] lines = System.IO.File.ReadAllLines(path);
+                Assert.IsTrue(lines.Any(l => l.Contains("1.5")) && !lines.Any(l => l.Contains("1,5")));
+                string[] elements = lines.SkipWhile(l => l != "$ELM").Skip(2).TakeWhile(l => l != "$ENDELM").ToArray();
+                CollectionAssert.AreEqual(new[] { "1", "2" }, elements.Select(l => l.Split(' ')[2]).ToArray());
+
+                MeshExport.ExportToMshFormatv2(path, meshes);
+                lines = System.IO.File.ReadAllLines(path);
+                elements = lines.SkipWhile(l => l != "$Elements").Skip(2).TakeWhile(l => l != "$EndElements").ToArray();
+                CollectionAssert.AreEqual(new[] { "1", "2" }, elements.Select(l => l.Split(' ')[3]).ToArray());
+                Assert.AreEqual("it-IT", System.Threading.Thread.CurrentThread.CurrentCulture.Name, "the culture of the thread is not changed");
+            }
+            finally
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+                System.IO.File.Delete(path);
+            }
+        }
+
         #endregion
     }
 }
