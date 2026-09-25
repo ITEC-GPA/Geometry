@@ -1,0 +1,2649 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="d86336c1-178b-46dc-8b8b-38323fa7b04f" name="g.pacini@ITEC-137 2026-09-25 13:02:44" runUser="ITEC-137\CodexSandboxOffline" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-25T13:02:44.0773193+02:00" queuing="2026-09-25T13:02:44.0773193+02:00" start="2026-09-25T13:02:41.9521255+02:00" finish="2026-09-25T13:02:46.9487176+02:00" />
+  <TestSettings name="default" id="e7f1a0d2-1ecc-4a50-b728-ce492c3ec275">
+    <Deployment runDeploymentRoot="g.pacini_ITEC-137_2026-09-25_13_02_44" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="24aa405a-943b-4b5e-b9d0-2517ffaea0d4" testId="7da3e542-b3a8-8062-4082-26c99ca43c78" testName="NullShapesAreRejected" computerName="ITEC-137" duration="00:00:00.0064319" startTime="2026-09-25T13:02:44.4170313+02:00" endTime="2026-09-25T13:02:44.4240362+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="24aa405a-943b-4b5e-b9d0-2517ffaea0d4" />
+    <UnitTestResult executionId="db9cfcec-b6ab-4d08-a985-4aabbcc309de" testId="42f56a3a-5431-5eae-aec2-d4a98e38fc6b" testName="RenumberDisabledKeepsConnectivity" computerName="ITEC-137" duration="00:00:00.0064131" startTime="2026-09-25T13:02:44.2326995+02:00" endTime="2026-09-25T13:02:44.2398253+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db9cfcec-b6ab-4d08-a985-4aabbcc309de" />
+    <UnitTestResult executionId="7b3907e0-3d56-4613-93ad-551a59c97389" testId="8e17f1f3-2072-0f20-f58b-210c4d819f5f" testName="RectangularWithTwoLines2" computerName="ITEC-137" duration="00:00:00.0769787" startTime="2026-09-25T13:02:46.5049976+02:00" endTime="2026-09-25T13:02:46.5824462+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b3907e0-3d56-4613-93ad-551a59c97389">
+      <Output>
+        <StdOut>Face degenerated: 0.&#xD;
+Average Area: 22,2.&#xD;
+Ideal area: 25 max admitted: 62,5, min admitted:5&#xD;
+Face areas smaller than allowed: 0.&#xD;
+Face areas bigger than allowed: 0.&#xD;
+Edge degenerated: 0.&#xD;
+Average edge lenght: 4,9&#xD;
+Average lenght difference to ideal lenght: -2%&#xD;
+Edge lengths smaller than allowed: 0.&#xD;
+Edge lengths bigger than allowed: 0.</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="76e79849-a046-49e0-b12b-6019a59eb8e4" testId="d874d9dd-f454-227f-8cbc-6ec511b6ca54" testName="EmbeddedShapeMapsExactlyItsFaces" computerName="ITEC-137" duration="00:00:00.0101774" startTime="2026-09-25T13:02:44.3221581+02:00" endTime="2026-09-25T13:02:44.3323378+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="76e79849-a046-49e0-b12b-6019a59eb8e4" />
+    <UnitTestResult executionId="a9830acc-8a2a-47bf-a800-56ec7a054f6b" testId="f83e2d9a-ae04-f02f-0ee9-bd11251a53ba" testName="MeshAdaptProducesTriangles" computerName="ITEC-137" duration="00:00:00.0042683" startTime="2026-09-25T13:02:44.1182631+02:00" endTime="2026-09-25T13:02:44.1227790+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a9830acc-8a2a-47bf-a800-56ec7a054f6b" />
+    <UnitTestResult executionId="13585bc1-550d-4992-a774-0909eb054c13" testId="5fdd5db5-0c96-490b-a72d-04a3c43a60b0" testName="UnsupportedEmbeddedGeometryDoesNotPoisonNextCall" computerName="ITEC-137" duration="00:00:00.0095442" startTime="2026-09-25T13:02:44.3683269+02:00" endTime="2026-09-25T13:02:44.3773280+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="13585bc1-550d-4992-a774-0909eb054c13" />
+    <UnitTestResult executionId="5bda9f7f-8ad5-4793-a330-44a66d81d566" testId="a94925d3-eb1c-deb4-eb37-e511ef42402d" testName="QuasiStructuredProducesValidQuads" computerName="ITEC-137" duration="00:00:00.0228913" startTime="2026-09-25T13:02:44.1501584+02:00" endTime="2026-09-25T13:02:44.1732291+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5bda9f7f-8ad5-4793-a330-44a66d81d566" />
+    <UnitTestResult executionId="66653344-73fb-4f53-8748-320d6ef3ee9c" testId="bdf58d2b-205e-be59-3e65-6dcd51501989" testName="BlossomRecombination" computerName="ITEC-137" duration="00:00:00.0054836" startTime="2026-09-25T13:02:44.1971071+02:00" endTime="2026-09-25T13:02:44.2022243+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="66653344-73fb-4f53-8748-320d6ef3ee9c" />
+    <UnitTestResult executionId="0df4a85f-fe21-4fff-a295-0077f657f385" testId="148425d7-08d8-d259-2f00-bff33a095364" testName="LargeCoordinatesPreserveArea" computerName="ITEC-137" duration="00:00:00.0057735" startTime="2026-09-25T13:02:44.0511702+02:00" endTime="2026-09-25T13:02:44.0576792+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0df4a85f-fe21-4fff-a295-0077f657f385" />
+    <UnitTestResult executionId="bbc84fb0-807b-4fdc-8827-b2329effd668" testId="6015c26d-d874-1046-4235-f3f4b9f77a26" testName="InvalidMeshSizesAreRejectedBeforeNativeCalls" computerName="ITEC-137" duration="00:00:00.0067159" startTime="2026-09-25T13:02:44.4260396+02:00" endTime="2026-09-25T13:02:44.4335460+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bbc84fb0-807b-4fdc-8827-b2329effd668" />
+    <UnitTestResult executionId="4caa4f5d-f192-452c-9e26-254276344684" testId="238d9a00-520b-c7b3-3e40-f2930e9b593b" testName="PackingWorkaroundReportsEffectiveAlgorithm" computerName="ITEC-137" duration="00:00:00.0146223" startTime="2026-09-25T13:02:44.1742433+02:00" endTime="2026-09-25T13:02:44.1891008+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4caa4f5d-f192-452c-9e26-254276344684" />
+    <UnitTestResult executionId="cd829451-0002-4b7c-9ab3-86e463174a66" testId="409fdc39-a305-6fd4-e9f7-8242776d73e6" testName="GenerationDoesNotMutateInputGeometry" computerName="ITEC-137" duration="00:00:00.0074145" startTime="2026-09-25T13:02:44.4084137+02:00" endTime="2026-09-25T13:02:44.4155271+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cd829451-0002-4b7c-9ab3-86e463174a66" />
+    <UnitTestResult executionId="12c29a84-7b7f-45a3-8069-5391aa293073" testId="ec8941c3-40c7-1cc4-4b6b-8b49c608f7db" testName="InteriorPointIsAFaceVertex" computerName="ITEC-137" duration="00:00:00.0078771" startTime="2026-09-25T13:02:44.2703360+02:00" endTime="2026-09-25T13:02:44.2778445+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="12c29a84-7b7f-45a3-8069-5391aa293073" />
+    <UnitTestResult executionId="3d98a738-6fc3-4132-8d32-086f3690b642" testId="833d74dc-17ff-9567-029d-969c35c8188b" testName="FrontalDelaunayProducesTriangles" computerName="ITEC-137" duration="00:00:00.0050716" startTime="2026-09-25T13:02:44.1313581+02:00" endTime="2026-09-25T13:02:44.1361202+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3d98a738-6fc3-4132-8d32-086f3690b642" />
+    <UnitTestResult executionId="5cc4bbcd-7ce2-45db-adb9-d88ab954af89" testId="6a55cbae-32d6-531f-595f-fc53bfb130a5" testName="LocalSizingIncreasesResolution" computerName="ITEC-137" duration="00:00:00.0164203" startTime="2026-09-25T13:02:44.3333379+02:00" endTime="2026-09-25T13:02:44.3503426+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5cc4bbcd-7ce2-45db-adb9-d88ab954af89" />
+    <UnitTestResult executionId="3c84da68-36c5-4fdc-9fb1-c75a72782b3a" testId="935898d4-06f5-4ea2-a34e-f7c291863067" testName="RefinementIncreasesResolutionWithoutChangingArea" computerName="ITEC-137" duration="00:00:00.0139994" startTime="2026-09-25T13:02:44.2175768+02:00" endTime="2026-09-25T13:02:44.2317017+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3c84da68-36c5-4fdc-9fb1-c75a72782b3a" />
+    <UnitTestResult executionId="d8edc8ef-2680-4e01-849b-a2551dc63aa5" testId="71518b5d-329c-43d6-193f-7cc8f4f38ac0" testName="ConcavePolygonAreaAndConnectivity" computerName="ITEC-137" duration="00:00:00.0068014" startTime="2026-09-25T13:02:43.9643674+02:00" endTime="2026-09-25T13:02:43.9728769+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d8edc8ef-2680-4e01-849b-a2551dc63aa5" />
+    <UnitTestResult executionId="3cdf7a60-3e46-4bb9-923d-eb1d537185ba" testId="fd5c1eb6-1c49-3a7c-acbc-da47fdf4a066" testName="DisconnectedSurfacesRemainSeparate" computerName="ITEC-137" duration="00:00:00.0130229" startTime="2026-09-25T13:02:44.0783190+02:00" endTime="2026-09-25T13:02:44.0908083+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3cdf7a60-3e46-4bb9-923d-eb1d537185ba" />
+    <UnitTestResult executionId="1c4019a0-7833-4b41-bd5f-4ab8572b04ce" testId="921031e7-700f-49d9-5692-98783284eec1" testName="ComplexShapes1" computerName="ITEC-137" duration="00:00:02.0440904" startTime="2026-09-25T13:02:44.4581515+02:00" endTime="2026-09-25T13:02:46.5044939+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1c4019a0-7833-4b41-bd5f-4ab8572b04ce">
+      <Output>
+        <StdOut>Face degenerated: 0.&#xD;
+Average Area: 24,1.&#xD;
+Ideal area: 100 max admitted: 450, min admitted:2,8&#xD;
+Face areas smaller than allowed: 0.&#xD;
+Face areas bigger than allowed: 0.&#xD;
+Edge degenerated: 0.&#xD;
+Average edge lenght: 4,9&#xD;
+Average lenght difference to ideal lenght: -104%&#xD;
+Edge lengths smaller than allowed: 0.&#xD;
+Edge lengths bigger than allowed: 0.</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a5644781-fffa-4ce0-a5b3-986dd7153209" testId="f75a30ba-064c-3dca-9968-0daa0f063b63" testName="GeneratedMeshCloneIsIndependent" computerName="ITEC-137" duration="00:00:00.0085375" startTime="2026-09-25T13:02:44.4345465+02:00" endTime="2026-09-25T13:02:44.4430537+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a5644781-fffa-4ce0-a5b3-986dd7153209" />
+    <UnitTestResult executionId="3d60e3c3-7b36-4d00-949b-254e47b3726c" testId="703abe5b-9825-47b0-afd1-547387eaa843" testName="ConcurrentCallsKeepTheirOwnResults" computerName="ITEC-137" duration="00:00:00.0253215" startTime="2026-09-25T13:02:44.3788326+02:00" endTime="2026-09-25T13:02:44.4044079+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3d60e3c3-7b36-4d00-949b-254e47b3726c" />
+    <UnitTestResult executionId="05843bd6-2802-4cab-9975-8b5e618abd81" testId="dc1f3993-3436-3b3d-ada9-c3b1ac749067" testName="InteriorLineFollowsFaceEdges" computerName="ITEC-137" duration="00:00:00.0111136" startTime="2026-09-25T13:02:44.2938493+02:00" endTime="2026-09-25T13:02:44.3056300+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="05843bd6-2802-4cab-9975-8b5e618abd81" />
+    <UnitTestResult executionId="286c72d2-21b1-4614-983c-3b537574cd5f" testId="3f920558-99d9-7945-25a3-9c5445a3be8b" testName="QuadFrontalWithoutRecombinationProducesTriangles" computerName="ITEC-137" duration="00:00:00.0054580" startTime="2026-09-25T13:02:44.1371196+02:00" endTime="2026-09-25T13:02:44.1431589+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="286c72d2-21b1-4614-983c-3b537574cd5f" />
+    <UnitTestResult executionId="c38b978c-188e-4dea-997b-b9754185bbfd" testId="a3b82c23-dbcb-80b3-b168-d997a0094fcd" testName="OptionsClonePreservesAllPublicFields" computerName="ITEC-137" duration="00:00:00.0014614" startTime="2026-09-25T13:02:44.4054143+02:00" endTime="2026-09-25T13:02:44.4074143+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c38b978c-188e-4dea-997b-b9754185bbfd" />
+    <UnitTestResult executionId="98e0d765-7578-4c79-952d-2bebbf7a3239" testId="99c2b31c-5bce-17a9-7d83-1699eb9ad1e7" testName="RectangleAreaAndConnectivity" computerName="ITEC-137" duration="00:00:00.0103028" startTime="2026-09-25T13:02:43.9478582+02:00" endTime="2026-09-25T13:02:43.9583668+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="98e0d765-7578-4c79-952d-2bebbf7a3239" />
+    <UnitTestResult executionId="bf96e096-2632-40e5-90de-7ea309cd4dca" testId="9ee16fce-7680-7e7f-35a2-babffea8b0dd" testName="CrossingLinesFollowFaceEdges" computerName="ITEC-137" duration="00:00:00.0081260" startTime="2026-09-25T13:02:44.3131391+02:00" endTime="2026-09-25T13:02:44.3211538+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf96e096-2632-40e5-90de-7ea309cd4dca" />
+    <UnitTestResult executionId="32162f4b-5faf-42cd-9a16-ddfcc3e14960" testId="46eff1e9-d2b2-7280-97a7-8fe0844f377f" testName="BoundaryLineFollowsFaceEdges" computerName="ITEC-137" duration="00:00:00.0055772" startTime="2026-09-25T13:02:44.3056300+02:00" endTime="2026-09-25T13:02:44.3121350+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="32162f4b-5faf-42cd-9a16-ddfcc3e14960" />
+    <UnitTestResult executionId="8413cf4f-f0de-4c50-8a03-6f4ec36ed9ab" testId="2d6b90a3-1cb0-fdac-2247-6822aea2318c" testName="AutomaticProducesTriangles" computerName="ITEC-137" duration="00:00:00.0048089" startTime="2026-09-25T13:02:44.1441584+02:00" endTime="2026-09-25T13:02:44.1491585+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8413cf4f-f0de-4c50-8a03-6f4ec36ed9ab" />
+    <UnitTestResult executionId="6a38976f-6617-4cdb-94f2-6e57b787823c" testId="f2a4e8f8-ef29-2976-0a3d-b37820b9c3a4" testName="SimpleRecombination" computerName="ITEC-137" duration="00:00:00.0058249" startTime="2026-09-25T13:02:44.1901050+02:00" endTime="2026-09-25T13:02:44.1961055+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6a38976f-6617-4cdb-94f2-6e57b787823c" />
+    <UnitTestResult executionId="a018ba94-0dfa-43fd-85b5-3ea8f5ea6388" testId="181f037d-8285-46d4-4245-7ef29be2f9d0" testName="NegativeCoordinates" computerName="ITEC-137" duration="00:00:00.0059087" startTime="2026-09-25T13:02:44.0337123+02:00" endTime="2026-09-25T13:02:44.0406724+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a018ba94-0dfa-43fd-85b5-3ea8f5ea6388" />
+    <UnitTestResult executionId="4fc881b7-25bc-45ce-883a-69a78e3c1a94" testId="33039721-c523-0551-394e-c361739562e3" testName="RectangularHoleRemainsEmpty" computerName="ITEC-137" duration="00:00:00.0093620" startTime="2026-09-25T13:02:44.0586794+02:00" endTime="2026-09-25T13:02:44.0678125+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4fc881b7-25bc-45ce-883a-69a78e3c1a94" />
+    <UnitTestResult executionId="b1c2bc0d-1047-4e46-93a6-ce256d7449d9" testId="0f0ff09e-c3ec-d6fd-57fb-7d6ffb6f9cf7" testName="VerticalYZPlane" computerName="ITEC-137" duration="00:00:00.0076657" startTime="2026-09-25T13:02:44.0046261+02:00" endTime="2026-09-25T13:02:44.0126306+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1c2bc0d-1047-4e46-93a6-ce256d7449d9" />
+    <UnitTestResult executionId="de89a18b-2c0c-4572-9e80-184708a11e46" testId="b94cb20b-1bc3-df1b-cb90-d4d82dbe5d7b" testName="InclinedPlane" computerName="ITEC-137" duration="00:00:00.0059781" startTime="2026-09-25T13:02:44.0136309+02:00" endTime="2026-09-25T13:02:44.0201378+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="de89a18b-2c0c-4572-9e80-184708a11e46" />
+    <UnitTestResult executionId="f3fa7856-1ade-439d-a369-780e2ac4764b" testId="bdd5ee14-f831-a249-0e4a-f30c48eb65a7" testName="BlossomFullQuadRecombination" computerName="ITEC-137" duration="00:00:00.0055966" startTime="2026-09-25T13:02:44.2107338+02:00" endTime="2026-09-25T13:02:44.2157323+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f3fa7856-1ade-439d-a369-780e2ac4764b" />
+    <UnitTestResult executionId="96e3df88-bc59-4752-abe9-e194f6e17012" testId="2b66d0a6-2f47-c200-740e-386213a8240f" testName="RepeatedCallsDoNotLeakModels" computerName="ITEC-137" duration="00:00:00.0156001" startTime="2026-09-25T13:02:44.3513430+02:00" endTime="2026-09-25T13:02:44.3672953+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="96e3df88-bc59-4752-abe9-e194f6e17012" />
+    <UnitTestResult executionId="b87f2f4a-cab1-44cb-8955-3d659df05b53" testId="59ed685d-96bc-16fe-2c0c-64ba2e0f10e0" testName="NullOptionsAreRejected" computerName="ITEC-137" duration="00:00:00.0005218" startTime="2026-09-25T13:02:44.4250357+02:00" endTime="2026-09-25T13:02:44.4260396+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b87f2f4a-cab1-44cb-8955-3d659df05b53" />
+    <UnitTestResult executionId="5de52b8d-8f58-46e4-9b01-ad8285f99e47" testId="95be87a2-78e4-78bd-3b69-11c5b4280729" testName="HorizontalPlaneAtNonzeroHeight" computerName="ITEC-137" duration="00:00:00.0068950" startTime="2026-09-25T13:02:43.9838775+02:00" endTime="2026-09-25T13:02:43.9921209+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5de52b8d-8f58-46e4-9b01-ad8285f99e47" />
+    <UnitTestResult executionId="59263e88-2104-4ac6-be74-a95e28d18119" testId="43749891-6429-5b58-8edb-e142ba5110a7" testName="IntersectingPlateAndWallShareNodes" computerName="ITEC-137" duration="00:00:00.0094157" startTime="2026-09-25T13:02:44.1071902+02:00" endTime="2026-09-25T13:02:44.1157517+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59263e88-2104-4ac6-be74-a95e28d18119" />
+    <UnitTestResult executionId="60dbc62b-5e67-40d8-b3f4-97f18fee21f4" testId="8c8f6f49-d0ee-2908-d679-4880bfe15969" testName="DelaunayProducesTriangles" computerName="ITEC-137" duration="00:00:00.0054063" startTime="2026-09-25T13:02:44.1237790+02:00" endTime="2026-09-25T13:02:44.1287768+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="60dbc62b-5e67-40d8-b3f4-97f18fee21f4" />
+    <UnitTestResult executionId="ec8e5009-9750-4b40-b978-a6fe95a815ed" testId="d770ac4d-7e19-ae6e-fd32-94a9b0f30d32" testName="TransfiniteSurfaceProducesStructuredQuads" computerName="ITEC-137" duration="00:00:00.0045551" startTime="2026-09-25T13:02:44.2535022+02:00" endTime="2026-09-25T13:02:44.2583367+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ec8e5009-9750-4b40-b978-a6fe95a815ed" />
+    <UnitTestResult executionId="267c89ca-00f4-4187-adc7-cd98cea26765" testId="40157f20-a151-44f1-e5de-b921fb69d804" testName="RelocateOptimizationPreservesBoundaryAndArea" computerName="ITEC-137" duration="00:00:00.0069928" startTime="2026-09-25T13:02:44.2623355+02:00" endTime="2026-09-25T13:02:44.2693367+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="267c89ca-00f4-4187-adc7-cd98cea26765" />
+    <UnitTestResult executionId="1724a0ca-7a99-4be2-9b7b-ead001e82070" testId="e8afd2e5-aabf-cbf1-14d2-35e56ee2eb0e" testName="ManagedMeshRefinementPreservesArea" computerName="ITEC-137" duration="00:00:00.0130052" startTime="2026-09-25T13:02:44.4440542+02:00" endTime="2026-09-25T13:02:44.4571515+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1724a0ca-7a99-4be2-9b7b-ead001e82070" />
+    <UnitTestResult executionId="24b2a020-b276-4a20-a366-bfa989913fb6" testId="7f9bcb6a-f8da-5532-05d0-89097b78716f" testName="BlossomRecombinationPreservesCrossingConstraints" computerName="ITEC-137" duration="00:00:00.1954020" startTime="2026-09-25T13:02:43.5898436+02:00" endTime="2026-09-25T13:02:43.9328535+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="24b2a020-b276-4a20-a366-bfa989913fb6" />
+    <UnitTestResult executionId="b81b8710-23d9-4ffa-b034-b3478b879367" testId="c5753349-4837-94ba-e97b-bd37004d471f" testName="RectangularWithShapeEmb14" computerName="ITEC-137" duration="00:00:00.1603042" startTime="2026-09-25T13:02:46.5844450+02:00" endTime="2026-09-25T13:02:46.7457116+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b81b8710-23d9-4ffa-b034-b3478b879367">
+      <Output>
+        <StdOut>Gmsh 4.15.2 PackingOfParallelograms can crash in native UntangleTris; using FrontalDelaunayForQuads with the requested recombination instead.&#xD;
+Face degenerated: 0.&#xD;
+Average Area: 422,8.&#xD;
+Ideal area: 625 max admitted: 2343,8, min admitted:83,3&#xD;
+Face areas smaller than allowed: 0.&#xD;
+Face areas bigger than allowed: 0.&#xD;
+Edge degenerated: 0.&#xD;
+Average edge lenght: 20,3&#xD;
+Average lenght difference to ideal lenght: -23%&#xD;
+Edge lengths smaller than allowed: 0.&#xD;
+Edge lengths bigger than allowed: 0.</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5dc0b2e2-e593-4988-9ec1-109ebb863c4b" testId="26a4b29c-e7bb-fa16-1313-f0565584e3a7" testName="CornerPointIsNotDuplicated" computerName="ITEC-137" duration="00:00:00.0056090" startTime="2026-09-25T13:02:44.2868500+02:00" endTime="2026-09-25T13:02:44.2928492+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5dc0b2e2-e593-4988-9ec1-109ebb863c4b" />
+    <UnitTestResult executionId="caede72c-0207-488e-8d96-74335aa3c2ec" testId="94d01103-fc16-b161-3aa3-2ed968b17953" testName="TwoHolesPreserveNetArea" computerName="ITEC-137" duration="00:00:00.0073382" startTime="2026-09-25T13:02:44.0688099+02:00" endTime="2026-09-25T13:02:44.0763199+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="caede72c-0207-488e-8d96-74335aa3c2ec" />
+    <UnitTestResult executionId="40e2c113-ff93-4b9c-90ca-7ff2ca2e2799" testId="650119c3-1f3f-c44c-d48a-ef02db225fb8" testName="SimpleFullQuadRecombination" computerName="ITEC-137" duration="00:00:00.0056895" startTime="2026-09-25T13:02:44.2032239+02:00" endTime="2026-09-25T13:02:44.2097346+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="40e2c113-ff93-4b9c-90ca-7ff2ca2e2799" />
+    <UnitTestResult executionId="6be9dcb8-f7b4-4593-b566-c32e7603d938" testId="f54559f3-2b90-0583-a05f-bbd9a1d9f204" testName="LocalIdentifiersRemainValidPerMesh" computerName="ITEC-137" duration="00:00:00.0110833" startTime="2026-09-25T13:02:44.2408252+02:00" endTime="2026-09-25T13:02:44.2525036+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6be9dcb8-f7b4-4593-b566-c32e7603d938" />
+    <UnitTestResult executionId="c4c9ba2b-5589-43a0-b0fe-9684e43ce6aa" testId="c4625922-c0e9-55e2-82de-4c7a5f4689aa" testName="ReversedWindingPreservesArea" computerName="ITEC-137" duration="00:00:00.0091575" startTime="2026-09-25T13:02:43.9738760+02:00" endTime="2026-09-25T13:02:43.9828776+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c4c9ba2b-5589-43a0-b0fe-9684e43ce6aa" />
+    <UnitTestResult executionId="c2ecc3e1-0d5b-482f-8772-a195f93d2fcc" testId="b6be01c4-f734-11a4-b881-0a124b2adb30" testName="AdjacentSurfacesShareBoundaryCoordinates" computerName="ITEC-137" duration="00:00:00.0133035" startTime="2026-09-25T13:02:44.0918082+02:00" endTime="2026-09-25T13:02:44.1061861+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c2ecc3e1-0d5b-482f-8772-a195f93d2fcc" />
+    <UnitTestResult executionId="d7751310-6249-452f-9d19-ab7d477e89fd" testId="03626a1b-d209-9078-3945-08c651a8a04f" testName="SmallGeometry" computerName="ITEC-137" duration="00:00:00.0059770" startTime="2026-09-25T13:02:44.0439159+02:00" endTime="2026-09-25T13:02:44.0501706+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d7751310-6249-452f-9d19-ab7d477e89fd" />
+    <UnitTestResult executionId="20aced73-69c2-4dc7-b6ab-142a8b4156dd" testId="323f4afb-2967-c0ad-899c-7491fb898192" testName="TriangleAreaAndConnectivity" computerName="ITEC-137" duration="00:00:00.0041087" startTime="2026-09-25T13:02:43.9593672+02:00" endTime="2026-09-25T13:02:43.9643674+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="20aced73-69c2-4dc7-b6ab-142a8b4156dd" />
+    <UnitTestResult executionId="b8b461ec-436e-4dee-ba4b-ba8b11c88e1e" testId="63d08761-057f-a9aa-8052-0cc41ef957f2" testName="BoundaryPointIsAFaceVertex" computerName="ITEC-137" duration="00:00:00.0062063" startTime="2026-09-25T13:02:44.2788450+02:00" endTime="2026-09-25T13:02:44.2858492+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8b461ec-436e-4dee-ba4b-ba8b11c88e1e" />
+    <UnitTestResult executionId="86b8710e-eaae-4d0e-980f-b90ba82cbc1f" testId="fdb340b4-912a-ad37-8ac3-3d3200295b14" testName="VerticalXZPlane" computerName="ITEC-137" duration="00:00:00.0093954" startTime="2026-09-25T13:02:43.9932890+02:00" endTime="2026-09-25T13:02:44.0031232+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="86b8710e-eaae-4d0e-980f-b90ba82cbc1f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="NullOptionsAreRejected" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="59ed685d-96bc-16fe-2c0c-64ba2e0f10e0">
+      <Execution id="b87f2f4a-cab1-44cb-8955-3d659df05b53" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="NullOptionsAreRejected" />
+    </UnitTest>
+    <UnitTest name="SimpleFullQuadRecombination" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="650119c3-1f3f-c44c-d48a-ef02db225fb8">
+      <Execution id="40e2c113-ff93-4b9c-90ca-7ff2ca2e2799" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="SimpleFullQuadRecombination" />
+    </UnitTest>
+    <UnitTest name="VerticalYZPlane" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="0f0ff09e-c3ec-d6fd-57fb-7d6ffb6f9cf7">
+      <Execution id="b1c2bc0d-1047-4e46-93a6-ce256d7449d9" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="VerticalYZPlane" />
+    </UnitTest>
+    <UnitTest name="NegativeCoordinates" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="181f037d-8285-46d4-4245-7ef29be2f9d0">
+      <Execution id="a018ba94-0dfa-43fd-85b5-3ea8f5ea6388" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="NegativeCoordinates" />
+    </UnitTest>
+    <UnitTest name="DelaunayProducesTriangles" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="8c8f6f49-d0ee-2908-d679-4880bfe15969">
+      <Execution id="60dbc62b-5e67-40d8-b3f4-97f18fee21f4" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="DelaunayProducesTriangles" />
+    </UnitTest>
+    <UnitTest name="HorizontalPlaneAtNonzeroHeight" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="95be87a2-78e4-78bd-3b69-11c5b4280729">
+      <Execution id="5de52b8d-8f58-46e4-9b01-ad8285f99e47" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="HorizontalPlaneAtNonzeroHeight" />
+    </UnitTest>
+    <UnitTest name="AdjacentSurfacesShareBoundaryCoordinates" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="b6be01c4-f734-11a4-b881-0a124b2adb30">
+      <Execution id="c2ecc3e1-0d5b-482f-8772-a195f93d2fcc" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="AdjacentSurfacesShareBoundaryCoordinates" />
+    </UnitTest>
+    <UnitTest name="QuadFrontalWithoutRecombinationProducesTriangles" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="3f920558-99d9-7945-25a3-9c5445a3be8b">
+      <Execution id="286c72d2-21b1-4614-983c-3b537574cd5f" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="QuadFrontalWithoutRecombinationProducesTriangles" />
+    </UnitTest>
+    <UnitTest name="NullShapesAreRejected" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="7da3e542-b3a8-8062-4082-26c99ca43c78">
+      <Execution id="24aa405a-943b-4b5e-b9d0-2517ffaea0d4" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="NullShapesAreRejected" />
+    </UnitTest>
+    <UnitTest name="InvalidMeshSizesAreRejectedBeforeNativeCalls" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="6015c26d-d874-1046-4235-f3f4b9f77a26">
+      <Execution id="bbc84fb0-807b-4fdc-8827-b2329effd668" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="InvalidMeshSizesAreRejectedBeforeNativeCalls" />
+    </UnitTest>
+    <UnitTest name="SimpleRecombination" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="f2a4e8f8-ef29-2976-0a3d-b37820b9c3a4">
+      <Execution id="6a38976f-6617-4cdb-94f2-6e57b787823c" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="SimpleRecombination" />
+    </UnitTest>
+    <UnitTest name="TriangleAreaAndConnectivity" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="323f4afb-2967-c0ad-899c-7491fb898192">
+      <Execution id="20aced73-69c2-4dc7-b6ab-142a8b4156dd" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="TriangleAreaAndConnectivity" />
+    </UnitTest>
+    <UnitTest name="ConcavePolygonAreaAndConnectivity" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="71518b5d-329c-43d6-193f-7cc8f4f38ac0">
+      <Execution id="d8edc8ef-2680-4e01-849b-a2551dc63aa5" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="ConcavePolygonAreaAndConnectivity" />
+    </UnitTest>
+    <UnitTest name="OptionsClonePreservesAllPublicFields" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="a3b82c23-dbcb-80b3-b168-d997a0094fcd">
+      <Execution id="c38b978c-188e-4dea-997b-b9754185bbfd" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="OptionsClonePreservesAllPublicFields" />
+    </UnitTest>
+    <UnitTest name="CrossingLinesFollowFaceEdges" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="9ee16fce-7680-7e7f-35a2-babffea8b0dd">
+      <Execution id="bf96e096-2632-40e5-90de-7ea309cd4dca" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="CrossingLinesFollowFaceEdges" />
+    </UnitTest>
+    <UnitTest name="IntersectingPlateAndWallShareNodes" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="43749891-6429-5b58-8edb-e142ba5110a7">
+      <Execution id="59263e88-2104-4ac6-be74-a95e28d18119" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="IntersectingPlateAndWallShareNodes" />
+    </UnitTest>
+    <UnitTest name="CornerPointIsNotDuplicated" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="26a4b29c-e7bb-fa16-1313-f0565584e3a7">
+      <Execution id="5dc0b2e2-e593-4988-9ec1-109ebb863c4b" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="CornerPointIsNotDuplicated" />
+    </UnitTest>
+    <UnitTest name="BlossomFullQuadRecombination" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="bdd5ee14-f831-a249-0e4a-f30c48eb65a7">
+      <Execution id="f3fa7856-1ade-439d-a369-780e2ac4764b" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="BlossomFullQuadRecombination" />
+    </UnitTest>
+    <UnitTest name="UnsupportedEmbeddedGeometryDoesNotPoisonNextCall" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="5fdd5db5-0c96-490b-a72d-04a3c43a60b0">
+      <Execution id="13585bc1-550d-4992-a774-0909eb054c13" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="UnsupportedEmbeddedGeometryDoesNotPoisonNextCall" />
+    </UnitTest>
+    <UnitTest name="MeshAdaptProducesTriangles" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="f83e2d9a-ae04-f02f-0ee9-bd11251a53ba">
+      <Execution id="a9830acc-8a2a-47bf-a800-56ec7a054f6b" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="MeshAdaptProducesTriangles" />
+    </UnitTest>
+    <UnitTest name="RefinementIncreasesResolutionWithoutChangingArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="935898d4-06f5-4ea2-a34e-f7c291863067">
+      <Execution id="3c84da68-36c5-4fdc-9fb1-c75a72782b3a" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RefinementIncreasesResolutionWithoutChangingArea" />
+    </UnitTest>
+    <UnitTest name="QuasiStructuredProducesValidQuads" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="a94925d3-eb1c-deb4-eb37-e511ef42402d">
+      <Execution id="5bda9f7f-8ad5-4793-a330-44a66d81d566" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="QuasiStructuredProducesValidQuads" />
+    </UnitTest>
+    <UnitTest name="RectangularHoleRemainsEmpty" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="33039721-c523-0551-394e-c361739562e3">
+      <Execution id="4fc881b7-25bc-45ce-883a-69a78e3c1a94" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RectangularHoleRemainsEmpty" />
+    </UnitTest>
+    <UnitTest name="BlossomRecombinationPreservesCrossingConstraints" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="7f9bcb6a-f8da-5532-05d0-89097b78716f">
+      <Execution id="24b2a020-b276-4a20-a366-bfa989913fb6" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMeshReviewTest" name="BlossomRecombinationPreservesCrossingConstraints" />
+    </UnitTest>
+    <UnitTest name="TransfiniteSurfaceProducesStructuredQuads" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="d770ac4d-7e19-ae6e-fd32-94a9b0f30d32">
+      <Execution id="ec8e5009-9750-4b40-b978-a6fe95a815ed" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="TransfiniteSurfaceProducesStructuredQuads" />
+    </UnitTest>
+    <UnitTest name="FrontalDelaunayProducesTriangles" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="833d74dc-17ff-9567-029d-969c35c8188b">
+      <Execution id="3d98a738-6fc3-4132-8d32-086f3690b642" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="FrontalDelaunayProducesTriangles" />
+    </UnitTest>
+    <UnitTest name="InclinedPlane" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="b94cb20b-1bc3-df1b-cb90-d4d82dbe5d7b">
+      <Execution id="de89a18b-2c0c-4572-9e80-184708a11e46" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="InclinedPlane" />
+    </UnitTest>
+    <UnitTest name="LocalSizingIncreasesResolution" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="6a55cbae-32d6-531f-595f-fc53bfb130a5">
+      <Execution id="5cc4bbcd-7ce2-45db-adb9-d88ab954af89" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="LocalSizingIncreasesResolution" />
+    </UnitTest>
+    <UnitTest name="BoundaryLineFollowsFaceEdges" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="46eff1e9-d2b2-7280-97a7-8fe0844f377f">
+      <Execution id="32162f4b-5faf-42cd-9a16-ddfcc3e14960" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="BoundaryLineFollowsFaceEdges" />
+    </UnitTest>
+    <UnitTest name="RelocateOptimizationPreservesBoundaryAndArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="40157f20-a151-44f1-e5de-b921fb69d804">
+      <Execution id="267c89ca-00f4-4187-adc7-cd98cea26765" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RelocateOptimizationPreservesBoundaryAndArea" />
+    </UnitTest>
+    <UnitTest name="RectangularWithShapeEmb14" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="c5753349-4837-94ba-e97b-bd37004d471f">
+      <TestCategory>
+        <TestCategoryItem TestCategory="1 shape. emb: 1 shapes" />
+      </TestCategory>
+      <Execution id="b81b8710-23d9-4ffa-b034-b3478b879367" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMeshTestShape" name="RectangularWithShapeEmb14" />
+    </UnitTest>
+    <UnitTest name="GenerationDoesNotMutateInputGeometry" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="409fdc39-a305-6fd4-e9f7-8242776d73e6">
+      <Execution id="cd829451-0002-4b7c-9ab3-86e463174a66" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="GenerationDoesNotMutateInputGeometry" />
+    </UnitTest>
+    <UnitTest name="DisconnectedSurfacesRemainSeparate" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="fd5c1eb6-1c49-3a7c-acbc-da47fdf4a066">
+      <Execution id="3cdf7a60-3e46-4bb9-923d-eb1d537185ba" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="DisconnectedSurfacesRemainSeparate" />
+    </UnitTest>
+    <UnitTest name="RectangleAreaAndConnectivity" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="99c2b31c-5bce-17a9-7d83-1699eb9ad1e7">
+      <Execution id="98e0d765-7578-4c79-952d-2bebbf7a3239" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RectangleAreaAndConnectivity" />
+    </UnitTest>
+    <UnitTest name="InteriorPointIsAFaceVertex" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="ec8941c3-40c7-1cc4-4b6b-8b49c608f7db">
+      <Execution id="12c29a84-7b7f-45a3-8069-5391aa293073" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="InteriorPointIsAFaceVertex" />
+    </UnitTest>
+    <UnitTest name="ConcurrentCallsKeepTheirOwnResults" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="703abe5b-9825-47b0-afd1-547387eaa843">
+      <Execution id="3d60e3c3-7b36-4d00-949b-254e47b3726c" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="ConcurrentCallsKeepTheirOwnResults" />
+    </UnitTest>
+    <UnitTest name="InteriorLineFollowsFaceEdges" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="dc1f3993-3436-3b3d-ada9-c3b1ac749067">
+      <Execution id="05843bd6-2802-4cab-9975-8b5e618abd81" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="InteriorLineFollowsFaceEdges" />
+    </UnitTest>
+    <UnitTest name="VerticalXZPlane" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="fdb340b4-912a-ad37-8ac3-3d3200295b14">
+      <Execution id="86b8710e-eaae-4d0e-980f-b90ba82cbc1f" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="VerticalXZPlane" />
+    </UnitTest>
+    <UnitTest name="TwoHolesPreserveNetArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="94d01103-fc16-b161-3aa3-2ed968b17953">
+      <Execution id="caede72c-0207-488e-8d96-74335aa3c2ec" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="TwoHolesPreserveNetArea" />
+    </UnitTest>
+    <UnitTest name="RepeatedCallsDoNotLeakModels" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="2b66d0a6-2f47-c200-740e-386213a8240f">
+      <Execution id="96e3df88-bc59-4752-abe9-e194f6e17012" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RepeatedCallsDoNotLeakModels" />
+    </UnitTest>
+    <UnitTest name="BlossomRecombination" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="bdf58d2b-205e-be59-3e65-6dcd51501989">
+      <Execution id="66653344-73fb-4f53-8748-320d6ef3ee9c" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="BlossomRecombination" />
+    </UnitTest>
+    <UnitTest name="SmallGeometry" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="03626a1b-d209-9078-3945-08c651a8a04f">
+      <Execution id="d7751310-6249-452f-9d19-ab7d477e89fd" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="SmallGeometry" />
+    </UnitTest>
+    <UnitTest name="GeneratedMeshCloneIsIndependent" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="f75a30ba-064c-3dca-9968-0daa0f063b63">
+      <Execution id="a5644781-fffa-4ce0-a5b3-986dd7153209" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="GeneratedMeshCloneIsIndependent" />
+    </UnitTest>
+    <UnitTest name="BoundaryPointIsAFaceVertex" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="63d08761-057f-a9aa-8052-0cc41ef957f2">
+      <Execution id="b8b461ec-436e-4dee-ba4b-ba8b11c88e1e" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="BoundaryPointIsAFaceVertex" />
+    </UnitTest>
+    <UnitTest name="AutomaticProducesTriangles" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="2d6b90a3-1cb0-fdac-2247-6822aea2318c">
+      <Execution id="8413cf4f-f0de-4c50-8a03-6f4ec36ed9ab" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="AutomaticProducesTriangles" />
+    </UnitTest>
+    <UnitTest name="LargeCoordinatesPreserveArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="148425d7-08d8-d259-2f00-bff33a095364">
+      <Execution id="0df4a85f-fe21-4fff-a295-0077f657f385" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="LargeCoordinatesPreserveArea" />
+    </UnitTest>
+    <UnitTest name="EmbeddedShapeMapsExactlyItsFaces" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="d874d9dd-f454-227f-8cbc-6ec511b6ca54">
+      <Execution id="76e79849-a046-49e0-b12b-6019a59eb8e4" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="EmbeddedShapeMapsExactlyItsFaces" />
+    </UnitTest>
+    <UnitTest name="ReversedWindingPreservesArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="c4625922-c0e9-55e2-82de-4c7a5f4689aa">
+      <Execution id="c4c9ba2b-5589-43a0-b0fe-9684e43ce6aa" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="ReversedWindingPreservesArea" />
+    </UnitTest>
+    <UnitTest name="ComplexShapes1" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="921031e7-700f-49d9-5692-98783284eec1">
+      <Execution id="1c4019a0-7833-4b41-bd5f-4ab8572b04ce" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMeshTestGeneric" name="ComplexShapes1" />
+    </UnitTest>
+    <UnitTest name="RectangularWithTwoLines2" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="8e17f1f3-2072-0f20-f58b-210c4d819f5f">
+      <Execution id="7b3907e0-3d56-4613-93ad-551a59c97389" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMeshTestLine" name="RectangularWithTwoLines2" />
+    </UnitTest>
+    <UnitTest name="PackingWorkaroundReportsEffectiveAlgorithm" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="238d9a00-520b-c7b3-3e40-f2930e9b593b">
+      <Execution id="4caa4f5d-f192-452c-9e26-254276344684" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="PackingWorkaroundReportsEffectiveAlgorithm" />
+    </UnitTest>
+    <UnitTest name="RenumberDisabledKeepsConnectivity" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="42f56a3a-5431-5eae-aec2-d4a98e38fc6b">
+      <Execution id="db9cfcec-b6ab-4d08-a985-4aabbcc309de" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="RenumberDisabledKeepsConnectivity" />
+    </UnitTest>
+    <UnitTest name="ManagedMeshRefinementPreservesArea" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="e8afd2e5-aabf-cbf1-14d2-35e56ee2eb0e">
+      <Execution id="1724a0ca-7a99-4be2-9b7b-ead001e82070" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="ManagedMeshRefinementPreservesArea" />
+    </UnitTest>
+    <UnitTest name="LocalIdentifiersRemainValidPerMesh" storage="c:\users\g.pacini\documents\repository\geometry\unittest\bin\release\unittest.dll" id="f54559f3-2b90-0583-a05f-bbd9a1d9f204">
+      <Execution id="6be9dcb8-f7b4-4593-b566-c32e7603d938" />
+      <TestMethod codeBase="C:\Users\g.pacini\Documents\Repository\Geometry\UnitTest\bin\Release\UnitTest.dll" adapterTypeName="executor://mstestadapter/v2" className="Meshes.GMsh.GMesh415RegressionTest" name="LocalIdentifiersRemainValidPerMesh" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7da3e542-b3a8-8062-4082-26c99ca43c78" executionId="24aa405a-943b-4b5e-b9d0-2517ffaea0d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="42f56a3a-5431-5eae-aec2-d4a98e38fc6b" executionId="db9cfcec-b6ab-4d08-a985-4aabbcc309de" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8e17f1f3-2072-0f20-f58b-210c4d819f5f" executionId="7b3907e0-3d56-4613-93ad-551a59c97389" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d874d9dd-f454-227f-8cbc-6ec511b6ca54" executionId="76e79849-a046-49e0-b12b-6019a59eb8e4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f83e2d9a-ae04-f02f-0ee9-bd11251a53ba" executionId="a9830acc-8a2a-47bf-a800-56ec7a054f6b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5fdd5db5-0c96-490b-a72d-04a3c43a60b0" executionId="13585bc1-550d-4992-a774-0909eb054c13" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a94925d3-eb1c-deb4-eb37-e511ef42402d" executionId="5bda9f7f-8ad5-4793-a330-44a66d81d566" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bdf58d2b-205e-be59-3e65-6dcd51501989" executionId="66653344-73fb-4f53-8748-320d6ef3ee9c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="148425d7-08d8-d259-2f00-bff33a095364" executionId="0df4a85f-fe21-4fff-a295-0077f657f385" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6015c26d-d874-1046-4235-f3f4b9f77a26" executionId="bbc84fb0-807b-4fdc-8827-b2329effd668" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="238d9a00-520b-c7b3-3e40-f2930e9b593b" executionId="4caa4f5d-f192-452c-9e26-254276344684" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="409fdc39-a305-6fd4-e9f7-8242776d73e6" executionId="cd829451-0002-4b7c-9ab3-86e463174a66" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec8941c3-40c7-1cc4-4b6b-8b49c608f7db" executionId="12c29a84-7b7f-45a3-8069-5391aa293073" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="833d74dc-17ff-9567-029d-969c35c8188b" executionId="3d98a738-6fc3-4132-8d32-086f3690b642" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a55cbae-32d6-531f-595f-fc53bfb130a5" executionId="5cc4bbcd-7ce2-45db-adb9-d88ab954af89" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="935898d4-06f5-4ea2-a34e-f7c291863067" executionId="3c84da68-36c5-4fdc-9fb1-c75a72782b3a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="71518b5d-329c-43d6-193f-7cc8f4f38ac0" executionId="d8edc8ef-2680-4e01-849b-a2551dc63aa5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fd5c1eb6-1c49-3a7c-acbc-da47fdf4a066" executionId="3cdf7a60-3e46-4bb9-923d-eb1d537185ba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="921031e7-700f-49d9-5692-98783284eec1" executionId="1c4019a0-7833-4b41-bd5f-4ab8572b04ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f75a30ba-064c-3dca-9968-0daa0f063b63" executionId="a5644781-fffa-4ce0-a5b3-986dd7153209" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="703abe5b-9825-47b0-afd1-547387eaa843" executionId="3d60e3c3-7b36-4d00-949b-254e47b3726c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dc1f3993-3436-3b3d-ada9-c3b1ac749067" executionId="05843bd6-2802-4cab-9975-8b5e618abd81" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3f920558-99d9-7945-25a3-9c5445a3be8b" executionId="286c72d2-21b1-4614-983c-3b537574cd5f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a3b82c23-dbcb-80b3-b168-d997a0094fcd" executionId="c38b978c-188e-4dea-997b-b9754185bbfd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="99c2b31c-5bce-17a9-7d83-1699eb9ad1e7" executionId="98e0d765-7578-4c79-952d-2bebbf7a3239" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9ee16fce-7680-7e7f-35a2-babffea8b0dd" executionId="bf96e096-2632-40e5-90de-7ea309cd4dca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46eff1e9-d2b2-7280-97a7-8fe0844f377f" executionId="32162f4b-5faf-42cd-9a16-ddfcc3e14960" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d6b90a3-1cb0-fdac-2247-6822aea2318c" executionId="8413cf4f-f0de-4c50-8a03-6f4ec36ed9ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2a4e8f8-ef29-2976-0a3d-b37820b9c3a4" executionId="6a38976f-6617-4cdb-94f2-6e57b787823c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="181f037d-8285-46d4-4245-7ef29be2f9d0" executionId="a018ba94-0dfa-43fd-85b5-3ea8f5ea6388" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="33039721-c523-0551-394e-c361739562e3" executionId="4fc881b7-25bc-45ce-883a-69a78e3c1a94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0f0ff09e-c3ec-d6fd-57fb-7d6ffb6f9cf7" executionId="b1c2bc0d-1047-4e46-93a6-ce256d7449d9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b94cb20b-1bc3-df1b-cb90-d4d82dbe5d7b" executionId="de89a18b-2c0c-4572-9e80-184708a11e46" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bdd5ee14-f831-a249-0e4a-f30c48eb65a7" executionId="f3fa7856-1ade-439d-a369-780e2ac4764b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2b66d0a6-2f47-c200-740e-386213a8240f" executionId="96e3df88-bc59-4752-abe9-e194f6e17012" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="59ed685d-96bc-16fe-2c0c-64ba2e0f10e0" executionId="b87f2f4a-cab1-44cb-8955-3d659df05b53" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95be87a2-78e4-78bd-3b69-11c5b4280729" executionId="5de52b8d-8f58-46e4-9b01-ad8285f99e47" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="43749891-6429-5b58-8edb-e142ba5110a7" executionId="59263e88-2104-4ac6-be74-a95e28d18119" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8c8f6f49-d0ee-2908-d679-4880bfe15969" executionId="60dbc62b-5e67-40d8-b3f4-97f18fee21f4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d770ac4d-7e19-ae6e-fd32-94a9b0f30d32" executionId="ec8e5009-9750-4b40-b978-a6fe95a815ed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="40157f20-a151-44f1-e5de-b921fb69d804" executionId="267c89ca-00f4-4187-adc7-cd98cea26765" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e8afd2e5-aabf-cbf1-14d2-35e56ee2eb0e" executionId="1724a0ca-7a99-4be2-9b7b-ead001e82070" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7f9bcb6a-f8da-5532-05d0-89097b78716f" executionId="24b2a020-b276-4a20-a366-bfa989913fb6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5753349-4837-94ba-e97b-bd37004d471f" executionId="b81b8710-23d9-4ffa-b034-b3478b879367" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="26a4b29c-e7bb-fa16-1313-f0565584e3a7" executionId="5dc0b2e2-e593-4988-9ec1-109ebb863c4b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94d01103-fc16-b161-3aa3-2ed968b17953" executionId="caede72c-0207-488e-8d96-74335aa3c2ec" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="650119c3-1f3f-c44c-d48a-ef02db225fb8" executionId="40e2c113-ff93-4b9c-90ca-7ff2ca2e2799" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f54559f3-2b90-0583-a05f-bbd9a1d9f204" executionId="6be9dcb8-f7b4-4593-b566-c32e7603d938" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c4625922-c0e9-55e2-82de-4c7a5f4689aa" executionId="c4c9ba2b-5589-43a0-b0fe-9684e43ce6aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b6be01c4-f734-11a4-b881-0a124b2adb30" executionId="c2ecc3e1-0d5b-482f-8772-a195f93d2fcc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="03626a1b-d209-9078-3945-08c651a8a04f" executionId="d7751310-6249-452f-9d19-ab7d477e89fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="323f4afb-2967-c0ad-899c-7491fb898192" executionId="20aced73-69c2-4dc7-b6ab-142a8b4156dd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63d08761-057f-a9aa-8052-0cc41ef957f2" executionId="b8b461ec-436e-4dee-ba4b-ba8b11c88e1e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fdb340b4-912a-ad37-8ac3-3d3200295b14" executionId="86b8710e-eaae-4d0e-980f-b90ba82cbc1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Risultati non in elenco" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Tutti i risultati caricati" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="54" executed="54" passed="54" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000833035s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (8)&#xD;
+Info    :  - Vertices           : 4 (5)&#xD;
+Info    :  - Total surface area : 1e+06 (1e+06)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 30%] Meshing curve 3 (Line)&#xD;
+Info    : [ 40%] Meshing curve 4 (Line)&#xD;
+Info    : [ 60%] Meshing curve 5 (Line)&#xD;
+Info    : [ 70%] Meshing curve 6 (Line)&#xD;
+Info    : [ 80%] Meshing curve 7 (Line)&#xD;
+Info    : [ 90%] Meshing curve 8 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000379086s, CPU 0s)&#xD;
+Info    : 133 nodes 141 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.0198462s, CPU 0s)&#xD;
+Info    : 459 nodes 977 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Blossom: 1158 internal 80 closed&#xD;
+Info    : Blossom recombination completed (Wall 0.01634s, CPU 0s): 407 quads, 18 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.76454, min Q = 0.270262&#xD;
+Info    : Done recombining 2D mesh (Wall 0.0164609s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000576019s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000143051s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.0028429s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000657082s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000674963s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000464916s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 3 (3)&#xD;
+Info    :  - Vertices           : 3 (3)&#xD;
+Info    :  - Total surface area : 100 (100)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 40%] Meshing curve 2 (Line)&#xD;
+Info    : [ 70%] Meshing curve 3 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000104904s, CPU 0s)&#xD;
+Info    : 26 nodes 29 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00160098s, CPU 0s)&#xD;
+Info    : 39 nodes 79 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000524998s, CPU 0s): 22 quads, 6 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.870151, min Q = 0.689524&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000554323s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000898838s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 6 (6)&#xD;
+Info    :  - Vertices           : 6 (6)&#xD;
+Info    :  - Total surface area : 150 (150)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 40%] Meshing curve 3 (Line)&#xD;
+Info    : [ 60%] Meshing curve 4 (Line)&#xD;
+Info    : [ 70%] Meshing curve 5 (Line)&#xD;
+Info    : [ 90%] Meshing curve 6 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000184059s, CPU 0s)&#xD;
+Info    : 31 nodes 37 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00272393s, CPU 0s)&#xD;
+Info    : 59 nodes 122 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000937939s, CPU 0s): 41 quads, 3 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.90964, min Q = 0.506191&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000957966s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000565052s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000135183s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00301695s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000650167s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.989672, min Q = 0.96907&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000673056s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.0006001s, CPU 0.015625s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000160933s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00291705s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000633955s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000652075s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000575066s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000453711s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00426602s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00148582s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.99536, min Q = 0.985564&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00152206s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000592232s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000231028s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00376892s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000701904s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000732899s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000588179s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000130177s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00289512s, CPU 0.015625s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000610113s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000626087s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000586987s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000142097s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00283694s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000669956s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.996883, min Q = 0.990917&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000691891s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000586987s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 0.02 (0.02)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000227928s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00290704s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000739098s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995446, min Q = 0.983464&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000763893s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000586033s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000136852s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00287914s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000629902s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.996883, min Q = 0.990917&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000650167s, CPU 0s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000916004s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 2 (2)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 8 (8)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 184 (184)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 5 (Line)&#xD;
+Info    : [ 20%] Meshing curve 6 (Line)&#xD;
+Info    : [ 30%] Meshing curve 7 (Line)&#xD;
+Info    : [ 40%] Meshing curve 8 (Line)&#xD;
+Info    : [ 60%] Meshing curve 9 (Line)&#xD;
+Info    : [ 70%] Meshing curve 10 (Line)&#xD;
+Info    : [ 80%] Meshing curve 11 (Line)&#xD;
+Info    : [ 90%] Meshing curve 12 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000238895s, CPU 0s)&#xD;
+Info    : 38 nodes 46 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00167012s, CPU 0.015625s)&#xD;
+Info    : 70 nodes 148 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000374079s, CPU 0s): 50 quads, 2 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.93016, min Q = 0.804189&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000392914s, CPU 0s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 60%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference                                                                                  &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00119495s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 3 (3)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 12 (12)&#xD;
+Info    :  - Vertices           : 12 (12)&#xD;
+Info    :  - Total surface area : 192 (192)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 5 (Line)&#xD;
+Info    : [ 10%] Meshing curve 6 (Line)&#xD;
+Info    : [ 20%] Meshing curve 7 (Line)&#xD;
+Info    : [ 30%] Meshing curve 8 (Line)&#xD;
+Info    : [ 40%] Meshing curve 9 (Line)&#xD;
+Info    : [ 50%] Meshing curve 10 (Line)&#xD;
+Info    : [ 60%] Meshing curve 11 (Line)&#xD;
+Info    : [ 60%] Meshing curve 12 (Line)&#xD;
+Info    : [ 70%] Meshing curve 13 (Line)&#xD;
+Info    : [ 80%] Meshing curve 14 (Line)&#xD;
+Info    : [ 90%] Meshing curve 15 (Line)&#xD;
+Info    : [100%] Meshing curve 16 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000332832s, CPU 0s)&#xD;
+Info    : 38 nodes 50 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00186324s, CPU 0s)&#xD;
+Info    : 76 nodes 166 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000756979s, CPU 0s): 54 quads, 8 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.791314, min Q = 0.452647&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00077796s, CPU 0s)&#xD;
+Info    : [  0%] Fragments                                                                                  &#xD;
+Info    : [ 10%] Fragments - Performing intersection of shapes                                                                                &#xD;
+Info    : [ 80%] Fragments - Building splits of containers                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00120211s, CPU 0.015625s):&#xD;
+Info    :  - Compounds          : 1 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 2 (2)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 8 (8)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 400 (400)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 30%] Meshing curve 3 (Line)&#xD;
+Info    : [ 40%] Meshing curve 4 (Line)&#xD;
+Info    : [ 60%] Meshing curve 5 (Line)&#xD;
+Info    : [ 70%] Meshing curve 6 (Line)&#xD;
+Info    : [ 80%] Meshing curve 7 (Line)&#xD;
+Info    : [ 90%] Meshing curve 8 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000250816s, CPU 0s)&#xD;
+Info    : 60 nodes 68 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00598383s, CPU 0s)&#xD;
+Info    : 132 nodes 268 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000658274s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Simple recombination completed (Wall 0.000627995s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.990967, min Q = 0.971338&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00132489s, CPU 0s)&#xD;
+Info    : [  0%] Fragments                                                                                  &#xD;
+Info    : [ 10%] Fragments                                                                                  &#xD;
+Info    : [ 20%] Fragments                                                                                  &#xD;
+Info    : [ 30%] Fragments                                                                                  &#xD;
+Info    : [ 40%] Fragments                                                                                  &#xD;
+Info    : [ 50%] Fragments                                                                                  &#xD;
+Info    : [ 60%] Fragments                                                                                  &#xD;
+Info    : [ 70%] Fragments                                                                                  &#xD;
+Info    : [ 80%] Fragments - Splitting faces                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00111723s, CPU 0.015625s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 1 (0)&#xD;
+Info    :  - Wires              : 2 (2)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 7 (7)&#xD;
+Info    :  - Vertices           : 6 (6)&#xD;
+Info    :  - Total surface area : 400 (400)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 30%] Meshing curve 3 (Line)&#xD;
+Info    : [ 50%] Meshing curve 4 (Line)&#xD;
+Info    : [ 60%] Meshing curve 5 (Line)&#xD;
+Info    : [ 80%] Meshing curve 6 (Line)&#xD;
+Info    : [ 90%] Meshing curve 7 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000251055s, CPU 0s)&#xD;
+Info    : 54 nodes 61 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00342369s, CPU 0s)&#xD;
+Info    : 126 nodes 261 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000491858s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Simple recombination completed (Wall 0.000507832s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.989314, min Q = 0.965932&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00105715s, CPU 0s)&#xD;
+Info    : [  0%] Fragments                                                                                  &#xD;
+Info    : [ 10%] Fragments                                                                                  &#xD;
+Info    : [ 20%] Fragments                                                                                  &#xD;
+Info    : [ 30%] Fragments                                                                                  &#xD;
+Info    : [ 40%] Fragments                                                                                  &#xD;
+Info    : [ 50%] Fragments                                                                                  &#xD;
+Info    : [ 70%] Fragments - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Fragments - Making faces                                                                                &#xD;
+Info    : [ 90%] Fragments - Making faces                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00174594s, CPU 0s):&#xD;
+Info    :  - Compounds          : 1 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 2 (0)&#xD;
+Info    :  - Wires              : 4 (4)&#xD;
+Info    :  - Faces              : 4 (4)&#xD;
+Info    :  - Edges              : 13 (13)&#xD;
+Info    :  - Vertices           : 10 (10)&#xD;
+Info    :  - Total surface area : 300 (300)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 10%] Meshing curve 2 (Line)&#xD;
+Info    : [ 20%] Meshing curve 3 (Line)&#xD;
+Info    : [ 30%] Meshing curve 4 (Line)&#xD;
+Info    : [ 40%] Meshing curve 5 (Line)&#xD;
+Info    : [ 40%] Meshing curve 6 (Line)&#xD;
+Info    : [ 50%] Meshing curve 7 (Line)&#xD;
+Info    : [ 60%] Meshing curve 8 (Line)&#xD;
+Info    : [ 70%] Meshing curve 9 (Line)&#xD;
+Info    : [ 70%] Meshing curve 10 (Line)&#xD;
+Info    : [ 80%] Meshing curve 11 (Line)&#xD;
+Info    : [ 90%] Meshing curve 12 (Line)&#xD;
+Info    : [100%] Meshing curve 13 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000356913s, CPU 0s)&#xD;
+Info    : 54 nodes 67 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 30%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 3 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 80%] Meshing surface 4 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00260496s, CPU 0s)&#xD;
+Info    : 102 nodes 227 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000169039s, CPU 0s): 25 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Simple recombination completed (Wall 0.000160933s, CPU 0s): 25 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.989426, min Q = 0.980223&#xD;
+Info    : Simple recombination completed (Wall 0.000100136s, CPU 0s): 15 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.983447, min Q = 0.967811&#xD;
+Info    : Simple recombination completed (Wall 9.32217e-05s, CPU 0s): 15 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.983447, min Q = 0.967811&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000565052s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000575066s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000139952s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, MeshAdapt)&#xD;
+Info    : Done meshing 2D (Wall 0.00160098s, CPU 0s)&#xD;
+Info    : 83 nodes 168 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000573874s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000227928s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Delaunay)&#xD;
+Info    : Done meshing 2D (Wall 0.00284123s, CPU 0.015625s)&#xD;
+Info    : 86 nodes 174 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00058198s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000126839s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay)&#xD;
+Info    : Done meshing 2D (Wall 0.00288677s, CPU 0s)&#xD;
+Info    : 78 nodes 158 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000585079s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000178099s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00326109s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000562191s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000130892s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Delaunay)&#xD;
+Info    : Done meshing 2D (Wall 0.00279498s, CPU 0s)&#xD;
+Info    : 86 nodes 174 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000577927s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Build background mesh and guiding field ...&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000145912s, CPU 0s)&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay)&#xD;
+Info    : Done meshing 2D (Wall 0.00513482s, CPU 0s)&#xD;
+Info    : 130 nodes 262 elements&#xD;
+Info    : - quadqs sizemap method: background mesh sizes (3), expect midpoint subdivision: 0, scaling on edge length: 0.750000&#xD;
+Info    : - Face 1/1: compute cross field (218 triangles, 40 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : Size map statistics: min=1.789, max=2.050, target #elements: 52.648&#xD;
+Info    : Build background field (view 'guiding_field') ...&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000927925s, CPU 0s)&#xD;
+Info    : 32 nodes 36 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Transfinite)&#xD;
+Info    : Refine mesh (midpoint subdivision, with background projection) ...&#xD;
+Info    : Refining mesh...&#xD;
+Info    : Meshing order 2 (curvilinear off)...&#xD;
+Info    : [  0%] Meshing curve 1 order 2&#xD;
+Info    : [ 30%] Meshing curve 2 order 2&#xD;
+Info    : [ 50%] Meshing curve 3 order 2&#xD;
+Info    : [ 70%] Meshing curve 4 order 2&#xD;
+Info    : [ 90%] Meshing surface 1 order 2&#xD;
+Info    : Done meshing order 2 (Wall 0.000249147s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrderElastic)...&#xD;
+Info    : Applying elastic analogy to high-order mesh...&#xD;
+Info    : High-order tools set up: 225 nodes are considered&#xD;
+Info    : Done applying elastic analogy to high-order mesh (0 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.000258923s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrder)...&#xD;
+Info    : Optimizing high-order mesh...&#xD;
+Info    : Optimizing mesh...&#xD;
+Info    : Computing connectivity and bad elements for entity 1...&#xD;
+Info    : Starting patch generation from 0 bad elements...&#xD;
+Info    : Constructing 0 primary patches&#xD;
+Info    : Computing patch connectivity...&#xD;
+Info    : Identifying groups of primary patches...&#xD;
+Info    : Merging primary patches into 0 patches...&#xD;
+Info    : Computing boundaries for 0 patches...&#xD;
+Info    : Generated 0 patches&#xD;
+Info    : Optimization succeeded&#xD;
+Info    : Done optimizing mesh (0 s)&#xD;
+Info    : Done optimizing high-order mesh (0 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.000218868s, CPU 0s)&#xD;
+Info    : Done refining mesh (Wall 0.000806808s, CPU 0s)&#xD;
+Info    : Quad mesh after subdivision, projection and small smoothing:&#xD;
+Info    : - 253 vertices, 220 quads&#xD;
+Info    : - vertex topology: 249 regular, 0 valence 3, 0 valence 5, 0 very irregular&#xD;
+Info    : - quad edge length: min=0.851, avg=0.955, max=1.018&#xD;
+Info    : - quad SICN quality: min=0.988, avg=0.995, max=0.998&#xD;
+Info    : - quad SIGE quality: min=1.000, avg=1.000, max=1.000&#xD;
+Info    : Optimizing mesh (QuadQuasiStructured)...&#xD;
+Info    : Pattern-based quad meshing of simple CAD faces ...&#xD;
+Info    : loading 9 quad patterns&#xD;
+Info    : - Face 1: remeshed with a global pattern, 220 -&gt; 220 quads, 189 -&gt; 189 int. vertices, SICN min: 0.988 -&gt; 0.988, SICN avg: 0.995 -&gt; 0.995, time: 0.000s&#xD;
+Info    : Quad mesh after simple face pattern-based remeshing:&#xD;
+Info    : - 253 vertices, 220 quads&#xD;
+Info    : - vertex topology: 249 regular, 0 valence 3, 0 valence 5, 0 very irregular&#xD;
+Info    : - quad edge length: min=0.851, avg=0.955, max=1.018&#xD;
+Info    : - quad SICN quality: min=0.988, avg=0.995, max=0.997&#xD;
+Info    : - quad SIGE quality: min=0.999, avg=1.000, max=1.000&#xD;
+Info    : Optimize topology of quad meshes with cavity remeshing (1 faces) ...&#xD;
+Info    : Quad mesh after cavity remeshing:&#xD;
+Info    : - 253 vertices, 220 quads&#xD;
+Info    : - vertex topology: 249 regular, 0 valence 3, 0 valence 5, 0 very irregular&#xD;
+Info    : - quad edge length: min=0.851, avg=0.955, max=1.018&#xD;
+Info    : - quad SICN quality: min=0.988, avg=0.995, max=0.997&#xD;
+Info    : - quad SIGE quality: min=0.999, avg=1.000, max=1.000&#xD;
+Info    : Done optimizing mesh (Wall 0.003757s, CPU 0s)&#xD;
+Info    : Done meshing 2D (Wall 0.00724101s, CPU 0s)&#xD;
+Info    : 253 nodes 288 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00166512s, CPU 0s): 220 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.992457, min Q = 0.972256&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00172281s, CPU 0s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00168705s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 1 (0)&#xD;
+Info    :  - Wires              : 3 (3)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 8 (12)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 5 (Line)&#xD;
+Info    : [ 10%] Meshing curve 6 (Line)&#xD;
+Info    : [ 20%] Meshing curve 7 (Line)&#xD;
+Info    : [ 30%] Meshing curve 8 (Line)&#xD;
+Info    : [ 40%] Meshing curve 9 (Line)&#xD;
+Info    : [ 50%] Meshing curve 10 (Line)&#xD;
+Info    : [ 60%] Meshing curve 11 (Line)&#xD;
+Info    : [ 60%] Meshing curve 12 (Line)&#xD;
+Info    : [ 70%] Meshing curve 13 (Line)&#xD;
+Info    : [ 80%] Meshing curve 14 (Line)&#xD;
+Info    : [ 90%] Meshing curve 15 (Line)&#xD;
+Info    : [100%] Meshing curve 16 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000334978s, CPU 0s)&#xD;
+Info    : 34 nodes 46 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00177622s, CPU 0s)&#xD;
+Info    : 68 nodes 150 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000494957s, CPU 0s): 50 quads, 2 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.895053, min Q = 0.764858&#xD;
+Info    : Simple recombination completed (Wall 1.00136e-05s, CPU 0s): 1 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000528812s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000560999s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000137806s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00285697s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000633001s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000651121s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00055027s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000172138s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00286794s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Blossom: 135 internal 28 closed&#xD;
+Info    : Blossom recombination completed (Wall 0.000668049s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000687122s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000651121s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000136137s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00283813s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000716925s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000744104s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000565052s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.0001297s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00288987s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Blossom: 135 internal 28 closed&#xD;
+Info    : Blossom recombination completed (Wall 0.000690937s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000710964s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00056386s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000134706s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00302005s, CPU 0.015625s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000895977s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.0003829s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00335431s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Refining mesh...&#xD;
+Info    : Meshing order 2 (curvilinear on)...&#xD;
+Info    : [  0%] Meshing curve 1 order 2&#xD;
+Info    : [ 30%] Meshing curve 2 order 2&#xD;
+Info    : [ 50%] Meshing curve 3 order 2&#xD;
+Info    : [ 70%] Meshing curve 4 order 2&#xD;
+Info    : [ 90%] Meshing surface 1 order 2&#xD;
+Info    : Surface mesh: worst distortion = 1 (0 elements in ]0, 0.2]); worst gamma = 0.802153&#xD;
+Info    : Done meshing order 2 (Wall 0.00045085s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrderElastic)...&#xD;
+Info    : Applying elastic analogy to high-order mesh...&#xD;
+Info    : High-order tools set up: 205 nodes are considered&#xD;
+Info    : Surface mesh: worst distortion = 1 (0 elements in ]0, 0.2]); worst gamma = 0.802153&#xD;
+Info    : Final surface mesh: worst distortion = 1 (0 elements in ]0, 0.2]); worst gamma = 0.802153&#xD;
+Info    : Done applying elastic analogy to high-order mesh (0 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.000207901s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrder)...&#xD;
+Info    : Optimizing high-order mesh...&#xD;
+Info    : Optimizing mesh...&#xD;
+Info    : Computing connectivity and bad elements for entity 1...&#xD;
+Info    : Starting patch generation from 0 bad elements...&#xD;
+Info    : Constructing 0 primary patches&#xD;
+Info    : Computing patch connectivity...&#xD;
+Info    : Identifying groups of primary patches...&#xD;
+Info    : Merging primary patches into 0 patches...&#xD;
+Info    : Computing boundaries for 0 patches...&#xD;
+Info    : Generated 0 patches&#xD;
+Info    : Optimization succeeded&#xD;
+Info    : Done optimizing mesh (0 s)&#xD;
+Info    : Done optimizing high-order mesh (0 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.000143766s, CPU 0s)&#xD;
+Info    : Done refining mesh (Wall 0.00100875s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000571966s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000154018s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00316119s, CPU 0.015625s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000768185s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000794172s, CPU 0s)&#xD;
+Info    : [  0%] Fragments                                                                                  &#xD;
+Info    : [ 10%] Fragments - Performing intersection of shapes                                                                                &#xD;
+Info    : [ 80%] Fragments - Building splits of containers                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.0011301s, CPU 0s):&#xD;
+Info    :  - Compounds          : 1 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 2 (2)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 8 (8)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 400 (400)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 30%] Meshing curve 3 (Line)&#xD;
+Info    : [ 40%] Meshing curve 4 (Line)&#xD;
+Info    : [ 60%] Meshing curve 5 (Line)&#xD;
+Info    : [ 70%] Meshing curve 6 (Line)&#xD;
+Info    : [ 80%] Meshing curve 7 (Line)&#xD;
+Info    : [ 90%] Meshing curve 8 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000236034s, CPU 0s)&#xD;
+Info    : 60 nodes 68 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00591993s, CPU 0s)&#xD;
+Info    : 132 nodes 268 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000646114s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Simple recombination completed (Wall 0.000612974s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.990967, min Q = 0.971338&#xD;
+Info    : Done recombining 2D mesh (Wall 0.0012989s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000734091s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000145197s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Transfinite)&#xD;
+Info    : Done meshing 2D (Wall 8.08239e-05s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000739098s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000761032s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000684738s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000129938s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00300097s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Optimizing mesh (Relocate2D)...&#xD;
+Info    : Done optimizing mesh (Wall 0.000173092s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000585794s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (5)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.00013113s, CPU 0s)&#xD;
+Info    : 31 nodes 35 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00296378s, CPU 0s)&#xD;
+Info    : 67 nodes 137 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00066185s, CPU 0s): 50 quads, 2 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.963646, min Q = 0.783406&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000683069s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000690937s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 5 (5)&#xD;
+Info    :  - Vertices           : 5 (5)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 50%] Meshing curve 3 (Line)&#xD;
+Info    : [ 70%] Meshing curve 4 (Line)&#xD;
+Info    : [ 90%] Meshing curve 5 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000169277s, CPU 0s)&#xD;
+Info    : 31 nodes 36 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00282693s, CPU 0.015625s)&#xD;
+Info    : 69 nodes 141 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000737667s, CPU 0s): 52 quads, 1 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.93602, min Q = 0.781972&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000756025s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000558853s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000141621s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00280094s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000629187s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000648022s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000579834s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (5)&#xD;
+Info    :  - Vertices           : 4 (6)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 50%] Meshing curve 3 (Line)&#xD;
+Info    : [ 70%] Meshing curve 4 (Line)&#xD;
+Info    : [ 90%] Meshing curve 5 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000154734s, CPU 0s)&#xD;
+Info    : 38 nodes 43 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00324464s, CPU 0.015625s)&#xD;
+Info    : 70 nodes 151 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00150609s, CPU 0s): 52 quads, 4 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.823934, min Q = 0.324617&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00152612s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000563145s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000133991s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.0028441s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000620127s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000641108s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000650883s, CPU 0.015625s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (8)&#xD;
+Info    :  - Vertices           : 4 (5)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 20%] Meshing curve 2 (Line)&#xD;
+Info    : [ 30%] Meshing curve 3 (Line)&#xD;
+Info    : [ 40%] Meshing curve 4 (Line)&#xD;
+Info    : [ 60%] Meshing curve 5 (Line)&#xD;
+Info    : [ 70%] Meshing curve 6 (Line)&#xD;
+Info    : [ 80%] Meshing curve 7 (Line)&#xD;
+Info    : [ 90%] Meshing curve 8 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000236988s, CPU 0s)&#xD;
+Info    : 51 nodes 59 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00378895s, CPU 0s)&#xD;
+Info    : 83 nodes 193 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00141525s, CPU 0s): 54 quads, 24 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.719551, min Q = 0.464049&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00143313s, CPU 0s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00164723s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 1 (0)&#xD;
+Info    :  - Wires              : 3 (3)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 8 (12)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 5 (Line)&#xD;
+Info    : [ 10%] Meshing curve 6 (Line)&#xD;
+Info    : [ 20%] Meshing curve 7 (Line)&#xD;
+Info    : [ 30%] Meshing curve 8 (Line)&#xD;
+Info    : [ 40%] Meshing curve 9 (Line)&#xD;
+Info    : [ 50%] Meshing curve 10 (Line)&#xD;
+Info    : [ 60%] Meshing curve 11 (Line)&#xD;
+Info    : [ 60%] Meshing curve 12 (Line)&#xD;
+Info    : [ 70%] Meshing curve 13 (Line)&#xD;
+Info    : [ 80%] Meshing curve 14 (Line)&#xD;
+Info    : [ 90%] Meshing curve 15 (Line)&#xD;
+Info    : [100%] Meshing curve 16 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000335217s, CPU 0s)&#xD;
+Info    : 54 nodes 66 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00205994s, CPU 0s)&#xD;
+Info    : 76 nodes 166 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000252247s, CPU 0s): 38 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.998402, min Q = 0.992239&#xD;
+Info    : Simple recombination completed (Wall 0.000195026s, CPU 0s): 12 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.985033, min Q = 0.97072&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000472069s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000756025s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (5)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000129938s, CPU 0s)&#xD;
+Info    : 31 nodes 35 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00286198s, CPU 0s)&#xD;
+Info    : 67 nodes 137 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000697136s, CPU 0s): 51 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.943439, min Q = 0.592213&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000718117s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000578165s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (5)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000138998s, CPU 0s)&#xD;
+Info    : 31 nodes 35 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00384092s, CPU 0.015625s)&#xD;
+Info    : 99 nodes 201 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00193s, CPU 0s): 75 quads, 16 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.770264, min Q = 0.309891&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00195479s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000555038s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000224113s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00307608s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000659943s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00067997s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.00069809s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 96 (96)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000133991s, CPU 0s)&#xD;
+Info    : 20 nodes 24 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00177526s, CPU 0s)&#xD;
+Info    : 35 nodes 72 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000334978s, CPU 0s): 24 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995172, min Q = 0.987363&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000349045s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000591993s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000133991s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00300217s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000653028s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000672102s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000632763s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000132084s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00309873s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000690937s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000709772s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000569105s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000142097s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00288796s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000643015s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000663996s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000552177s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 220 (220)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000146151s, CPU 0s)&#xD;
+Info    : 32 nodes 36 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00317621s, CPU 0s)&#xD;
+Info    : 72 nodes 146 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.00067091s, CPU 0s): 55 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.991667, min Q = 0.97285&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000690937s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000608921s, CPU 0.015625s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 210 (210)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000135183s, CPU 0s)&#xD;
+Info    : 32 nodes 36 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00316119s, CPU 0s)&#xD;
+Info    : 73 nodes 148 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000790834s, CPU 0s): 55 quads, 2 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.937668, min Q = 0.626657&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000816822s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000686884s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 230 (230)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000140905s, CPU 0s)&#xD;
+Info    : 34 nodes 38 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00376129s, CPU 0s)&#xD;
+Info    : 79 nodes 160 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000993013s, CPU 0s): 60 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995651, min Q = 0.985869&#xD;
+Info    : Done recombining 2D mesh (Wall 0.00101709s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000592232s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000152826s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00364494s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000772953s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000807285s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000588894s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000133753s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00290823s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000633955s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000651836s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000616074s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000139952s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00294113s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000642061s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000660896s, CPU 0s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.000583172s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 4 (4)&#xD;
+Info    :  - Vertices           : 4 (4)&#xD;
+Info    :  - Total surface area : 200 (200)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 30%] Meshing curve 2 (Line)&#xD;
+Info    : [ 60%] Meshing curve 3 (Line)&#xD;
+Info    : [ 80%] Meshing curve 4 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000138998s, CPU 0s)&#xD;
+Info    : 30 nodes 34 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.00297999s, CPU 0s)&#xD;
+Info    : 66 nodes 134 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.000659943s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995558, min Q = 0.9858&#xD;
+Info    : Done recombining 2D mesh (Wall 0.000678778s, CPU 0s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 60%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : [  0%] Fragments                                                                                  &#xD;
+Info    : [ 10%] Fragments                                                                                  &#xD;
+Info    : [ 20%] Fragments                                                                                  &#xD;
+Info    : [ 30%] Fragments                                                                                  &#xD;
+Info    : [ 40%] Fragments                                                                                  &#xD;
+Info    : [ 50%] Fragments                                                                                  &#xD;
+Info    : [ 60%] Fragments                                                                                  &#xD;
+Info    : [ 70%] Fragments - Performing intersection of shapes                                                                                &#xD;
+Info    : [ 80%] Fragments - Making faces                                                                                &#xD;
+Info    : [ 90%] Fragments - Making faces                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  . Repaired face&#xD;
+Info    :  . Some wires are fixed&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00397706s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 1 (0)&#xD;
+Info    :  - Wires              : 9 (9)&#xD;
+Info    :  - Faces              : 5 (5)&#xD;
+Info    :  - Edges              : 29 (30)&#xD;
+Info    :  - Vertices           : 27 (34)&#xD;
+Info    :  - Total surface area : 202938 (202938)&#xD;
+Info    : Build background mesh and guiding field ...&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 32 (Line)&#xD;
+Info    : [ 10%] Meshing curve 33 (Line)&#xD;
+Info    : [ 10%] Meshing curve 34 (Line)&#xD;
+Info    : [ 20%] Meshing curve 35 (Line)&#xD;
+Info    : [ 20%] Meshing curve 36 (Line)&#xD;
+Info    : [ 20%] Meshing curve 37 (Line)&#xD;
+Info    : [ 30%] Meshing curve 38 (Line)&#xD;
+Info    : [ 30%] Meshing curve 39 (Line)&#xD;
+Info    : [ 30%] Meshing curve 40 (Line)&#xD;
+Info    : [ 40%] Meshing curve 41 (Line)&#xD;
+Info    : [ 40%] Meshing curve 42 (Line)&#xD;
+Info    : [ 40%] Meshing curve 43 (Line)&#xD;
+Info    : [ 50%] Meshing curve 44 (Line)&#xD;
+Info    : [ 50%] Meshing curve 45 (Line)&#xD;
+Info    : [ 50%] Meshing curve 46 (Line)&#xD;
+Info    : [ 60%] Meshing curve 47 (Line)&#xD;
+Info    : [ 60%] Meshing curve 48 (Line)&#xD;
+Info    : [ 60%] Meshing curve 49 (Line)&#xD;
+Info    : [ 70%] Meshing curve 50 (Line)&#xD;
+Info    : [ 70%] Meshing curve 51 (Line)&#xD;
+Info    : [ 70%] Meshing curve 52 (Line)&#xD;
+Info    : [ 80%] Meshing curve 53 (Line)&#xD;
+Info    : [ 80%] Meshing curve 54 (Line)&#xD;
+Info    : [ 80%] Meshing curve 55 (Line)&#xD;
+Info    : [ 90%] Meshing curve 56 (Line)&#xD;
+Info    : [ 90%] Meshing curve 57 (Line)&#xD;
+Info    : [ 90%] Meshing curve 58 (Line)&#xD;
+Info    : [100%] Meshing curve 59 (Line)&#xD;
+Info    : [100%] Meshing curve 60 (Line)&#xD;
+Info    : [100%] Meshing curve 61 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000868082s, CPU 0s)&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay)&#xD;
+Info    : [ 30%] Meshing surface 2 (Plane, Frontal-Delaunay)&#xD;
+Info    : [ 50%] Meshing surface 3 (Plane, Frontal-Delaunay)&#xD;
+Info    : [ 70%] Meshing surface 4 (Plane, Frontal-Delaunay)&#xD;
+Info    : [ 90%] Meshing surface 5 (Plane, Frontal-Delaunay)&#xD;
+Info    : Done meshing 2D (Wall 0.0940461s, CPU 0.09375s)&#xD;
+Info    : 4432 nodes 9046 elements&#xD;
+Info    : - quadqs sizemap method: background mesh sizes (3), expect midpoint subdivision: 0, scaling on edge length: 0.750000&#xD;
+Info    : - Face 1/5: compute cross field (7225 triangles, 355 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : - Face 2/5: compute cross field (214 triangles, 54 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : - Face 3/5: compute cross field (290 triangles, 44 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : - Face 4/5: compute cross field (406 triangles, 52 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : - Face 5/5: compute cross field (408 triangles, 52 B.C. edges, 4 diffusion levels) ...&#xD;
+Info    : Size map statistics: min=6.372, max=12.333, target #elements: 2071.014&#xD;
+Info    : Build background field (view 'guiding_field') ...&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 32 (Line)&#xD;
+Info    : [ 10%] Meshing curve 33 (Line)&#xD;
+Info    : [ 10%] Meshing curve 34 (Line)&#xD;
+Info    : [ 20%] Meshing curve 35 (Line)&#xD;
+Info    : [ 20%] Meshing curve 36 (Line)&#xD;
+Info    : [ 20%] Meshing curve 37 (Line)&#xD;
+Info    : [ 30%] Meshing curve 38 (Line)&#xD;
+Info    : [ 30%] Meshing curve 39 (Line)&#xD;
+Info    : [ 30%] Meshing curve 40 (Line)&#xD;
+Info    : [ 40%] Meshing curve 41 (Line)&#xD;
+Info    : [ 40%] Meshing curve 42 (Line)&#xD;
+Info    : [ 40%] Meshing curve 43 (Line)&#xD;
+Info    : [ 50%] Meshing curve 44 (Line)&#xD;
+Info    : [ 50%] Meshing curve 45 (Line)&#xD;
+Info    : [ 50%] Meshing curve 46 (Line)&#xD;
+Info    : [ 60%] Meshing curve 47 (Line)&#xD;
+Info    : [ 60%] Meshing curve 48 (Line)&#xD;
+Info    : [ 60%] Meshing curve 49 (Line)&#xD;
+Info    : [ 70%] Meshing curve 50 (Line)&#xD;
+Info    : [ 70%] Meshing curve 51 (Line)&#xD;
+Info    : [ 70%] Meshing curve 52 (Line)&#xD;
+Info    : [ 80%] Meshing curve 53 (Line)&#xD;
+Info    : [ 80%] Meshing curve 54 (Line)&#xD;
+Info    : [ 80%] Meshing curve 55 (Line)&#xD;
+Info    : [ 90%] Meshing curve 56 (Line)&#xD;
+Info    : [ 90%] Meshing curve 57 (Line)&#xD;
+Info    : [ 90%] Meshing curve 58 (Line)&#xD;
+Info    : [100%] Meshing curve 59 (Line)&#xD;
+Info    : [100%] Meshing curve 60 (Line)&#xD;
+Info    : [100%] Meshing curve 61 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.010144s, CPU 0s)&#xD;
+Info    : 367 nodes 397 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Packing of Parallelograms)&#xD;
+Info    : [  0%] 1598 Nodes created --&gt; now staring insertion&#xD;
+Info    : [  0%] Simple recombination completed (Wall 0.0170572s, CPU 0.015625s): 1732 quads, 62 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.952972, min Q = 0.489776&#xD;
+Info    : [ 30%] Meshing surface 2 (Plane, Packing of Parallelograms)&#xD;
+Info    : [ 30%] 30 Nodes created --&gt; now staring insertion&#xD;
+Info    : [ 30%] Simple recombination completed (Wall 0.000609875s, CPU 0s): 50 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.957279, min Q = 0.814443&#xD;
+Info    : [ 50%] Meshing surface 3 (Transfinite)&#xD;
+Info    : [ 70%] Meshing surface 4 (Transfinite)&#xD;
+Info    : [ 90%] Meshing surface 5 (Transfinite)&#xD;
+Info    : Refine mesh (midpoint subdivision, with background projection) ...&#xD;
+Info    : Refining mesh...&#xD;
+Info    : Meshing order 2 (curvilinear off)...&#xD;
+Info    : [  0%] Meshing curve 32 order 2&#xD;
+Info    : [ 10%] Meshing curve 33 order 2&#xD;
+Info    : [ 10%] Meshing curve 34 order 2&#xD;
+Info    : [ 10%] Meshing curve 35 order 2&#xD;
+Info    : [ 20%] Meshing curve 36 order 2&#xD;
+Info    : [ 20%] Meshing curve 37 order 2&#xD;
+Info    : [ 20%] Meshing curve 38 order 2&#xD;
+Info    : [ 30%] Meshing curve 39 order 2&#xD;
+Info    : [ 30%] Meshing curve 40 order 2&#xD;
+Info    : [ 30%] Meshing curve 41 order 2&#xD;
+Info    : [ 30%] Meshing curve 42 order 2&#xD;
+Info    : [ 40%] Meshing curve 43 order 2&#xD;
+Info    : [ 40%] Meshing curve 44 order 2&#xD;
+Info    : [ 40%] Meshing curve 45 order 2&#xD;
+Info    : [ 50%] Meshing curve 46 order 2&#xD;
+Info    : [ 50%] Meshing curve 47 order 2&#xD;
+Info    : [ 50%] Meshing curve 48 order 2&#xD;
+Info    : [ 50%] Meshing curve 49 order 2&#xD;
+Info    : [ 60%] Meshing curve 50 order 2&#xD;
+Info    : [ 60%] Meshing curve 51 order 2&#xD;
+Info    : [ 60%] Meshing curve 52 order 2&#xD;
+Info    : [ 70%] Meshing curve 53 order 2&#xD;
+Info    : [ 70%] Meshing curve 54 order 2&#xD;
+Info    : [ 70%] Meshing curve 55 order 2&#xD;
+Info    : [ 70%] Meshing curve 56 order 2&#xD;
+Info    : [ 80%] Meshing curve 57 order 2&#xD;
+Info    : [ 80%] Meshing curve 58 order 2&#xD;
+Info    : [ 80%] Meshing curve 59 order 2&#xD;
+Info    : [ 90%] Meshing curve 60 order 2&#xD;
+Info    : [ 90%] Meshing curve 61 order 2&#xD;
+Info    : [ 90%] Meshing surface 1 order 2&#xD;
+Info    : [ 90%] Meshing surface 2 order 2&#xD;
+Info    : [100%] Meshing surface 3 order 2&#xD;
+Info    : [100%] Meshing surface 4 order 2&#xD;
+Info    : [100%] Meshing surface 5 order 2&#xD;
+Info    : Done meshing order 2 (Wall 0.00551605s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrderElastic)...&#xD;
+Info    : Applying elastic analogy to high-order mesh...&#xD;
+Info    : High-order tools set up: 8442 nodes are considered&#xD;
+Info    : Surface mesh: worst distortion = 1 (0 elements in ]0, 0.2]); worst gamma = 0.823704&#xD;
+Info    : Final surface mesh: worst distortion = 1 (0 elements in ]0, 0.2]); worst gamma = 0.823704&#xD;
+Info    : Done applying elastic analogy to high-order mesh (0 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.00597501s, CPU 0s)&#xD;
+Info    : Optimizing mesh (HighOrder)...&#xD;
+Info    : Optimizing high-order mesh...&#xD;
+Info    : Optimizing mesh...&#xD;
+Info    : Computing connectivity and bad elements for entity 1...&#xD;
+Info    : Computing connectivity and bad elements for entity 2...&#xD;
+Info    : Computing connectivity and bad elements for entity 3...&#xD;
+Info    : Computing connectivity and bad elements for entity 4...&#xD;
+Info    : Computing connectivity and bad elements for entity 5...&#xD;
+Info    : Starting patch generation from 0 bad elements...&#xD;
+Info    : Constructing 0 primary patches&#xD;
+Info    : Computing patch connectivity...&#xD;
+Info    : Identifying groups of primary patches...&#xD;
+Info    : Merging primary patches into 0 patches...&#xD;
+Info    : Computing boundaries for 0 patches...&#xD;
+Info    : Generated 0 patches&#xD;
+Info    : Optimization succeeded&#xD;
+Info    : Done optimizing mesh (0.015625 s)&#xD;
+Info    : Done optimizing high-order mesh (0.015625 s)&#xD;
+Info    : Done optimizing mesh (Wall 0.00392127s, CPU 0.015625s)&#xD;
+Info    : Done refining mesh (Wall 0.0166118s, CPU 0.03125s)&#xD;
+Info    : Quad mesh after subdivision, projection and small smoothing:&#xD;
+Info    : - 8980 vertices, 8590 quads&#xD;
+Info    : - vertex topology: 8718 regular, 69 valence 3, 58 valence 5, 90 very irregular&#xD;
+Info    : - quad edge length: min=2.075, avg=4.854, max=7.124&#xD;
+Info    : - quad SICN quality: min=0.596, avg=0.987, max=1.000&#xD;
+Info    : - quad SIGE quality: min=0.596, avg=0.991, max=1.000&#xD;
+Info    : Optimizing mesh (QuadQuasiStructured)...&#xD;
+Info    : Pattern-based quad meshing of simple CAD faces ...&#xD;
+Info    : - Face 3: remeshed with a global pattern, 308 -&gt; 308 quads, 273 -&gt; 273 int. vertices, SICN min: 0.986 -&gt; 0.990, SICN avg: 0.994 -&gt; 0.994, time: 0.000s&#xD;
+Info    : - Face 4: remeshed with a global pattern, 484 -&gt; 484 quads, 441 -&gt; 441 int. vertices, SICN min: 0.999 -&gt; 0.999, SICN avg: 1.000 -&gt; 1.000, time: 0.016s&#xD;
+Info    : - Face 5: remeshed with a global pattern, 484 -&gt; 484 quads, 441 -&gt; 441 int. vertices, SICN min: 0.998 -&gt; 0.999, SICN avg: 1.000 -&gt; 1.000, time: 0.000s&#xD;
+Info    : Quad mesh after simple face pattern-based remeshing:&#xD;
+Info    : - 8980 vertices, 8590 quads&#xD;
+Info    : - vertex topology: 8718 regular, 69 valence 3, 58 valence 5, 90 very irregular&#xD;
+Info    : - quad edge length: min=2.075, avg=4.854, max=7.124&#xD;
+Info    : - quad SICN quality: min=0.596, avg=0.987, max=1.000&#xD;
+Info    : - quad SIGE quality: min=0.596, avg=0.991, max=1.000&#xD;
+Info    : Optimize topology of quad meshes with cavity remeshing (5 faces) ...&#xD;
+Info    : - Face 1: optimize quad mesh topology (7114 elements, 0 cross field singularities) with cavity remeshing ...&#xD;
+Info    : - Face 1: SICN min: 0.682336 -&gt; 0.682336, avg: 0.994642 -&gt; 0.994642&#xD;
+Info    : - Face 1: remeshed 0 singular and 14 quadrilateral cavities, 7114 -&gt; 7082 quads, 6792 -&gt; 6760 vertices&#xD;
+Info    : - Face 2: optimize quad mesh topology (200 elements, 0 cross field singularities) with cavity remeshing ...&#xD;
+Info    : - Face 2: remeshed 0 singular and 0 quadrilateral cavities, 200 -&gt; 200 quads, 160 -&gt; 160 vertices&#xD;
+Info    : Quad mesh after cavity remeshing:&#xD;
+Info    : - 8948 vertices, 8558 quads&#xD;
+Info    : - vertex topology: 8756 regular, 34 valence 3, 23 valence 5, 90 very irregular&#xD;
+Info    : - quad edge length: min=2.042, avg=4.859, max=8.073&#xD;
+Info    : - quad SICN quality: min=0.682, avg=0.995, max=1.000&#xD;
+Info    : - quad SIGE quality: min=0.722, avg=0.997, max=1.000&#xD;
+Info    : Done optimizing mesh (Wall 1.28148s, CPU 1.23438s)&#xD;
+Info    : Done meshing 2D (Wall 1.40265s, CPU 1.34375s)&#xD;
+Info    : 8805 nodes 9318 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.0695319s, CPU 0.0625s): 7082 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.971673, min Q = 0.502228&#xD;
+Info    : Simple recombination completed (Wall 0.00276589s, CPU 0s): 200 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.964246, min Q = 0.736152&#xD;
+Info    : Simple recombination completed (Wall 0.00244093s, CPU 0s): 308 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.993228, min Q = 0.964352&#xD;
+Info    : Simple recombination completed (Wall 0.00310302s, CPU 0.015625s): 484 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.995362, min Q = 0.976257&#xD;
+Info    : Simple recombination completed (Wall 0.00295687s, CPU 0s): 484 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.994496, min Q = 0.97015&#xD;
+Info    : Done recombining 2D mesh (Wall 0.083648s, CPU 0.078125s)&#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid (no shells)&#xD;
+Info    : Done healing shapes (Wall 0.0012269s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 0 (0)&#xD;
+Info    :  - Wires              : 1 (1)&#xD;
+Info    :  - Faces              : 1 (1)&#xD;
+Info    :  - Edges              : 8 (12)&#xD;
+Info    :  - Vertices           : 8 (9)&#xD;
+Info    :  - Total surface area : 20000 (20000)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 1 (Line)&#xD;
+Info    : [ 10%] Meshing curve 2 (Line)&#xD;
+Info    : [ 20%] Meshing curve 3 (Line)&#xD;
+Info    : [ 30%] Meshing curve 4 (Line)&#xD;
+Info    : [ 40%] Meshing curve 5 (Line)&#xD;
+Info    : [ 50%] Meshing curve 6 (Line)&#xD;
+Info    : [ 60%] Meshing curve 7 (Line)&#xD;
+Info    : [ 60%] Meshing curve 8 (Line)&#xD;
+Info    : [ 70%] Meshing curve 9 (Line)&#xD;
+Info    : [ 80%] Meshing curve 10 (Line)&#xD;
+Info    : [ 90%] Meshing curve 11 (Line)&#xD;
+Info    : [100%] Meshing curve 12 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000386s, CPU 0s)&#xD;
+Info    : 183 nodes 195 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.042522s, CPU 0.03125s)&#xD;
+Info    : 916 nodes 1905 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Simple recombination completed (Wall 0.0151339s, CPU 0.015625s): 811 quads, 88 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.901922, min Q = 0.275279&#xD;
+Info    : Done recombining 2D mesh (Wall 0.0153768s, CPU 0.015625s)&#xD;
+Info    : [  0%] Difference                                                                                  &#xD;
+Info    : [ 10%] Difference                                                                                  &#xD;
+Info    : [ 20%] Difference                                                                                  &#xD;
+Info    : [ 30%] Difference                                                                                  &#xD;
+Info    : [ 40%] Difference                                                                                  &#xD;
+Info    : [ 50%] Difference                                                                                  &#xD;
+Info    : [ 70%] Difference - Filling splits of edges                                                                                &#xD;
+Info    : [ 80%] Difference - Making faces                                                                                &#xD;
+Info    : [ 90%] Difference - Adding holes                                                                                &#xD;
+Info    : Healing shapes (tolerance: 0.0001)&#xD;
+Info    :  - Fixing degenerated edges and faces&#xD;
+Info    :  - Fixing small edges&#xD;
+Info    :  - Fixing spot and strip faces&#xD;
+Info    :  - Sewing faces&#xD;
+Info    :  - Making solids&#xD;
+Info    :  . Could not make solid&#xD;
+Info    : Done healing shapes (Wall 0.00196099s, CPU 0s):&#xD;
+Info    :  - Compounds          : 0 (1)&#xD;
+Info    :  - Composite solids   : 0 (0)&#xD;
+Info    :  - Solids             : 0 (0)&#xD;
+Info    :  - Shells             : 1 (0)&#xD;
+Info    :  - Wires              : 3 (3)&#xD;
+Info    :  - Faces              : 2 (2)&#xD;
+Info    :  - Edges              : 8 (12)&#xD;
+Info    :  - Vertices           : 8 (8)&#xD;
+Info    :  - Total surface area : 800000 (800000)&#xD;
+Info    : Meshing 1D...&#xD;
+Info    : [  0%] Meshing curve 5 (Line)&#xD;
+Info    : [ 10%] Meshing curve 6 (Line)&#xD;
+Info    : [ 20%] Meshing curve 7 (Line)&#xD;
+Info    : [ 30%] Meshing curve 8 (Line)&#xD;
+Info    : [ 40%] Meshing curve 9 (Line)&#xD;
+Info    : [ 50%] Meshing curve 10 (Line)&#xD;
+Info    : [ 60%] Meshing curve 11 (Line)&#xD;
+Info    : [ 60%] Meshing curve 12 (Line)&#xD;
+Info    : [ 70%] Meshing curve 13 (Line)&#xD;
+Info    : [ 80%] Meshing curve 14 (Line)&#xD;
+Info    : [ 90%] Meshing curve 15 (Line)&#xD;
+Info    : [100%] Meshing curve 16 (Line)&#xD;
+Info    : Done meshing 1D (Wall 0.000442743s, CPU 0s)&#xD;
+Info    : 148 nodes 160 elements&#xD;
+Info    : Meshing 2D...&#xD;
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : [ 60%] Meshing surface 2 (Plane, Frontal-Delaunay for Quads)&#xD;
+Info    : Done meshing 2D (Wall 0.0765939s, CPU 0.078125s)&#xD;
+Info    : 1971 nodes 3956 elements&#xD;
+Info    : Recombining 2D mesh...&#xD;
+Info    : Blossom: 5617 internal 145 closed&#xD;
+Info    : Blossom recombination completed (Wall 0.0533741s, CPU 0.046875s): 1891 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 0.893207, min Q = 0.421783&#xD;
+Info    : Blossom: 1 internal 2 closed&#xD;
+Info    : Blossom recombination completed (Wall 6.81877e-05s, CPU 0s): 1 quads, 0 triangles, 0 invalid quads, 0 quads with Q &lt; 0.1, avg Q = 1, min Q = 1&#xD;
+Info    : Done recombining 2D mesh (Wall 0.0539749s, CPU 0.046875s)&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
