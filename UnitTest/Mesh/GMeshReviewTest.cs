@@ -177,9 +177,10 @@ namespace Meshes.GMsh
         }
 
         [TestMethod]
-        public void FailedBlossomRecombinationUsesTheSimpleOne()
+        public void BlossomRecombinationPreservesCrossingConstraints()
         {
-            // the geometry of Shape2DTwoLinesEmb2: the Blossom recombination of Gmsh fails ("Perfect Match failed in quadrangulation")
+            // Gmsh 4.13 required the Simple fallback here; 4.15 can recombine directly.
+            // Test the mesh contract, not the presence of an upstream algorithm failure.
             var plate = new Shape(Rectangle(0, 0, 1000, 1000));
             var embedded = new Dictionary<Shape, GeometryBase[]>
             {
@@ -191,7 +192,8 @@ namespace Meshes.GMsh
             // before, the generation failed
             Assert.IsTrue(GMesh.Generate(new List<Shape> { plate }, embedded, null, options, out List<Mesh> meshes, out GMesh.GMeshGenerateMeshStatus status), status.GetLastCustomErrorMessage());
             Assert.AreEqual(1000000, Area(meshes[0]), 1e-4);
-            Assert.IsTrue(status.Warnings.Any(w => w.Contains("recombined with Simple")), "the fallback is reported");
+            foreach (int[] nodes in status.EmbeddedGeometriesVertexMap[meshes[0]].Values)
+                Assert.IsTrue(nodes.Any(id => meshes[0].Vertices.GetElementById(id).Point.DistanceTo(P(500, 500)) < 1e-6), "both constraints contain the crossing node");
             int quads = meshes[0].Faces.Count(f => f.IsQuad);
             Assert.IsTrue(quads > meshes[0].FacesCount / 2, $"the mesh is recombined: {quads} quads of {meshes[0].FacesCount} faces");
         }

@@ -4,6 +4,7 @@ using GPC.Geometry.Meshes.GMesh;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 
 namespace Meshes.GMsh
@@ -452,7 +453,8 @@ namespace Meshes.GMsh
 
 			GMesh.Generate(shapes, embeddedGeometries, embGeomMeshSize, options, out List<Mesh> meshes, out GMesh.GMeshGenerateMeshStatus generateMeshStatus);
 			MeshExport.ExportToMshFormatv2(base.GetFilePathInOutputFolder(base.GetTestName(), "msh"), meshes);
-			CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, options.MeshSize, generateMeshStatus, 8);
+			// The embedded points request size 5, so validate against the actual local minimum.
+			CommonGMeshAssert(meshes, shapes, embeddedGeometries, options.MeshSize, embGeomMeshSize.Values.Min(), generateMeshStatus, 8);
 		}
 
 		[TestMethod]

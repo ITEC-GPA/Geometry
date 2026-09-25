@@ -102,15 +102,21 @@ namespace GPC.Geometry.Meshes.GMesh
             if (shapesInput is null)
                 throw new ArgumentNullException(nameof(Shape));
 
-            if (options.MeshSizeMax == 0)
-                throw new ArgumentException("Max mesh size cannot be zero");
+            if (!IsFinitePositive(options.MeshSize) || !IsFinitePositive(options.MeshSizeMax)
+                || double.IsNaN(options.MeshSizeMin) || double.IsInfinity(options.MeshSizeMin)
+                || options.MeshSizeMin < 0 || options.MeshSizeMin > options.MeshSizeMax)
+                throw new ArgumentException("Mesh sizes must be finite, with positive target/maximum and 0 <= minimum <= maximum.", nameof(options));
+
+            if (embeddedGeomMeshSize != null && embeddedGeomMeshSize.Values.Any(size => !IsFinitePositive(size)))
+                throw new ArgumentException("Embedded mesh sizes must be finite and positive.", nameof(embeddedGeomMeshSize));
 
             // the input is enumerated once (before, Count() and ElementAt(s) at every step)
             IList<Shape> shapesList = shapesInput as IList<Shape> ?? shapesInput.ToList();
 
             lock (GmshSync)
             {
-                Gmsh.Initialize();
+                // Personal Gmsh configuration must not override this library's meshing options.
+                Gmsh.Initialize(readConfigFiles: false);
                 try
                 {
                     return GenerateCore(shapesList, embeddedGeometriesInput, embeddedGeomMeshSize, options, out meshes, out generateMeshStatus);
@@ -126,6 +132,8 @@ namespace GPC.Geometry.Meshes.GMesh
         /// Gmsh is a global state: one generation at a time
         /// </summary>
         private static readonly object GmshSync = new object();
+
+        private static bool IsFinitePositive(double value) => value > 0 && !double.IsInfinity(value);
 
         private static bool GenerateCore(IList<Shape> shapesInput, Dictionary<Shape, GeometryBase[]> embeddedGeometriesInput, Dictionary<GeometryBase,
             double> embeddedGeomMeshSize, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
@@ -151,7 +159,14 @@ namespace GPC.Geometry.Meshes.GMesh
             Gmsh.Option.SetNumber("General.ExpertMode", 1);     //to disable all the messages meant for inexperienced users
 
             // MESH 
-            Gmsh.Option.SetNumber("Mesh.Algorithm", (int)options.Algorithm);
+            // Gmsh 4.15.2's algorithm 9 unconditionally invokes UntangleTris, even
+            // with Optimize=false. Embedded surfaces can cause native heap corruption
+            // there, which cannot be caught as a GmshException. Keep the requested
+            // options intact and report the safe algorithm actually used below.
+            bool packingWorkaround = options.Algorithm == GMeshGenerateOptions.MeshAlgorithm.PackingOfParallelograms
+                && Gmsh.Option.GetString("General.Version") == "4.15.2";
+            Gmsh.Option.SetNumber("Mesh.Algorithm", (int)(packingWorkaround
+                ? GMeshGenerateOptions.MeshAlgorithm.FrontalDelaunayForQuads : options.Algorithm));
 
             Gmsh.Option.SetNumber("Mesh.MeshSizeMax", options.MeshSizeMax);
             Gmsh.Option.SetNumber("Mesh.MeshSizeMin", options.MeshSizeMin);
@@ -203,6 +218,8 @@ namespace GPC.Geometry.Meshes.GMesh
 
             meshes = new List<Mesh>();                                  // lista di meshes che poi vengono date in out
             generateMeshStatus = new GMeshGenerateMeshStatus();
+            if (packingWorkaround)
+                generateMeshStatus.AddWarning("Gmsh 4.15.2 PackingOfParallelograms can crash in native UntangleTris; using FrontalDelaunayForQuads with the requested recombination instead.");
             OpenCascadeWrapper occw = new OpenCascadeWrapper();
 
             List<Shape> shapesList = new List<Shape>();

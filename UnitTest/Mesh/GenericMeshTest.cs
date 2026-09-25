@@ -126,7 +126,7 @@ namespace Meshes
 		}
 
 		protected void CommonGMeshAssert(IEnumerable<Mesh> meshes, IEnumerable<Shape> shapes, Dictionary<Shape, GeometryBase[]> embeddedGeometries, double meshSizeMax,
-			double meshSizeMin, GMesh.GMeshGenerateMeshStatus generateMeshStatus, double meshFactorQuality = 2.5, double tol = GeometryBase.Tolerance)
+			double meshSizeMin, GMesh.GMeshGenerateMeshStatus generateMeshStatus, double meshFactorQuality = 2.5, double tol = GeometryBase.Tolerance, double minimumFaceAreaFactor = 1)
 		{
 			// PARAMETRO MESHFACTORQUALITY
 			// 1 rappresenta la mesh perfetta. tutti quadrati o triangoli di lato MeshTransfinite.
@@ -176,7 +176,7 @@ namespace Meshes
 				}
 			}
 
-			double minimumFaceArea = meshSizeMin * meshSizeMin / (2.0 * meshFactorQuality);
+			double minimumFaceArea = minimumFaceAreaFactor * meshSizeMin * meshSizeMin / (2.0 * meshFactorQuality);
 			double maximumFaceArea = meshSizeMax * meshSizeMax * meshFactorQuality;
 			List<double> faceAreaArray = new List<double>();
 			List<double> edgeLenghtArray = new List<double>();
