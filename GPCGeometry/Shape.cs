@@ -462,13 +462,26 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// The plane of the first three vertices of the fill, after removing the aligned and the duplicated points
+        /// The plane of the fill: through its first vertex, with the Newell normal (right hand rule on the vertices order, also for concave
+        /// fills) and the first axis on the first side. For a degenerate fill (area close to zero) the plane of the first three vertices, after
+        /// removing the aligned and the duplicated points. Before, always the plane of the first three vertices: with a concave first vertex
+        /// the normal was reversed
         /// </summary>
         /// <param name="tolerance">The tolerance of the removal of the points and of the plane</param>
         /// <returns>The plane of the shape</returns>
         /// <exception cref="ArgumentException">If the three points are aligned</exception>
         public Plane GetPlane(double tolerance = GeometryBase.Tolerance)
         {
+            if (Fill.TryGetUnitNormal(tolerance, out Vector3d normal))
+            {
+                for (int i = 1; i < Fill.Count; i++)
+                {
+                    Vector3d side = Fill[0].VectorTo(Fill[i]);
+                    if (side.Length > tolerance)
+                        return new Plane(Fill[0], side, normal.CrossProduct(side));
+                }
+            }
+
             var fill = (Polygon3d)Fill.Clone();
 
             fill.RemoveAlignedPoints(tolerance);

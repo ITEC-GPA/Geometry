@@ -340,75 +340,35 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// Remove aligned points keeping only the last 2 point of the segment.
-        /// If all the points are aligned, it keeps the last two points, not necessary the extremes of the line
+        /// Remove the aligned points: a vertex is removed when it is within <paramref name="tolerance"/> from the line through its current
+        /// neighbours (the vertices not removed) and the points already removed between them stay within the tolerance from that line, so every
+        /// removed point is within the tolerance from the final side. The spikes (a vertex on the line of its neighbours but outside their
+        /// segment) and the repeated consecutive vertices are removed too. If all the points are aligned, the two extremes are kept, in their
+        /// order; otherwise at least three points are kept.
+        /// Before, the tolerance was an angle, the neighbours were the original ones and, with all the points aligned, the last two points were kept
         /// </summary>
-        /// <param name="tolerance">Tolleranza</param>
-        public void RemoveAlignedPoints(double tolerance = GeometryBase.AngularTolerance)
+        /// <param name="tolerance">The tolerance on the distance from the line of the neighbours</param>
+        public void RemoveAlignedPoints(double tolerance = GeometryBase.Tolerance)
         {
-            List<int> pointToRemove = new List<int>();
-            double tollerance = Math.Sqrt(Utilities.Maths.ErrorPropagation.SumSquareTolerance(tolerance, tolerance));
+            if (_points.Length < 3)
+                return;
 
+            var x = new double[_points.Length];
+            var y = new double[_points.Length];
             for (int i = 0; i < _points.Length; i++)
             {
-                if (_points.Length > 2)
-                {
-                    Vector2d v1 = new Vector2d(GetPreviousPoint(i) - _points[i]);
-                    Vector2d v2 = new Vector2d(GetNextPoint(i) - _points[i]);
-
-                    double angle = v1.AngleTo(v2);                    
-
-                    // Il metodo costruisce l'angolo tra il punto da testare, il punto precedente e il punto successivo. 
-                    // Se questo angolo è 180° => pi greco, allora i punti sono allineati.
-
-                    if (Math.Abs(Math.Abs(angle) - Math.PI) < tollerance)                       
-                    {
-                        if (pointToRemove.Count < _points.Length - 2)
-                            pointToRemove.Add(i);
-                    }
-
-                    // Se l'angolo è 0, cerca il punto successivo. Se trovo un nuovo punto allineato in cui i è nel mezzo, allora tolgo i, 
-                    // se non trovo altri punti allora vuol dire che è un estremo o che non ci sono punti allineati
-
-                    if (Math.Abs(Math.Abs(angle)) < tollerance)
-                    {
-                        for (int k = 1; k < _points.Length - 1 - i; k++)
-                        {
-                            Vector2d v3 = new Vector2d(GetPreviousPoint(i) - _points[i]);
-
-                            Vector2d v4 = new Vector2d(GetNextPoint(k + i) - _points[i]);
-
-                            double angle2 = v3.AngleTo(v4);
-
-                            if (Math.Abs(Math.Abs(angle2) - Math.PI) < tollerance)
-                            {
-                                if (pointToRemove.Count < _points.Length - 2)
-                                {
-                                    pointToRemove.Add(i);
-                                    i--;
-                                }
-                                break;
-                            }
-
-                            if (Math.Abs(Math.Abs(angle)) < tollerance)
-                            {
-
-                            }
-
-                            else
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
+                x[i] = _points[i].X;
+                y[i] = _points[i].Y;
             }
 
-            // Rimozione punti leggendo la lista al contrario
-            for (int i = pointToRemove.Count -1; i >= 0; i--)
-            {
-                RemoveAt(pointToRemove[i]);
-            }
+            int[] kept = AlignedPoints.GetIndicesToKeep(x, y, new double[_points.Length], tolerance);
+            if (kept.Length == _points.Length)
+                return;
+
+            var points = new Point2d[kept.Length];
+            for (int i = 0; i < kept.Length; i++)
+                points[i] = _points[kept[i]];
+            _points = points;
         }
 
         /// <summary>

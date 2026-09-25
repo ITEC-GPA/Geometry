@@ -910,80 +910,43 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Remove aligned points keeping only the last 2 point of the segment.
-		/// If all the points are aligned, it keeps the last two points, not necessary the extremes of the line
+		/// Remove the aligned points: a vertex is removed when it is within <paramref name="tolerance"/> from the line through its current
+		/// neighbours (the vertices not removed) and the points already removed between them stay within the tolerance from that line, so every
+		/// removed point is within the tolerance from the final side. The spikes (a vertex on the line of its neighbours but outside their
+		/// segment) and the repeated consecutive vertices are removed too. If all the points are aligned, the two extremes are kept, in their
+		/// order; otherwise at least three points are kept.
+		/// Before, the tolerance was an angle, the neighbours were the original ones and, with all the points aligned, the last two points were kept
 		/// </summary>
-		/// <param name="tolerance">Tolleranza</param>
-		public void RemoveAlignedPoints(double tolerance = GeometryBase.AngularTolerance)
+		/// <param name="tolerance">The tolerance on the distance from the line of the neighbours</param>
+		public void RemoveAlignedPoints(double tolerance = GeometryBase.Tolerance)
 		{
-			List<int> pointToRemove = new List<int>();
+			if (_points.Length < 3)
+				return;
 
+			var x = new double[_points.Length];
+			var y = new double[_points.Length];
+			var z = new double[_points.Length];
 			for (int i = 0; i < _points.Length; i++)
 			{
-				if (_points.Length > 2)
-				{
-					Vector3d v1 = new Vector3d(GetPreviousPoint(i) - _points[i]);
-
-					Vector3d v2 = new Vector3d(GetNextPoint(i) - _points[i]);
-
-					double angle = v1.AngleTo(v2);
-					double tol = Utilities.Maths.ErrorPropagation.ProductTolerance(angle, angle, tolerance, tolerance);
-
-					// Il metodo costruisce l'angolo tra il punto da testare, il punto precedente e il punto successivo. 
-					// Se questo angolo è 180° => pi greco, allora i punti sono allineati.
-
-					if (Math.Abs(Math.Abs(angle) - Math.PI) < tol)
-					{
-						if (pointToRemove.Count < _points.Length - 2)
-							pointToRemove.Add(i);
-					}
-
-					// Se l'angolo è 0, cerca il punto successivo. Se trovo un nuovo punto allineato in cui i è nel mezzo, allora tolgo i, 
-					// se non trovo altri punti allora vuol dire che è un estremo o che non ci sono punti allineati
-
-					if (Math.Abs(Math.Abs(angle)) < tol)
-					{
-						for (int k = 1; k < _points.Length - 1 - i; k++)
-						{
-							Vector3d v3 = new Vector3d(GetPreviousPoint(i) - _points[i]);
-
-							Vector3d v4 = new Vector3d(GetNextPoint(k + i) - _points[i]);
-
-							double angle2 = v3.AngleTo(v4);
-
-							if (Math.Abs(Math.Abs(angle2) - Math.PI) < tol)
-							{
-								if (pointToRemove.Count < _points.Length - 2)
-								{
-									pointToRemove.Add(i);
-									i--;
-								}
-								break;
-							}
-
-							if (Math.Abs(Math.Abs(angle)) < tol)
-							{
-
-							}
-
-							else
-							{
-								break;
-							}
-						}
-					}
-				}
+				x[i] = _points[i].X;
+				y[i] = _points[i].Y;
+				z[i] = _points[i].Z;
 			}
 
-			// Rimozione punti leggendo la lista al contrario
-			for (int i = pointToRemove.Count - 1; i >= 0; i--)
-			{
-				RemoveAt(pointToRemove[i]);
-			}
+			int[] kept = AlignedPoints.GetIndicesToKeep(x, y, z, tolerance);
+			if (kept.Length == _points.Length)
+				return;
+
+			var points = new Point3d[kept.Length];
+			for (int i = 0; i < kept.Length; i++)
+				points[i] = _points[kept[i]];
+			_points = points;
 		}
 
 		/// <summary>
-		/// Check if the polygon is planar: all the vertices are on the plane of the first three not aligned vertices
+		/// Check if the polygon is planar: all the vertices are within the tolerance from the plane through their mean point with the Newell normal
+		/// (before, the plane of the first three not aligned vertices); for a degenerate polygon (area close to zero) the plane of the first three
+		/// not aligned vertices
 		/// </summary>
 		/// <param name="tolerance">The tolerance on the distances from the plane (and of the removal of the duplicated and aligned points)</param>
 		/// <returns>True if the polygon is planar (always true with 3 vertices or less)</returns>
@@ -998,6 +961,29 @@ namespace GPC.Geometry
 
 			if (Count <= 3)
 				return true;
+
+			if (TryGetUnitNormal(tolerance, out Vector3d normal))
+			{
+				double mx = 0, my = 0, mz = 0;
+				for (int i = 0; i < _points.Length; i++)
+				{
+					mx += _points[i].X;
+					my += _points[i].Y;
+					mz += _points[i].Z;
+				}
+				mx /= _points.Length;
+				my /= _points.Length;
+				mz /= _points.Length;
+
+				for (int i = 0; i < _points.Length; i++)
+				{
+					double distance = normal.X * (_points[i].X - mx) + normal.Y * (_points[i].Y - my) + normal.Z * (_points[i].Z - mz);
+					if (!(Math.Abs(distance) <= tolerance))
+						return false;
+				}
+
+				return true;
+			}
 
 			Polygon3d polygon = new Polygon3d();  // Non si può usare clona, altrimenti viene chiamato IsPlanar();
 			polygon.AddRange(_points);
@@ -1085,8 +1071,8 @@ namespace GPC.Geometry
 			if (!(Math.Abs(distanceFromPlane) < tol))
 			{
 				// Point off the plane: the previous method decides, so the result does not change.
-				// With a large tolerance it does not check the plane, because RemoveAlignedPoints uses the tolerance as an angle
-				// and removes vertices of the polygon (e.g. Checker MixedSectionTest.FailureDomain02 relies on it)
+				// With a tolerance large compared with the polygon it does not check the plane, because RemoveAlignedPoints removes
+				// vertices of the polygon (before, the tolerance was used as an angle: e.g. Checker MixedSectionTest.FailureDomain02 relied on it)
 				return IsPointInsideByProjections(pointToTest, tol);
 			}
 
@@ -1379,14 +1365,31 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// Get the coordinate system of the polygon. Generated from first 3 points (not aligned, not duplicated) of the polygon.
-		/// Origin in first point, X axis on the first side, Z axis on the normal, Y to complete the triad.
+		/// Get the coordinate system of the polygon: origin in the first point, X axis on the first side (to the first vertex farther than the
+		/// tolerance), Z axis on the Newell normal (right hand rule on the vertices order, also for concave polygons), Y to complete the triad.
+		/// For a degenerate polygon (area close to zero) it is generated from the first 3 points (not aligned, not duplicated). Before, always
+		/// from the first 3 points: with a concave first vertex the Z axis was opposite to the normal
 		/// </summary>
 		/// <param name="tolerance">The tolerance of the removal of the duplicated and aligned points</param>
 		/// <returns>Coordinate system generated from first three points of the polygon. Duplicate and aligned points are not considered</returns>
 		/// <exception cref="NotSupportedException">Thrown when Number of unique points not sufficient to create a coordinate system</exception>
 		public CoordinateSystem GetCoordinateSystem(double tolerance = GeometryBase.Tolerance)
 		{
+			if (TryGetUnitNormal(tolerance, out Vector3d normal))
+			{
+				for (int i = 1; i < _points.Length; i++)
+				{
+					Vector3d side = _points[0].VectorTo(_points[i]);
+					if (side.Length > tolerance)
+					{
+						side.Unitize();
+						Vector3d yAxis = normal.CrossProduct(side);
+						yAxis.Unitize();
+						return new CoordinateSystem(_points[0], side, yAxis);
+					}
+				}
+			}
+
 			Polygon3d p = (Polygon3d)Clone();
 			p.RemoveDuplicatedPoints(tolerance);
 			p.RemoveAlignedPoints(tolerance);
