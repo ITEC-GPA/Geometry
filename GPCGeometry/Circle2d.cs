@@ -210,7 +210,8 @@ namespace GPC.Geometry
 		/// <returns>The polygon</returns>
 		public Polygon2d ConvertToPolygon(int numberOfEdges = 32)
 		{			
-			return new Polygon2d(Radius, numberOfEdges, Center);
+			// the constructor of the regular polygon takes the diameter
+			return new Polygon2d(Diameter, numberOfEdges, Center);
 		}
 
 		#endregion
