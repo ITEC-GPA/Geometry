@@ -72,6 +72,7 @@
     <Compile Include="Collections\CollectionExtension.cs" />
     <Compile Include="Geometry\BoundingBox2d.cs" />
     <Compile Include="Geometry\Circle3dTest.cs" />
+    <Compile Include="Geometry\ControlTests.cs" />
     <Compile Include="Geometry\CoordinateSystemTest.cs" />
     <Compile Include="Geometry\GeometryEqualsHashCode.cs" />
     <Compile Include="Geometry\GeometryPerformance.cs" />
