@@ -192,6 +192,11 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// The boundary segments (constrained edges), by <see cref="SegmentKey"/>
         /// </summary>
         private readonly HashSet<long> _segments = new HashSet<long>(LongKeyComparer.Instance);
+        /// <summary>
+        /// The number of loop edges on each boundary segment (by <see cref="SegmentKey"/>), for the classification of the triangles: a segment of
+        /// two loops (e.g. a hole with an edge on the fill) does not change the side. The segments split later are not counted
+        /// </summary>
+        private readonly Dictionary<long, int> _segmentLoops = new Dictionary<long, int>(LongKeyComparer.Instance);
 
         /// <summary>
         /// The X of the center of the bounding box (normalization)
@@ -426,22 +431,56 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             NewTriangle(0, 1, 2);
 
             // Boundary points, divided according to the mesh size
-            var loopVertices = new List<List<int>>();
-            int tag = 0;
-            foreach (var loop in loops)
+            var pointX = new List<double>();
+            var pointY = new List<double>();
+            var pointLoop = new List<int>();
+            for (int l = 0; l < loops.Count; l++)
             {
-                var vertices = new List<int>();
+                List<double[]> loop = loops[l];
                 for (int i = 0; i < loop.Count; i++)
                 {
                     double[] a = loop[i];
                     double[] b = loop[(i + 1) % loop.Count];
 
-                    AddBoundaryVertex(vertices, a[0], a[1], ref tag);
+                    pointX.Add(a[0]);
+                    pointY.Add(a[1]);
+                    pointLoop.Add(l);
 
                     foreach (double t in Divisions(a, b, size))
-                        AddBoundaryVertex(vertices, a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), ref tag);
+                    {
+                        pointX.Add(a[0] + t * (b[0] - a[0]));
+                        pointY.Add(a[1] + t * (b[1] - a[1]));
+                        pointLoop.Add(l);
+                    }
                 }
-                loopVertices.Add(vertices);
+            }
+
+            // inserted in a randomized order: in the order of the loops the points of an edge are inside the circumcircles of the triangles
+            // of the edge in front of it (e.g. a thin strip), and the number of flips grows with the square of the points
+            var pointVertex = new int[pointX.Count];
+            foreach (int i in InsertionOrder(pointX.Count))
+                pointVertex[i] = InsertPoint((pointX[i] - _centerX) / _scale, (pointY[i] - _centerY) / _scale, pointX[i], pointY[i], -1, null);
+
+            // the vertices of the loops; the tags and the original coordinates are given in the order of the loops, the first occurrence of
+            // coincident points (e.g. a hole touching the fill, merged in one vertex) wins
+            var loopVertices = new List<List<int>>();
+            int tag = 0;
+            for (int i = 0; i < pointX.Count; i++)
+            {
+                if (i == 0 || pointLoop[i] != pointLoop[i - 1])
+                    loopVertices.Add(new List<int>());
+
+                List<int> vertices = loopVertices[loopVertices.Count - 1];
+                int vertex = pointVertex[i];
+                if (_tags[vertex] < 0)
+                {
+                    _tags[vertex] = tag++;
+                    _originalX[vertex] = pointX[i];
+                    _originalY[vertex] = pointY[i];
+                }
+
+                if (vertices.Count == 0 || vertices[vertices.Count - 1] != vertex)
+                    vertices.Add(vertex);
             }
 
             // Boundary segments
@@ -505,21 +544,41 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         }
 
         /// <summary>
-        /// Inserts a boundary point and adds it to the vertices of its loop (coincident points, e.g. a hole touching the fill, are merged)
+        /// Biased randomized insertion order (Amenta, Choi and Rote): the points are shuffled (with a fixed seed) and divided in rounds that double
+        /// in size, each one sorted in the order of the loops. The random order keeps few flips per point, the order of the loops keeps short the
+        /// walks of the point location. The order depends only on the number of points: the mesh does not depend on the units and on the position
+        /// (a spatial sorting can change with the rounding, and the triangulation of cocircular points depends on the order)
         /// </summary>
-        /// <param name="vertices">The vertices of the loop</param>
-        /// <param name="x">The original X</param>
-        /// <param name="y">The original Y</param>
-        /// <param name="tag">The tag of the next boundary point (incremented when a new point is added)</param>
-        private void AddBoundaryVertex(List<int> vertices, double x, double y, ref int tag)
+        /// <param name="count">The number of points</param>
+        /// <returns>The indices of the points in the insertion order</returns>
+        private static int[] InsertionOrder(int count)
         {
-            int vertex = InsertPoint((x - _centerX) / _scale, (y - _centerY) / _scale, x, y, tag, null);
-            if (vertex == _x.Count - 1 && _tags[vertex] == tag)
-                tag++;
+            var order = new int[count];
+            for (int i = 0; i < count; i++)
+                order[i] = i;
 
-            // coincident points (e.g. a hole touching the fill) are merged
-            if (vertices.Count == 0 || vertices[vertices.Count - 1] != vertex)
-                vertices.Add(vertex);
+            // Fisher-Yates shuffle with a xorshift generator
+            ulong state = 0x9E3779B97F4A7C15UL;
+            for (int i = count - 1; i > 0; i--)
+            {
+                state ^= state << 13;
+                state ^= state >> 7;
+                state ^= state << 17;
+                int j = (int)(state % (ulong)(i + 1));
+                int swap = order[i];
+                order[i] = order[j];
+                order[j] = swap;
+            }
+
+            // rounds [n/2, n), [n/4, n/2), ... [0, at most 32), each one sorted in the order of the loops
+            for (int end = count; end > 0;)
+            {
+                int start = end > 32 ? end / 2 : 0;
+                Array.Sort(order, start, end - start);
+                end = start;
+            }
+
+            return order;
         }
 
         #endregion
@@ -1105,7 +1164,10 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             if (u != null)
                 u.C[IndexOfNeighbour(u, t)] = true;
 
-            _segments.Add(SegmentKey(t.V[(edge + 1) % 3], t.V[(edge + 2) % 3]));
+            long key = SegmentKey(t.V[(edge + 1) % 3], t.V[(edge + 2) % 3]);
+            _segments.Add(key);
+            _segmentLoops.TryGetValue(key, out int loops);
+            _segmentLoops[key] = loops + 1;
         }
 
         /// <summary>
@@ -1304,7 +1366,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         #region Inside / outside
 
         /// <summary>
-        /// A triangle is inside the shape if it is reached from the super triangle crossing an odd number of boundary segments
+        /// A triangle is inside the shape if it is reached from the super triangle crossing an odd number of loop edges. A segment of two loops
+        /// counts twice (before, once: the result depended on the path, e.g. a hole with an edge on the fill could be inside)
         /// </summary>
         private void ClassifyTriangles()
         {
@@ -1327,7 +1390,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                     if (n is null || depth.ContainsKey(n))
                         continue;
 
-                    depth[n] = t.C[k] ? d + 1 : d;
+                    bool crossing = t.C[k] && (!_segmentLoops.TryGetValue(SegmentKey(t.V[(k + 1) % 3], t.V[(k + 2) % 3]), out int loops) || loops % 2 == 1);
+                    depth[n] = crossing ? d + 1 : d;
                     queue.Enqueue(n);
                 }
             }

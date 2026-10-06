@@ -156,6 +156,50 @@ namespace Meshes
         }
 
         [TestMethod]
+        public void LoopsWithSharedEdges()
+        {
+            // a segment of two loops does not change the side (before: hole inside, child missing or triangles outside the shape)
+            var shapes = new[]
+            {
+                new Shape2d(Rectangle(0, 0, 100, 100), new[] { Rectangle(0, 40, 30, 20) }),                                     // hole with an edge on the fill
+                new Shape2d(Rectangle(0, 0, 100, 100), new[] { Rectangle(20, 20, 30, 30), Rectangle(50, 20, 30, 30) }),         // two holes with a common edge
+                new Shape2d(Rectangle(0, 0, 100, 100), new[] { Rectangle(50, 50, 40, 40) }, new[] { new Shape2d(Rectangle(50, 50, 40, 40)) }), // child equal to its hole
+                new Shape2d(Rectangle(0, 0, 100, 100), new[] { Rectangle(0, 40, 30, 20), Rectangle(50, 50, 40, 40) }, new[] { new Shape2d(Rectangle(60, 60, 20, 20)) }),
+            };
+
+            foreach (Shape2d shape in shapes)
+            {
+                foreach (double meshSize in new[] { 1E+22, 5.0 })
+                {
+                    Mesh mesh = Generate(shape, meshSize);
+                    AssertValidMesh(mesh, shape);
+                    Assert.IsTrue(mesh.Vertices.All(v => v.Point.X >= 0 && v.Point.X <= 100 && v.Point.Y >= 0 && v.Point.Y <= 100));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void BoundaryPointsKeepTheirTags()
+        {
+            // the boundary points are inserted in a random order, the tags follow the order of the loops (the vertices of the shape first)
+            var shape = new Shape2d(Rectangle(0, 0, 300, 500), new[] { Rectangle(100, 100, 100, 100) });
+            Mesh mesh = Generate(shape, 50, true);
+
+            var tagged = mesh.Vertices.Where(v => v.Tag is int tag && tag >= 0).OrderBy(v => (int)v.Tag).ToList();
+            Assert.AreEqual(2 * (6 + 10) + 4 * 2, tagged.Count);
+            CollectionAssert.AreEqual(Enumerable.Range(0, tagged.Count).ToList(), tagged.Select(v => (int)v.Tag).ToList());
+
+            // the fill (tags 0-31), then the hole (32-39), each one from its first vertex along its edges (spacing 50)
+            Assert.IsTrue(tagged[0].Point.X == shape.Fill[0].X && tagged[0].Point.Y == shape.Fill[0].Y);
+            Assert.IsTrue(tagged[32].Point.X == shape.Holes[0][0].X && tagged[32].Point.Y == shape.Holes[0][0].Y);
+            for (int k = 0; k < tagged.Count; k++)
+            {
+                int next = k == 31 ? 0 : k == 39 ? 32 : k + 1;
+                Assert.AreEqual(50, tagged[k].Point.DistanceTo(tagged[next].Point), 1E-9, $"tags {k} and {next}");
+            }
+        }
+
+        [TestMethod]
         public void InitialMeshOnlyHasOnlyBoundaryPoints()
         {
             var shape = new Shape2d(Rectangle(0, 0, 300, 500));
