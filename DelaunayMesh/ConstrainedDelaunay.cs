@@ -152,6 +152,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// </summary>
         private const double LatticeMinAngle = 20.0;
 
+        /// <summary>
+        /// Up to this number the boundary points are inserted in the order of the loops, so the meshes of the usual shapes do not change
+        /// (the cost grows with the square of the points: a few milliseconds); with more points, in a randomized order (see <see cref="InsertionOrder"/>)
+        /// </summary>
+        private const int LoopOrderPoints = 1000;
+
         #endregion
 
         #region Variables
@@ -455,8 +461,8 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 }
             }
 
-            // inserted in a randomized order: in the order of the loops the points of an edge are inside the circumcircles of the triangles
-            // of the edge in front of it (e.g. a thin strip), and the number of flips grows with the square of the points
+            // many points are inserted in a randomized order: in the order of the loops the points of an edge are inside the circumcircles of
+            // the triangles of the edge in front of it (e.g. a thin strip), and the number of flips grows with the square of the points
             var pointVertex = new int[pointX.Count];
             foreach (int i in InsertionOrder(pointX.Count))
                 pointVertex[i] = InsertPoint((pointX[i] - _centerX) / _scale, (pointY[i] - _centerY) / _scale, pointX[i], pointY[i], -1, null);
@@ -544,10 +550,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         }
 
         /// <summary>
-        /// Biased randomized insertion order (Amenta, Choi and Rote): the points are shuffled (with a fixed seed) and divided in rounds that double
-        /// in size, each one sorted in the order of the loops. The random order keeps few flips per point, the order of the loops keeps short the
-        /// walks of the point location. The order depends only on the number of points: the mesh does not depend on the units and on the position
-        /// (a spatial sorting can change with the rounding, and the triangulation of cocircular points depends on the order)
+        /// The order of insertion of the boundary points. Up to <see cref="LoopOrderPoints"/> points, the order of the loops: the meshes are the ones
+        /// of the versions up to 2.0.0.8 (the triangulation of cocircular points, e.g. the vertices of a regular polygon, depends on the order).
+        /// With more points, biased randomized insertion order (Amenta, Choi and Rote): the points are shuffled (with a fixed seed) and divided in
+        /// rounds that double in size, each one sorted in the order of the loops. The random order keeps few flips per point, the order of the loops
+        /// keeps short the walks of the point location. The order depends only on the number of points: the mesh does not depend on the units and
+        /// on the position (a spatial sorting can change with the rounding)
         /// </summary>
         /// <param name="count">The number of points</param>
         /// <returns>The indices of the points in the insertion order</returns>
@@ -556,6 +564,9 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             var order = new int[count];
             for (int i = 0; i < count; i++)
                 order[i] = i;
+
+            if (count <= LoopOrderPoints)
+                return order;
 
             // Fisher-Yates shuffle with a xorshift generator
             ulong state = 0x9E3779B97F4A7C15UL;

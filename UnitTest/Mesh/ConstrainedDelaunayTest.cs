@@ -181,21 +181,26 @@ namespace Meshes
         [TestMethod]
         public void BoundaryPointsKeepTheirTags()
         {
-            // the boundary points are inserted in a random order, the tags follow the order of the loops (the vertices of the shape first)
+            // 40 points inserted in the order of the loops, 2000 in a random order: the tags follow the order of the loops (the vertices of
+            // the shape first)
             var shape = new Shape2d(Rectangle(0, 0, 300, 500), new[] { Rectangle(100, 100, 100, 100) });
-            Mesh mesh = Generate(shape, 50, true);
-
-            var tagged = mesh.Vertices.Where(v => v.Tag is int tag && tag >= 0).OrderBy(v => (int)v.Tag).ToList();
-            Assert.AreEqual(2 * (6 + 10) + 4 * 2, tagged.Count);
-            CollectionAssert.AreEqual(Enumerable.Range(0, tagged.Count).ToList(), tagged.Select(v => (int)v.Tag).ToList());
-
-            // the fill (tags 0-31), then the hole (32-39), each one from its first vertex along its edges (spacing 50)
-            Assert.IsTrue(tagged[0].Point.X == shape.Fill[0].X && tagged[0].Point.Y == shape.Fill[0].Y);
-            Assert.IsTrue(tagged[32].Point.X == shape.Holes[0][0].X && tagged[32].Point.Y == shape.Holes[0][0].Y);
-            for (int k = 0; k < tagged.Count; k++)
+            foreach (double meshSize in new[] { 50.0, 1.0 })
             {
-                int next = k == 31 ? 0 : k == 39 ? 32 : k + 1;
-                Assert.AreEqual(50, tagged[k].Point.DistanceTo(tagged[next].Point), 1E-9, $"tags {k} and {next}");
+                Mesh mesh = Generate(shape, meshSize, true);
+
+                var tagged = mesh.Vertices.Where(v => v.Tag is int tag && tag >= 0).OrderBy(v => (int)v.Tag).ToList();
+                int fill = (int)(1600 / meshSize), hole = (int)(400 / meshSize);
+                Assert.AreEqual(fill + hole, tagged.Count);
+                CollectionAssert.AreEqual(Enumerable.Range(0, tagged.Count).ToList(), tagged.Select(v => (int)v.Tag).ToList());
+
+                // the fill, then the hole, each one from its first vertex along its edges
+                Assert.IsTrue(tagged[0].Point.X == shape.Fill[0].X && tagged[0].Point.Y == shape.Fill[0].Y);
+                Assert.IsTrue(tagged[fill].Point.X == shape.Holes[0][0].X && tagged[fill].Point.Y == shape.Holes[0][0].Y);
+                for (int k = 0; k < tagged.Count; k++)
+                {
+                    int next = k == fill - 1 ? 0 : k == fill + hole - 1 ? fill : k + 1;
+                    Assert.AreEqual(meshSize, tagged[k].Point.DistanceTo(tagged[next].Point), 1E-9, $"size {meshSize}: tags {k} and {next}");
+                }
             }
         }
 
