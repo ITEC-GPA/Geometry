@@ -75,8 +75,10 @@ namespace Geometry
 
             // Assert
 
-            Vector3d v1Expected = v1;
-            Vector3d v2Expected = v2;
+            // Since 6590b90 the constructor copies the axis vectors: the caller's v1 and v2 keep their length,
+            // so the expected axes are their unit vectors.
+            Vector3d v1Expected = Vector3d.Unitize(v1);
+            Vector3d v2Expected = Vector3d.Unitize(v2);
             Vector3d v3Expected = new Vector3d(0, 0, 1);
 
             Assert.IsTrue((cs.V1 - v1Expected).Length < tollerance);
