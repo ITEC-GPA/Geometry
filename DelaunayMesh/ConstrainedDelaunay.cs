@@ -222,6 +222,15 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
         /// The triangles to check (with their stamp): not null during the refinement
         /// </summary>
         private Queue<KeyValuePair<Triangle, int>> _refineQueue;
+        /// <summary>
+        /// The boundary segments (by <see cref="SegmentKey"/>) in the cells of a grid, each one in the cells covered by its diametral circle:
+        /// not null during the refinement. The keys of the segments split later remain in the cells and are discarded with <see cref="_segments"/>
+        /// </summary>
+        private Dictionary<long, List<long>> _encroachmentCells;
+        /// <summary>
+        /// The size of the cells of <see cref="_encroachmentCells"/> (the normalized mesh size)
+        /// </summary>
+        private double _encroachmentCellSize;
 
         #endregion
 
@@ -913,6 +922,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
                 _segments.Remove(SegmentKey(a, b));
                 _segments.Add(SegmentKey(a, p));
                 _segments.Add(SegmentKey(p, b));
+
+                if (_encroachmentCells != null)
+                {
+                    AddEncroachmentCells(SegmentKey(a, p));
+                    AddEncroachmentCells(SegmentKey(p, b));
+                }
             }
 
             Legalize(stack);
@@ -1357,6 +1372,12 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             int inserted = 0;
             var encroached = new List<long>();
 
+            // the circumcenters are compared only with the segments of their cell (before, with all the segments: quadratic time)
+            _encroachmentCellSize = size;
+            _encroachmentCells = new Dictionary<long, List<long>>(LongKeyComparer.Instance);
+            foreach (long key in _segments)
+                AddEncroachmentCells(key);
+
             while (_refineQueue.Count > 0 && inserted < maxInserted)
             {
                 KeyValuePair<Triangle, int> item = _refineQueue.Dequeue();
@@ -1373,11 +1394,17 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
 
                 // the circumcenter inside the diametral circle of a boundary segment: the segment is split instead
                 encroached.Clear();
-                foreach (long key in _segments)
+                if (_encroachmentCells.TryGetValue(CellKey(CellIndex(cx, _encroachmentCellSize), CellIndex(cy, _encroachmentCellSize)), out List<long> near))
                 {
-                    int a = (int)(key >> 32), b = (int)(key & 0xFFFFFFFF);
-                    if ((_x[a] - cx) * (_x[b] - cx) + (_y[a] - cy) * (_y[b] - cy) < 0 && Distance(a, b) > minSegmentLength)
-                        encroached.Add(key);
+                    foreach (long key in near)
+                    {
+                        if (!_segments.Contains(key))
+                            continue; // split after it was added to the cell
+
+                        int a = (int)(key >> 32), b = (int)(key & 0xFFFFFFFF);
+                        if ((_x[a] - cx) * (_x[b] - cx) + (_y[a] - cy) * (_y[b] - cy) < 0 && Distance(a, b) > minSegmentLength)
+                            encroached.Add(key);
+                    }
                 }
 
                 if (encroached.Count > 0)
@@ -1414,6 +1441,31 @@ namespace GPC.Geometry.Meshes.DelaunayMesh
             }
 
             _refineQueue = null;
+            _encroachmentCells = null;
+        }
+
+        /// <summary>
+        /// Adds a boundary segment to the cells of <see cref="_encroachmentCells"/> covered by the bounding box of its diametral circle,
+        /// so every point inside the circle finds the segment in its own cell
+        /// </summary>
+        /// <param name="key">The key of the segment (see <see cref="SegmentKey"/>)</param>
+        private void AddEncroachmentCells(long key)
+        {
+            int a = (int)(key >> 32), b = (int)(key & 0xFFFFFFFF);
+            double centerX = (_x[a] + _x[b]) / 2.0, centerY = (_y[a] + _y[b]) / 2.0, radius = Distance(a, b) / 2.0;
+
+            long i0 = CellIndex(centerX - radius, _encroachmentCellSize), i1 = CellIndex(centerX + radius, _encroachmentCellSize);
+            long j0 = CellIndex(centerY - radius, _encroachmentCellSize), j1 = CellIndex(centerY + radius, _encroachmentCellSize);
+            for (long i = i0; i <= i1; i++)
+            {
+                for (long j = j0; j <= j1; j++)
+                {
+                    long cell = CellKey(i, j);
+                    if (!_encroachmentCells.TryGetValue(cell, out List<long> list))
+                        _encroachmentCells[cell] = list = new List<long>(4);
+                    list.Add(key);
+                }
+            }
         }
 
         /// <summary>
