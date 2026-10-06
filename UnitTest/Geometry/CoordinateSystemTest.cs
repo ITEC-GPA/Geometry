@@ -104,6 +104,27 @@ namespace Geometry
         }
 
         [TestMethod]
+        public void Constructor_DoesNotModifyOrShareTheArgumentVectors()
+        {
+            // Non-unit arguments: before, they were unitized in place and kept as the axes of the system.
+            Vector3d x = new Vector3d(2, 0, 0), y = new Vector3d(0, 3, 0), z = new Vector3d(0, 0, 4);
+            var coordinateSystem = new CoordinateSystem(new Point3d(1, 2, 3), x, y, z, "CS");
+
+            Assert.AreEqual(2, x.X); Assert.AreEqual(3, y.Y); Assert.AreEqual(4, z.Z);
+            Assert.IsFalse(ReferenceEquals(x, coordinateSystem.V1) || ReferenceEquals(y, coordinateSystem.V2) || ReferenceEquals(z, coordinateSystem.V3));
+            Assert.AreEqual(1, coordinateSystem.V1.X); Assert.AreEqual(1, coordinateSystem.V2.Y); Assert.AreEqual(1, coordinateSystem.V3.Z);
+
+            // A later change of the arguments does not reach the system.
+            x.X = -5; y.Y = 7;
+            Assert.AreEqual(1, coordinateSystem.V1.X);
+            Assert.AreEqual(new Point3d(2, 2, 3), coordinateSystem.ToGlobal(new Point3d(1, 0, 0)));
+
+            // The copy constructor does not share the axes of the source.
+            var copy = new CoordinateSystem(coordinateSystem);
+            Assert.IsFalse(ReferenceEquals(copy.V1, coordinateSystem.V1) || ReferenceEquals(copy.V2, coordinateSystem.V2));
+        }
+
+        [TestMethod]
         public void CoordinateSystemTest5()
         {
             // sistema di riferimento sinistrorso

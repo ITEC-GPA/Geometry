@@ -113,8 +113,8 @@ namespace GPC.Geometry
 		/// Create a new right handed Coordinate System: X along <paramref name="v1"/>, Z along <paramref name="v1"/> × <paramref name="v2"/>
 		/// </summary>
 		/// <param name="origin">The origin point</param>
-		/// <param name="v1">The X axis vector (it is unitized in place)</param>
-		/// <param name="v2">The Y axis vector, orthogonal to <paramref name="v1"/> (it is unitized in place)</param>
+		/// <param name="v1">The X axis vector (copied, then unitized; the argument is not modified)</param>
+		/// <param name="v2">The Y axis vector, orthogonal to <paramref name="v1"/> (copied, then unitized; the argument is not modified)</param>
 		/// <param name="name">The name of the CS</param>
 		/// <param name="tolerance">The angular tolerance of the orthogonality check</param>
 		/// <exception cref="ArgumentException">If the vectors are not orthogonal</exception>
@@ -128,9 +128,9 @@ namespace GPC.Geometry
         /// Create a new Coordinate System
         /// </summary>
         /// <param name="origin">The origin point</param>
-        /// <param name="v1">The X axis vector (it is unitized in place)</param>
-        /// <param name="v2">The Y axis vector (it is unitized in place)</param>
-        /// <param name="v3">The Z axis vector (it is unitized in place)</param>
+        /// <param name="v1">The X axis vector (copied, then unitized; the argument is not modified)</param>
+        /// <param name="v2">The Y axis vector (copied, then unitized; the argument is not modified)</param>
+        /// <param name="v3">The Z axis vector (copied, then unitized; the argument is not modified)</param>
         /// <param name="name">The name of the CS</param>
         /// <param name="tolerance">The angular tolerance of the orthogonality check</param>
         /// <remarks>The 3 vector must be orthogonal (the check is on v1 - v2 and v1 - v3)</remarks>
@@ -196,9 +196,9 @@ namespace GPC.Geometry
         /// Constructor for generic Coordinate System
         /// </summary>
         /// <param name="origin">The origin point</param>
-        /// <param name="v1">The X axis vector (it is unitized in place)</param>
-        /// <param name="v2">The Y axis vector (it is unitized in place)</param>
-        /// <param name="v3">The Z axis vector (it is unitized in place)</param>
+        /// <param name="v1">The X axis vector (copied, then unitized; the argument is not modified)</param>
+        /// <param name="v2">The Y axis vector (copied, then unitized; the argument is not modified)</param>
+        /// <param name="v3">The Z axis vector (copied, then unitized; the argument is not modified)</param>
         /// <param name="name">The name of the CS</param>
         /// <param name="guid">The unique GUID. <see cref="Guid.Empty"/>: generated when it is requested</param>
         /// <param name="tolerance">The angular tolerance of the orthogonality check</param>
@@ -206,6 +206,11 @@ namespace GPC.Geometry
         /// <exception cref="ArgumentException">If the vectors are not orthogonal</exception>
         protected CoordinateSystem(Point3d origin, Vector3d v1, Vector3d v2, Vector3d v3, string name, Guid guid, double tolerance = GeometryBase.AngularTolerance)
         {
+            // Copies: the caller's vectors are neither modified nor shared (a later change of them would leave the cached
+            // transformation inconsistent with V1, V2, V3).
+            v1 = new Vector3d(v1.X, v1.Y, v1.Z);
+            v2 = new Vector3d(v2.X, v2.Y, v2.Z);
+            v3 = new Vector3d(v3.X, v3.Y, v3.Z);
             v1.Unitize();
             v2.Unitize();
             v3.Unitize();
