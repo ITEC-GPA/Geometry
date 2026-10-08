@@ -217,15 +217,17 @@ namespace GPC.Geometry.BVH
         {
             _root = new AABBNode();
 
-            var count = Math.Min(points.Count(), ids.Count());
+            var pointList = points as IList<Point3d> ?? points.ToList();
+            var idList = ids as IList<int> ?? ids.ToList();
+            var count = Math.Min(pointList.Count, idList.Count);
 
             AABBNode[] nodes = new AABBNode[count];
             for (int i = 0; i < count; i++)
             {
                 nodes[i] = new AABBNode();
-                nodes[i].Id = ids.ElementAt(i);
-                nodes[i].Box.Min = points.ElementAt(i);
-                nodes[i].Box.Max = points.ElementAt(i);
+                nodes[i].Id = idList[i];
+                nodes[i].Box.Min = pointList[i];
+                nodes[i].Box.Max = pointList[i];
             }
 
             BuildRecursion(ref _root, nodes);
@@ -549,14 +551,16 @@ namespace GPC.Geometry.BVH
         {
             _root = new SphereNode();
 
-            var count = Math.Min(points.Count(), ids.Count());
+            var pointList = points as IList<Point3d> ?? points.ToList();
+            var idList = ids as IList<int> ?? ids.ToList();
+            var count = Math.Min(pointList.Count, idList.Count);
 
             SphereNode[] nodes = new SphereNode[count];
             for (int i = 0; i < count; i++)
             {
                 nodes[i] = new SphereNode();
-                nodes[i].Id = ids.ElementAt(i);
-                nodes[i].Sphere.Coord = points.ElementAt(i);
+                nodes[i].Id = idList[i];
+                nodes[i].Sphere.Coord = pointList[i];
                 nodes[i].Sphere.Radius = 0;
             }
 
@@ -572,18 +576,20 @@ namespace GPC.Geometry.BVH
         {
             _root = new SphereNode();
 
-            var count = Math.Min(elements.Count(), ids.Count());
+            var elementList = elements as IList<IEnumerable<Point3d>> ?? elements.ToList();
+            var idList = ids as IList<int> ?? ids.ToList();
+            var count = Math.Min(elementList.Count, idList.Count);
 
             SphereNode[] nodes = new SphereNode[count];
             for (int i = 0; i < count; i++)
             {
                 nodes[i] = new SphereNode();
-                nodes[i].Id = ids.ElementAt(i);
-                var element = elements.ElementAt(i);
-                var pointSpheres = new Sphere[element.Count()];
+                nodes[i].Id = idList[i];
+                var element = elementList[i] as IList<Point3d> ?? elementList[i].ToList();
+                var pointSpheres = new Sphere[element.Count];
                 for (int j = 0; j < pointSpheres.Length; j++)
                 {
-                    pointSpheres[j] = new Sphere(element.ElementAt(j), 0);
+                    pointSpheres[j] = new Sphere(element[j], 0);
                 }
                 nodes[i].Sphere.SetVolume(pointSpheres);
             }

@@ -12,6 +12,52 @@ namespace Geometry
     {
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
+        private sealed class SinglePass<T> : IEnumerable<T>
+        {
+            private readonly IEnumerable<T> _items;
+            private bool _used;
+            public int YieldCount { get; private set; }
+            public SinglePass(IEnumerable<T> items) { _items = items; }
+            public IEnumerator<T> GetEnumerator()
+            {
+                if (_used) throw new InvalidOperationException("Input was enumerated twice");
+                _used = true;
+                foreach (T item in _items) { YieldCount++; yield return item; }
+            }
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        [TestMethod]
+        public void BoundingHierarchiesEnumeratePointAndIdInputsOnce()
+        {
+            var points = new SinglePass<Point3d>(Enumerable.Range(0, 4000).Select(i => P(i, 0)));
+            var ids = new SinglePass<int>(Enumerable.Range(0, 4000).Select(i => i * 2));
+            var spheres = new GPC.Geometry.BVH.SphereBVH(points, ids);
+            Assert.AreEqual(4000, points.YieldCount);
+            Assert.AreEqual(4000, ids.YieldCount);
+            CollectionAssert.AreEqual(new[] { 400 }, spheres.GetIntersections(P(200, 0), 0.1));
+            points = new SinglePass<Point3d>(Enumerable.Range(0, 4000).Select(i => P(i, 0)));
+            ids = new SinglePass<int>(Enumerable.Range(0, 4000).Select(i => i * 2));
+            var boxes = new GPC.Geometry.BVH.AABBBVH(points, ids);
+            Assert.AreEqual(4000, points.YieldCount);
+            Assert.AreEqual(4000, ids.YieldCount);
+            CollectionAssert.AreEqual(new[] { 400 }, boxes.GetIntersections(P(200, 0), 0.1));
+        }
+
+        [TestMethod]
+        public void ElementHierarchyEnumeratesNestedInputsOnce()
+        {
+            var first = new SinglePass<Point3d>(new[] { P(0, 0), P(1, 0) });
+            var second = new SinglePass<Point3d>(new[] { P(10, 0), P(11, 0) });
+            var elements = new SinglePass<IEnumerable<Point3d>>(new[] { first, second });
+            var ids = new SinglePass<int>(new[] { 5, 6 });
+            var spheres = new GPC.Geometry.BVH.SphereBVH(elements, ids);
+            Assert.AreEqual(2, elements.YieldCount);
+            Assert.AreEqual(2, first.YieldCount);
+            Assert.AreEqual(2, second.YieldCount);
+            CollectionAssert.AreEqual(new[] { 5 }, spheres.GetIntersections(P(0.5, 0), 0.1));
+        }
+
         [TestMethod]
         public void BulkPolygonCopyPreservesCoordinatesIndependenceAndTolerance()
         {
