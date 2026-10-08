@@ -13,6 +13,38 @@ namespace Geometry
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
         [TestMethod]
+        public void IndexedMeshJoinPreservesToleranceTopologyAndInputIds()
+        {
+            var target = new Mesh();
+            target.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0, 1) });
+            var source = new Mesh();
+            source.Vertices.Add(new MeshVertex(P(0.00001, 0)), 10);
+            source.Vertices.Add(new MeshVertex(P(1, 0)), 20);
+            source.Vertices.Add(new MeshVertex(P(0, 1)), 30);
+            source.Faces.Add(new MeshFace(new[] { 10, 20, 30 }, "tag"));
+            source.Edges.Add(new MeshEdge(20, 10));
+            target.JoinMesh(source, out var map, out _, out _);
+            Assert.AreEqual(0, map[10]);
+            Assert.AreEqual(3, target.VerticesCount);
+            Assert.AreEqual(3, target.EdgesCount);
+            Assert.AreEqual(1, target.FacesCount);
+            Assert.AreEqual(10, source.Vertices[0].Id);
+            source.Faces.Add(new MeshFace(new[] { 30, 20, 10 }, "reversed"));
+            target.JoinMesh(source);
+            Assert.AreEqual(2, target.FacesCount, "Face winding must be preserved");
+            Assert.AreEqual("reversed", target.Faces[1].Tag);
+
+            var prism = new Mesh();
+            prism.AddVolumeMesh(new[] { P(0, 0), P(1, 0), P(0, 1), P(0, 0, 1), P(1, 0, 1), P(0, 1, 1) }.Select(p => new MeshVertex(p)).ToArray());
+            var volumes = new Mesh();
+            volumes.JoinMesh(prism);
+            volumes.JoinMesh(prism);
+            Assert.AreEqual(6, volumes.VerticesCount);
+            Assert.AreEqual(9, volumes.EdgesCount);
+            Assert.AreEqual(1, volumes.VolumesCount);
+        }
+
+        [TestMethod]
         public void VolumeEqualityHandlesNullOnEitherSide()
         {
             MeshVolume missing = null;

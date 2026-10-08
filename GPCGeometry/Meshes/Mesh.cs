@@ -1203,6 +1203,13 @@ namespace GPC.Geometry.Meshes
             facesIdMap = new Dictionary<int, int>();
             volumesIdMap = new Dictionary<int, int>();
 
+            // Index the topology once; scanning AddUnique for every element was quadratic.
+            HashSet<long> edgeKeys = GetEdgeKeys();
+            var faceKeys = new HashSet<(int, int, int, int)>();
+            foreach (var face in _faces) faceKeys.Add((face.A, face.B, face.C, face.D));
+            var volumeKeys = new HashSet<(int, int, int, int, int, int, int, int)>();
+            foreach (var volume in _volumes) volumeKeys.Add((volume.A, volume.B, volume.C, volume.D, volume.E, volume.F, volume.G, volume.H));
+
             for (int i = 0; i < meshToJoin.VerticesCount; i++)
             {
                 var oldVertex = meshToJoin.Vertices[i];
@@ -1214,7 +1221,7 @@ namespace GPC.Geometry.Meshes
             {
                 var oldEdge = meshToJoin.Edges[i];
                 var newEdge = new MeshEdge(vertexIdMap[oldEdge.A], vertexIdMap[oldEdge.B], oldEdge.Tag);
-                _edges.AddUnique(newEdge);
+                if (edgeKeys.Add(EdgeKey(newEdge.A, newEdge.B))) _edges.Add(newEdge);
             }
 
             for (int i = 0; i < meshToJoin.FacesCount; i++)
@@ -1226,7 +1233,7 @@ namespace GPC.Geometry.Meshes
                     nodes[j] = vertexIdMap[nodes[j]];
                 }
                 var newFace = new MeshFace(nodes, oldFace.Tag);
-                _faces.AddUnique(newFace);
+                if (faceKeys.Add((newFace.A, newFace.B, newFace.C, newFace.D))) _faces.Add(newFace);
             }
 
             for (int i = 0; i < meshToJoin.VolumesCount; ++i)
@@ -1238,8 +1245,10 @@ namespace GPC.Geometry.Meshes
                     nodes[j] = vertexIdMap[nodes[j]];
                 }
                 var newVolume = new MeshVolume(nodes, oldVolume.Tag);
-                _volumes.AddUnique(newVolume);
+                if (volumeKeys.Add((newVolume.A, newVolume.B, newVolume.C, newVolume.D, newVolume.E, newVolume.F, newVolume.G, newVolume.H)))
+                    _volumes.Add(newVolume);
             }
+            _edgeKeysVersion = _edges.Version;
         }
 
         /// <summary>
