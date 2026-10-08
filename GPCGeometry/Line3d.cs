@@ -354,7 +354,7 @@ namespace GPC.Geometry
 				return false;
 
 			// le due rette sono parallele => false
-			if (Math.Abs(denom) < tolerance)
+			if (Math.Abs(denom) <= AngularTolerance * AngularTolerance * d2121 * d4343)
 				return false;
 
 			// la linea 2 degenera in un punto => false
