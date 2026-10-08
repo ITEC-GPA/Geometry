@@ -42,7 +42,11 @@ namespace GPC.Geometry
 		/// <summary>
 		/// The vertices (the array of the polygon, not a copy). The setter does not check the planarity
 		/// </summary>
-		public Point3d[] Points { get => _points; set => _points = value; }
+		public Point3d[] Points
+		{
+			get { _pointsExposed = true; return _points; }
+			set { _points = value; _pointsExposed = true; _planeBasisIndices = null; }
+		}
 
 		#endregion
 
@@ -185,14 +189,20 @@ namespace GPC.Geometry
 		/// <param name="tolerance">The tolerance of the planarity check</param>
 		/// <exception cref="ArgumentException">Thrown when the point parameter make the polygon not planar (the point stays in the polygon)</exception>
 		/// <remarks>Only the new point is checked, against a plane of three points of the polygon kept up to date by the previous calls (O(1)).
-		/// The whole polygon is checked only if the new point is not on that plane</remarks>
+		/// The whole polygon is checked when its coordinates or vertices changed, or the new point is not on that plane</remarks>
 		public void Add(Point3d point, double tolerance = GeometryBase.Tolerance)
 		{
 			if (point == null)
 				return;
 
-			if (!IsPlaneBasisValid(tolerance))
+			bool changedPoints = EnsurePointTracking();
+			if (changedPoints || _planePointVersion != _pointChanges.Version || !IsPlaneBasisValid(tolerance))
+			{
+				if (!IsPlanar(tolerance))
+					throw new ArgumentException("The existing polygon is not planar");
 				ComputePlaneBasis(tolerance);
+				_planePointVersion = _pointChanges.Version;
+			}
 
 			AddWithoutChecks(point);
 
@@ -208,6 +218,28 @@ namespace GPC.Geometry
 		}
 
 		#region Plane basis used by Add
+
+		[NonSerialized] private Point3d.ChangeTracker _pointChanges;
+		[NonSerialized] private List<Point3d> _observedPoints;
+		[NonSerialized] private Point3d[] _trackingArray;
+		[NonSerialized] private int _planePointVersion;
+		[NonSerialized] private bool _pointsExposed;
+
+		private bool EnsurePointTracking()
+		{
+			bool changed = !ReferenceEquals(_trackingArray, _points);
+			if (!changed && _pointsExposed)
+				for (int i = 0; i < _points.Length; i++)
+					if (!ReferenceEquals(_observedPoints[i], _points[i])) { changed = true; break; }
+			if (!changed) return false;
+			if (_pointChanges == null) _pointChanges = new Point3d.ChangeTracker();
+			if (_observedPoints != null)
+				foreach (Point3d point in _observedPoints) point?.UntrackChanges(_pointChanges);
+			_observedPoints = new List<Point3d>(_points);
+			foreach (Point3d point in _observedPoints) point?.TrackChanges(_pointChanges);
+			_trackingArray = _points;
+			return true;
+		}
 
 		/// <summary>
 		/// The indices of up to three points of the polygon that define its plane (3 points), its line (2 points: the points are aligned)
@@ -397,6 +429,13 @@ namespace GPC.Geometry
 				for (int i = 0; i < pointBuffer.Length; i++)
 					_points[i] = pointBuffer[i];
 				_points[_points.Length - 1] = point;
+				if (ReferenceEquals(_trackingArray, pointBuffer))
+				{
+					point.TrackChanges(_pointChanges);
+					_observedPoints.Add(point);
+					_trackingArray = _points;
+				}
+				_pointsExposed = false; // Previously exported arrays no longer own the polygon's slots.
 			}
 		}
 

@@ -13,6 +13,25 @@ namespace Geometry
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
         [TestMethod]
+        public void PolygonAdditionRechecksChangedCoordinatesAndExportedArraySlots()
+        {
+            var polygon = new Polygon3d();
+            polygon.Add(P(0, 0)); polygon.Add(P(1, 0)); polygon.Add(P(1, 1)); polygon.Add(P(0, 1));
+            polygon[3].Z = 1;
+            Assert.ThrowsException<ArgumentException>(() => polygon.Add(P(2, 0)));
+            polygon[3].Z = 0;
+            polygon.Add(P(2, 0));
+            Point3d[] array = polygon.Points;
+            array[3] = P(0, 1, 1);
+            Assert.ThrowsException<ArgumentException>(() => polygon.Add(P(3, 0)));
+            array[3] = P(0, 1);
+            polygon.Add(P(3, 0));
+            polygon.Move(10, 20, 30);
+            polygon.Add(P(14, 20, 30));
+            Assert.AreEqual(7, polygon.Count);
+        }
+
+        [TestMethod]
         public void PickingCoversBothQuadHalvesAndRespectsConcavitiesAndDepth()
         {
             var mesh = new Mesh();
