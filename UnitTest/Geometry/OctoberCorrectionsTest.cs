@@ -12,6 +12,41 @@ namespace Geometry
     {
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
+        [TestMethod]
+        public void ToleranceEqualityWorksInHashCollectionsAndExactComparersAreAvailable()
+        {
+            var a = P(0, 0);
+            var b = P(0.00001, 0);
+            Assert.IsTrue(a.Equals(b));
+            Assert.AreEqual(a.GetHashCode(), b.GetHashCode());
+            Assert.IsTrue(new HashSet<Point3d> { a }.Contains(b));
+            Assert.AreEqual(2, new HashSet<Point3d>(Point3d.ExactComparer) { a, b, P(0, 0) }.Count);
+            Assert.IsTrue(new HashSet<Point2d> { new Point2d(0, 0) }.Contains(new Point2d(0.00001, 0)));
+            Assert.IsTrue(new HashSet<Vector2d> { new Vector2d(0, 0) }.Contains(new Vector2d(0.00001, 0)));
+            Assert.IsTrue(new HashSet<Vector3d> { new Vector3d(0, 0, 0) }.Contains(new Vector3d(0.00001, 0, 0)));
+            var vertices = new MeshBaseCollection<MeshVertex>();
+            int id = vertices.AddUnique(new MeshVertex(a));
+            Assert.AreEqual(id, vertices.AddUnique(new MeshVertex(b)));
+            Assert.AreEqual(1, vertices.Count);
+        }
+
+        [TestMethod]
+        public void LegacyMeshJoinUsesExactCoordinatesRatherThanHashIdentity()
+        {
+            var target = new Mesh();
+            target.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0, 1) });
+            var source = new Mesh();
+            source.AddFaceMesh(new[] { P(0.00001, 0), P(1, 0), P(1, 1) });
+            target.JoinMeshOld(source, out var vertices, out var faces, out var volumes);
+            Assert.AreEqual(5, target.VerticesCount);
+            Assert.AreEqual(3, vertices.Count);
+            Assert.AreEqual(1, faces.Count);
+            Assert.AreEqual(0, volumes.Count);
+            target.JoinMeshOld(source, out _, out _, out _);
+            Assert.AreEqual(5, target.VerticesCount);
+            Assert.AreEqual(2, target.FacesCount);
+        }
+
         private static bool Pick(Mesh mesh, double x, double y) =>
             mesh.PickFace(new Ray3d(P(x, y, 1), new Vector3d(0, 0, -1)), out _, out _);
 

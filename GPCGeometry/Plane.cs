@@ -589,8 +589,7 @@ namespace GPC.Geometry
         }
 
         /// <summary>
-        /// The hash code of the exact origin and normal: planes equal for <see cref="Equals(Plane)"/> (another origin on the plane, opposite
-        /// normal) can have different hash codes
+        /// A constant hash compatible with geometric plane equality, including different origins and opposite normals.
         /// </summary>
         /// <returns>The hash code</returns>
         public override int GetHashCode()

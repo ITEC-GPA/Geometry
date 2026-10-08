@@ -1,4 +1,4 @@
-using GPC.Geometry.BVH;
+﻿using GPC.Geometry.BVH;
 using GPC.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
@@ -1150,7 +1150,7 @@ namespace GPC.Geometry.Meshes
 
         /// <summary>
         /// The previous version of <see cref="JoinMesh(Mesh, out Dictionary{int, int}, out Dictionary{int, int}, out Dictionary{int, int})"/>: the
-        /// vertices, faces and volumes are merged when their hash codes are equal (exact coordinates, same nodes in the same order)
+        /// vertices are merged by exact coordinates; edges, faces and volumes by their nodes, after resolving hash collisions
         /// </summary>
         /// <param name="meshToJoin">The mesh to add</param>
         /// <param name="vertexIdMap">Map between <see cref="MeshVertex"/>.Id of <paramref name="meshToJoin"/> and id of the same vertex in this mesh (Map old, new)</param>
@@ -1161,209 +1161,34 @@ namespace GPC.Geometry.Meshes
             vertexIdMap = new Dictionary<int, int>();
             facesIdMap = new Dictionary<int, int>();
             volumesIdMap = new Dictionary<int, int>();
-
-            int faceIndex = _faces.GetMaxId();
-            //int edgeIndex = _edges.GetMaxId();
-            int verticesIndex = _vertices.GetMaxId();
-
-            Dictionary<int, List<int>> verticesHashMap = _vertices.GetElementHashMap();
-            Dictionary<int, List<int>> volumesHashMap = _volumes.GetElementHashMap();
-            Dictionary<int, List<int>> edgesHashMap = _edges.GetElementHashMap();
-            Dictionary<int, List<int>> facesHashMap = _faces.GetElementHashMap();
-
-            Dictionary<int, List<int>> meshToJoinVerticesIdMap = meshToJoin._vertices.GetElementIdMap();
-
-            foreach (var faceToJoin in meshToJoin._faces)
+            var exactVertices = new Dictionary<Point3d, int>(Point3d.ExactComparer);
+            foreach (var vertex in _vertices)
+                if (!exactVertices.ContainsKey(vertex.Point)) exactVertices.Add(vertex.Point, vertex.Id);
+            foreach (var vertex in meshToJoin._vertices)
             {
-                int[] faceToJoinVertexIds = faceToJoin.GetNodes(); // Salvo i vertici qua
-
-                for (int i = 0; i < faceToJoinVertexIds.Length; i++)
+                if (!exactVertices.TryGetValue(vertex.Point, out int id))
                 {
-                    int faceToJoinVertexId = faceToJoinVertexIds[i];
-                    int index = meshToJoinVerticesIdMap[faceToJoinVertexId].First();
-
-                    MeshVertex vertex = meshToJoin._vertices.GetElementByIndex(index);
-
-                    if (verticesHashMap.ContainsKey(vertex.GetHashCode()))
-                    {
-                        // il vertice è già presente nella mesh base
-
-                        // prendo il vertice, e cambio id alla lista dei vertici del volume da joinare 
-
-                        faceToJoinVertexIds[i] = _vertices.GetElementByIndex(verticesHashMap[vertex.GetHashCode()].First()).Id;
-                        vertexIdMap[faceToJoinVertexId] = faceToJoinVertexIds[i];
-                    }
-                    else
-                    {
-                        // il vertice non è presente nella mesh base
-                        // clono oggetto
-                        // lo aggiungo 
-                        // aggiorno hashMap
-
-                        verticesIndex++;
-                        var cloneMeshVertex = (MeshVertex)vertex.Clone();
-                        cloneMeshVertex.Id = verticesIndex;
-
-                        vertexIdMap[faceToJoinVertexId] = verticesIndex;
-
-                        var buildIndex = _vertices.Add(cloneMeshVertex, cloneMeshVertex.Id);
-                        verticesHashMap.Add(cloneMeshVertex.GetHashCode(), new List<int> { buildIndex });
-                        faceToJoinVertexIds[i] = cloneMeshVertex.Id;
-                    }
+                    var copy = new MeshVertex(vertex.Point, vertex.Tag);
+                    id = _vertices.Add(copy);
+                    exactVertices.Add(copy.Point, id);
                 }
-
-                var meshFace = new MeshFace(faceToJoinVertexIds, faceToJoin.Tag);
-
-                if (facesHashMap.ContainsKey(meshFace.GetHashCode()))
-                {
-                    // face già esistente
-                    facesIdMap[faceToJoin.Id] = Faces.GetElementByIndex(facesHashMap[meshFace.GetHashCode()].First()).Id;
-                }
-                else
-                {
-                    // face da aggiungere
-
-                    var buildIndex = _faces.Add(meshFace, ++faceIndex);
-                    facesHashMap.Add(meshFace.GetHashCode(), new List<int> { buildIndex });
-
-                    facesIdMap[faceToJoin.Id] = faceIndex;
-
-                    for (int i = 0; i < faceToJoinVertexIds.Count(); i++)
-                    {
-                        MeshEdge me;
-
-                        if (i == faceToJoinVertexIds.Count() - 1)
-                        {
-                            me = new MeshEdge(faceToJoinVertexIds[i], faceToJoinVertexIds[0]);
-                        }
-                        else
-                        {
-                            me = new MeshEdge(faceToJoinVertexIds[i], faceToJoinVertexIds[i + 1]);
-                        }
-
-                        if (me != null && !edgesHashMap.ContainsKey(me.GetHashCode()))
-                        {
-                            var buildEdgeIndex = _edges.Add(me);
-                            edgesHashMap.Add(me.GetHashCode(), new List<int> { buildEdgeIndex });
-                        }
-                    }
-                }
+                vertexIdMap.Add(vertex.Id, id);
             }
-
-            int volumeIndex = _volumes.GetMaxId();
-            foreach (var volumeToJoin in meshToJoin._volumes)
+            foreach (var edge in meshToJoin._edges)
+                _edges.AddUnique(new MeshEdge(vertexIdMap[edge.A], vertexIdMap[edge.B], edge.Tag));
+            foreach (var face in meshToJoin._faces)
             {
-                int[] volumeToJoinVertexIds = volumeToJoin.GetNodes(); // Salvo i vertici qua
-
-
-                for (int i = 0; i < volumeToJoinVertexIds.Length; i++)
-                {
-                    int volumeToJoinVertexId = volumeToJoinVertexIds[i];
-                    int index = meshToJoinVerticesIdMap[volumeToJoinVertexId].First();
-
-                    MeshVertex vertex = meshToJoin._vertices.GetElementByIndex(index);
-
-                    if (verticesHashMap.ContainsKey(vertex.GetHashCode()))
-                    {
-                        // il vertice è già presente nella mesh base
-
-                        // prendo il vertice, e cambio id alla lista dei vertici del volume da joinare 
-
-                        volumeToJoinVertexIds[i] = _vertices.GetElementByIndex(verticesHashMap[vertex.GetHashCode()].First()).Id;
-                        vertexIdMap[volumeToJoinVertexId] = volumeToJoinVertexIds[i];
-
-                    }
-                    else
-                    {
-                        // il vertice non è presente nella mesh base
-                        // clono oggetto
-                        // lo aggiungo 
-                        // aggiorno hashMap
-
-                        verticesIndex++;
-                        var cloneMeshVertex = (MeshVertex)vertex.Clone();
-                        cloneMeshVertex.Id = verticesIndex;
-
-                        vertexIdMap[volumeToJoinVertexId] = verticesIndex;
-
-                        var buildIndex = _vertices.Add(cloneMeshVertex, cloneMeshVertex.Id);
-                        verticesHashMap.Add(cloneMeshVertex.GetHashCode(), new List<int> { buildIndex });
-                        volumeToJoinVertexIds[i] = cloneMeshVertex.Id;
-
-                    }
-
-                }
-
-                var meshVolume = new MeshVolume(volumeToJoinVertexIds, volumeToJoin.Tag);
-
-                if (volumesHashMap.ContainsKey(meshVolume.GetHashCode()))
-                {
-                    // volume già esistente
-                    volumesIdMap[volumeToJoin.Id] = Volumes.GetElementByIndex(volumesHashMap[meshVolume.GetHashCode()].First()).Id;
-                }
-                else
-                {
-                    // volume da aggiungere
-
-                    var buildIndex = _volumes.Add(meshVolume, ++volumeIndex);
-                    volumesHashMap.Add(meshVolume.GetHashCode(), new List<int> { buildIndex });
-
-                    volumesIdMap[volumeToJoin.Id] = volumeIndex;
-
-                    int splitFactor = -1;
-                    if (meshVolume.IsQuadrangularPrism)
-                    {
-                        splitFactor = 4;
-
-                    }
-                    else if (meshVolume.IsTriangularPrism)
-                    {
-                        splitFactor = 3;
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    // edge fra indici 0, 1, 2, 3 e 4, 5, 6, 7 cioè le due facce
-                    foreach (var arrayIndex in volumeToJoinVertexIds.Split(splitFactor))
-                    {
-                        for (int i = 0; i < arrayIndex.Count(); i++)
-                        {
-                            MeshEdge me = null;
-
-                            if (i == arrayIndex.Count() - 1)
-                            {
-                                me = new MeshEdge(arrayIndex[i], arrayIndex[0]);
-                            }
-                            else
-                            {
-                                me = new MeshEdge(arrayIndex[i], arrayIndex[i + 1]);
-                            }
-
-                            if (me != null && !edgesHashMap.ContainsKey(me.GetHashCode()))
-                            {
-                                var buildEdgeIndex = _edges.Add(me);
-                                edgesHashMap.Add(me.GetHashCode(), new List<int> { buildEdgeIndex });
-                            }
-                        }
-                    }
-
-                    // edge fra indici 0, 4 e 1, 5 etc cioè le pareti
-                    for (int i = 0; i < splitFactor; i++)
-                    {
-                        MeshEdge me = new MeshEdge(volumeToJoinVertexIds[i], volumeToJoinVertexIds[i + splitFactor]);
-
-                        if (me != null && !edgesHashMap.ContainsKey(me.GetHashCode()))
-                        {
-                            var buildEdgeIndex = _edges.Add(me);
-                            edgesHashMap.Add(me.GetHashCode(), new List<int> { buildEdgeIndex });
-                        }
-                    }
-                }
+                var nodes = face.GetNodes();
+                for (int i = 0; i < nodes.Length; i++) nodes[i] = vertexIdMap[nodes[i]];
+                facesIdMap.Add(face.Id, _faces.AddUnique(new MeshFace(nodes, face.Tag)));
+            }
+            foreach (var volume in meshToJoin._volumes)
+            {
+                var nodes = volume.GetNodes();
+                for (int i = 0; i < nodes.Length; i++) nodes[i] = vertexIdMap[nodes[i]];
+                volumesIdMap.Add(volume.Id, _volumes.AddUnique(new MeshVolume(nodes, volume.Tag)));
             }
         }
-
         /// <summary>
         /// Adds the elements of another mesh: a vertex closer than the default tolerance to an existing one is merged with it (see
         /// <see cref="AddVertex(MeshVertex, double)"/>), the edges, faces and volumes with the same nodes of existing ones are not added again

@@ -175,8 +175,7 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// The hash code of the exact coordinates of the point: <see cref="MeshBaseCollection{T}.AddUnique(T)"/> finds only the vertices with the
-        /// same exact coordinates
+        /// Hashes the ID and the tolerance-compatible point hash; content deduplication is independent of the ID.
         /// </summary>
         /// <returns>The hash code</returns>
         public override int GetHashCode()
@@ -184,6 +183,7 @@ namespace GPC.Geometry.Meshes
             unchecked
             {
                 int hashCode = 23;
+                hashCode = hashCode * -17 + Id.GetHashCode();
                 hashCode = hashCode * -17 + EqualityComparer<Point3d>.Default.GetHashCode(_point);
                 return hashCode;
             }

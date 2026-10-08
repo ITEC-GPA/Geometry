@@ -50,7 +50,7 @@ namespace Geometry
             Point3d p2 = new Point3d(70, 90, 10); 
 
             Assert.IsFalse(p1.Equals(p2));
-            Assert.IsFalse(p1.GetHashCode().Equals(p2.GetHashCode()), $"{p1.GetHashCode()}, {p2.GetHashCode()}");
+            Assert.AreEqual(2, new HashSet<Point3d> { p1, p2 }.Count, "Hash collisions must not merge different points");
         }
 
         [TestMethod]
@@ -314,7 +314,7 @@ namespace Geometry
             pl3.Add(p4);
             pl3.Add(p3);
 
-            Assert.AreNotEqual(pl1.GetHashCode(), pl3.GetHashCode(), 0, $"{pl1.GetHashCode()} {pl3.GetHashCode()}");
+            Assert.AreEqual(2, new HashSet<Polygon3d> { pl1, pl3 }.Count);
         }
 
 
@@ -422,7 +422,7 @@ namespace Geometry
             Shape s1 = new Shape(pl1, new Polygon3d[] { pl3 }, null);
             Shape s2 = new Shape(pl2, new Polygon3d[] { pl4 }, null);
 
-            Assert.AreNotEqual(s1.GetHashCode(), s2.GetHashCode(), 0, $"{s1.GetHashCode()} {s2.GetHashCode()}");
+            Assert.AreEqual(2, new HashSet<Shape> { s1, s2 }.Count);
         }
 
 
@@ -489,7 +489,7 @@ namespace Geometry
             Shape s3 = new Shape(poly2, new Polygon3d[] { embS1 });
 
             Assert.IsFalse(s1 == s2);
-            Assert.IsFalse(s1.GetHashCode() == s2.GetHashCode());
+            Assert.AreEqual(2, new HashSet<Shape> { s1, s2 }.Count);
             Assert.IsFalse(s3.Equals(s2));
 
             Dictionary<Shape, GeometryBase> a = new Dictionary<Shape, GeometryBase>();

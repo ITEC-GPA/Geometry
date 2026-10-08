@@ -1,4 +1,4 @@
-using GmshNet;
+﻿using GmshNet;
 using GPC.Utilities.Maths;
 using System;
 using System.Collections.Generic;
@@ -60,7 +60,7 @@ namespace GPC.Geometry.Meshes.GMesh
         /// <returns>True if the mesh is generate without error, false otherwise</returns>
         public static bool Generate(IEnumerable<Shape> shapes, GMeshGenerateOptions options, out List<Mesh> meshes, out GMeshGenerateMeshStatus generateMeshStatus)
         {
-            var _ = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>();
+            var _ = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>(ReferenceComparer<Mesh>.Instance);
             return Generate(shapes, null, null, options, out meshes, out generateMeshStatus);
         }
 
@@ -275,8 +275,8 @@ namespace GPC.Geometry.Meshes.GMesh
             // Associazione tra shape embedded non modificata e shape embedded modificata.
             Dictionary<Shape, Shape> shapeOutputAssociation = new Dictionary<Shape, Shape>(ReferenceComparer<Shape>.Instance);
 
-            HashSet<GeometryBase> listOfAllEmbGeom = new HashSet<GeometryBase>();
-            HashSet<GeometryBase> listOfAllEmbGeomForEmbShape = new HashSet<GeometryBase>();
+            HashSet<GeometryBase> listOfAllEmbGeom = new HashSet<GeometryBase>(GeometryKeyComparer.Instance);
+            HashSet<GeometryBase> listOfAllEmbGeomForEmbShape = new HashSet<GeometryBase>(GeometryKeyComparer.Instance);
 
             // prima di scalare tutto, creo un dizionario in cui ho la shape, il riferimento in memoria della geometria (scalata) e la size.
             // scalo tutto del fattore scalegeometryfactor            
@@ -286,7 +286,7 @@ namespace GPC.Geometry.Meshes.GMesh
                 shape = shape.Scale(options.GeometryBaseScaleFactor);
                 shapesList.Add(shape);
                 List<GeometryBase> geometryBases = new List<GeometryBase>();
-                Dictionary<GeometryBase, double> geometryAndMeshSize = new Dictionary<GeometryBase, double>();
+                Dictionary<GeometryBase, double> geometryAndMeshSize = new Dictionary<GeometryBase, double>(GeometryKeyComparer.Instance);
 
                 if (embeddedGeometriesInput != null && embeddedGeometriesInput.ContainsKey(shapesInput[s]))
                 {
@@ -430,7 +430,7 @@ namespace GPC.Geometry.Meshes.GMesh
                     {
                         TimeSpan dt2_1 = clock.Elapsed;
 
-                        HashSet<GeometryBase> hashSet = new HashSet<GeometryBase>();
+                        HashSet<GeometryBase> hashSet = new HashSet<GeometryBase>(GeometryKeyComparer.Instance);
 
 
                         #region PREPROCESSING DELLA GEOMETRIA
@@ -1433,7 +1433,7 @@ namespace GPC.Geometry.Meshes.GMesh
                             if (embeddedGeometries.ContainsKey(shape))
                             {
                                 int physicalTag = physicalGroupTagSurfacesAssociation[si].physicalGroupTag;
-                                embeddedGeometriesTagAssociation[physicalTag] = new Dictionary<GeometryBase, int[]>();
+                                embeddedGeometriesTagAssociation[physicalTag] = new Dictionary<GeometryBase, int[]>(GeometryKeyComparer.Instance);
 
                                 // aggiungo a questa lista una shape ogni volta che la embeddo
                                 List<Shape> listEmbShape = new List<Shape>();
@@ -1613,11 +1613,11 @@ namespace GPC.Geometry.Meshes.GMesh
                             // lista di tutte le linee emb
                             HashSet<Line3d> splitLine = new HashSet<Line3d>();
                             // associo le linee spezzate alla geometria originale
-                            Dictionary<Line3d, Line3d[]> splitLines = new Dictionary<Line3d, Line3d[]>();
+                            Dictionary<Line3d, Line3d[]> splitLines = new Dictionary<Line3d, Line3d[]>(GeometryKeyComparer.Instance);
                             // lista dei punti di intersezione
                             HashSet<Point3d> splitPoints = new HashSet<Point3d>();
                             // hashset per controllare di non controllare la stessa geometria 2 volte
-                            HashSet<GeometryBase> hashSet = new HashSet<GeometryBase>();
+                            HashSet<GeometryBase> hashSet = new HashSet<GeometryBase>(GeometryKeyComparer.Instance);
 
                             if (embeddedGeometries.ContainsKey(shapes[t]))
                             {
@@ -2418,7 +2418,7 @@ namespace GPC.Geometry.Meshes.GMesh
                             {
                                 try
                                 {
-                                    Dictionary<GeometryBase, int[]> embeddedGeometriesSingleMesh = new Dictionary<GeometryBase, int[]>();
+                                    Dictionary<GeometryBase, int[]> embeddedGeometriesSingleMesh = new Dictionary<GeometryBase, int[]>(GeometryKeyComparer.Instance);
 
                                     // before, ElementAt(k) on the dictionary: O(n^2)
                                     foreach (KeyValuePair<GeometryBase, int[]> embedded in embeddedGeometriesTagAssociation[phGTags[p]])
@@ -3177,6 +3177,68 @@ namespace GPC.Geometry.Meshes.GMesh
         /// <summary>
         /// Equality by reference, for dictionaries whose keys (shapes) are modified after they have been added
         /// </summary>
+        private sealed class GeometryKeyComparer : IEqualityComparer<GeometryBase>, IEqualityComparer<Line3d>
+        {
+            public static readonly GeometryKeyComparer Instance = new GeometryKeyComparer();
+
+            public bool Equals(GeometryBase x, GeometryBase y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+                if (x is Point3d p && y is Point3d q) return Point3d.ExactComparer.Equals(p, q);
+                if (x is Point2d p2 && y is Point2d q2) return Point2d.ExactComparer.Equals(p2, q2);
+                if (x is Line3d a && y is Line3d b)
+                    return (Equals(a.Start, b.Start) && Equals(a.End, b.End)) || (Equals(a.Start, b.End) && Equals(a.End, b.Start));
+                if (x is Line2d a2 && y is Line2d b2)
+                    return (Equals(a2.Start, b2.Start) && Equals(a2.End, b2.End)) || (Equals(a2.Start, b2.End) && Equals(a2.End, b2.Start));
+                if (x is Polygon3d poly && y is Polygon3d other) return poly.SequenceEqual(other, Point3d.ExactComparer);
+                if (x is Polygon2d poly2 && y is Polygon2d other2) return poly2.SequenceEqual(other2, Point2d.ExactComparer);
+                if (x is Shape shape && y is Shape otherShape)
+                    return Equals(shape.Fill, otherShape.Fill) && SameItems(shape.Holes, otherShape.Holes) && SameItems(shape.Childs, otherShape.Childs);
+                return false;
+            }
+
+            private bool SameItems(GeometryBase[] x, GeometryBase[] y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x == null || y == null || x.Length != y.Length) return false;
+                var matched = new bool[y.Length];
+                foreach (var item in x)
+                {
+                    int i = 0;
+                    while (i < y.Length && (matched[i] || !Equals(item, y[i]))) i++;
+                    if (i == y.Length) return false;
+                    matched[i] = true;
+                }
+                return true;
+            }
+
+            public int GetHashCode(GeometryBase geometry)
+            {
+                if (geometry is null) return 0;
+                if (geometry is Point3d p) return Point3d.ExactComparer.GetHashCode(p);
+                if (geometry is Point2d p2) return Point2d.ExactComparer.GetHashCode(p2);
+                if (geometry is Line3d line) return GetHashCode(line.Start) ^ GetHashCode(line.End);
+                if (geometry is Line2d line2) return GetHashCode(line2.Start) ^ GetHashCode(line2.End);
+                unchecked
+                {
+                    int hash = 17;
+                    if (geometry is Polygon3d poly) foreach (var point in poly) hash = hash * 31 + GetHashCode(point);
+                    else if (geometry is Polygon2d poly2) foreach (var point in poly2) hash = hash * 31 + GetHashCode(point);
+                    else if (geometry is Shape shape)
+                    {
+                        hash = GetHashCode(shape.Fill);
+                        if (shape.Holes != null) foreach (var hole in shape.Holes) hash += 31 * GetHashCode(hole);
+                        if (shape.Childs != null) foreach (var child in shape.Childs) hash += 37 * GetHashCode(child);
+                    }
+                    return hash;
+                }
+            }
+
+            bool IEqualityComparer<Line3d>.Equals(Line3d x, Line3d y) => Equals((GeometryBase)x, y);
+            int IEqualityComparer<Line3d>.GetHashCode(Line3d line) => GetHashCode((GeometryBase)line);
+        }
+
         private sealed class ReferenceComparer<T> : IEqualityComparer<T> where T : class
         {
             /// <summary>
@@ -3690,7 +3752,7 @@ namespace GPC.Geometry.Meshes.GMesh
             public GMeshGenerateMeshStatus()
                 : base()
             {
-                _embeddedGeometriesVertexMap = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>();
+                _embeddedGeometriesVertexMap = new Dictionary<Mesh, Dictionary<GeometryBase, int[]>>(ReferenceComparer<Mesh>.Instance);
             }
 
             /// <summary>
@@ -3721,7 +3783,7 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             public OpenCascadeWrapper()
             {
-                _pointTag = new Dictionary<Point3d, int>();
+                _pointTag = new Dictionary<Point3d, int>(Point3d.ExactComparer);
             }
 
             /// <summary>
@@ -3922,7 +3984,7 @@ namespace GPC.Geometry.Meshes.GMesh
             public void RebuildObjectTags(int surfaceTag = -1)
             {
                 Dictionary<Point3d, int> pointsTagCopy = _pointTag;
-                _pointTag = new Dictionary<Point3d, int>(); // Reset della mappa
+                _pointTag = new Dictionary<Point3d, int>(Point3d.ExactComparer); // Reset della mappa
 
                 if (surfaceTag == -1)
                 {
@@ -3967,7 +4029,7 @@ namespace GPC.Geometry.Meshes.GMesh
             public void RebuildObjectTagsAndCheck(double tolerance)
             {
                 Dictionary<Point3d, int> pointsTagCopy = _pointTag;
-                _pointTag = new Dictionary<Point3d, int>(); // Reset della mappa
+                _pointTag = new Dictionary<Point3d, int>(Point3d.ExactComparer); // Reset della mappa
 
                 (int, int)[] tags = Gmsh.Model.Occ.GetEntities(0); // Recupero tutte le entità
                 Point3d[] occPoints = OccPoints(tags);

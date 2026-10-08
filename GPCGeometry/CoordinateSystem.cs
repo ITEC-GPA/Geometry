@@ -808,7 +808,7 @@ namespace GPC.Geometry
                 hashCode = hashCode * -17 + EqualityComparer<Vector3d>.Default.GetHashCode(_v2);
                 hashCode = hashCode * -17 + EqualityComparer<Vector3d>.Default.GetHashCode(_v3);
                 hashCode = hashCode * -17 + EqualityComparer<Vector3d>.Default.GetHashCode(_InvOrigin);
-                hashCode = hashCode * -17 + EqualityComparer<string>.Default.GetHashCode(_name);
+                // Typed equality ignores the name, so it cannot contribute to the hash.
                 return hashCode;
             }
         }

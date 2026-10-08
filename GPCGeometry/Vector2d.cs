@@ -426,19 +426,16 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// The hash code of the exact components (equal vectors within the tolerance can have different hash codes)
+		/// A constant hash compatible with tolerance equality. Use ExactComparer for exact component keys.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
         {
-            unchecked
-            {
-                int hashCode = 23;
-                hashCode = hashCode * -17 + _x.GetHashCode();
-                hashCode = hashCode * -17 + _y.GetHashCode();
-                return hashCode; 
-            }
+            return base.GetHashCode();
         }
+
+        /// <summary>Exact component equality and hashing for dictionaries. Do not mutate their keys.</summary>
+        public static IEqualityComparer<Vector2d> ExactComparer { get; } = new ExactCoordinateComparer<Vector2d>(p => (p.X, p.Y, 0.0));
 
         /// <summary>
         /// A description of the vector

@@ -195,7 +195,8 @@ namespace GPC.Geometry
             for (int i = 0; i < _collection.Count; ++i)
             {
                 T element = _collection[i];
-                if (element.GetHashCode() == hash && element.HasSameContent(item))
+                // Vertex equality includes its ID, but content deduplication must ignore it.
+                if ((item is MeshVertex || element.GetHashCode() == hash) && element.HasSameContent(item))
                     return element.Id;
             }
             return Add(item);

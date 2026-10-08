@@ -426,20 +426,16 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// The hash code of the exact coordinates. Two points equal within the tolerance can have different hash codes: to find the points near a
-		/// given one use a spatial search, not a hash set or a dictionary
+		/// A constant hash compatible with tolerance equality. Use ExactComparer for exact coordinate keys or a spatial index for proximity searches.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
         {
-            unchecked
-            {
-                int hashCode = 23;
-                hashCode = hashCode * -17 + _x.GetHashCode();
-                hashCode = hashCode * -17 + _y.GetHashCode();
-                return hashCode;
-            }
+            return base.GetHashCode();
         }
+
+        /// <summary>Exact coordinate equality and hashing for dictionaries. Do not mutate their keys.</summary>
+        public static IEqualityComparer<Point2d> ExactComparer { get; } = new ExactCoordinateComparer<Point2d>(p => (p.X, p.Y, 0.0));
 
         /// <summary>
         /// The coordinates separated by the list separator of the current culture (the format read by <see cref="TryParse"/>)

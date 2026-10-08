@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace GPC.Geometry
 {
@@ -492,20 +493,16 @@ namespace GPC.Geometry
 		}
 
 		/// <summary>
-		/// The hash code of the exact components (equal vectors within the tolerance can have different hash codes)
+		/// A constant hash compatible with tolerance equality. Use ExactComparer for exact component keys.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				int hashCode = 23;
-				hashCode = hashCode * -17 + _x.GetHashCode();
-				hashCode = hashCode * -17 + _y.GetHashCode();
-				hashCode = hashCode * -17 + _z.GetHashCode();
-				return hashCode;
-			}
+			return base.GetHashCode();
 		}
+
+        /// <summary>Exact component equality and hashing for dictionaries. Do not mutate their keys.</summary>
+        public static IEqualityComparer<Vector3d> ExactComparer { get; } = new ExactCoordinateComparer<Vector3d>(p => (p.X, p.Y, p.Z));
 
 		/// <summary>
 		/// A description of the vector
