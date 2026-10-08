@@ -65,6 +65,13 @@ namespace GPC.Geometry.Meshes
         [NonSerialized]
         private int _edgeKeysVersion;
 
+        [NonSerialized] private MeshBaseCollection<MeshVertex> _vertexBvhVertices;
+        [NonSerialized] private int _vertexBvhVersion;
+        [NonSerialized] private MeshBaseCollection<MeshVertex> _faceBvhVertices;
+        [NonSerialized] private MeshBaseCollection<MeshFace> _faceBvhFaces;
+        [NonSerialized] private int _faceBvhVertexVersion;
+        [NonSerialized] private int _faceBvhFaceVersion;
+
         #endregion
 
         #region Properties
@@ -213,6 +220,7 @@ namespace GPC.Geometry.Meshes
 
             MeshFace face = new MeshFace(verticesIds);
             _faces.Add(face);
+            FaceBVH = null;
 
             return face.Id;
         }
@@ -2604,6 +2612,8 @@ namespace GPC.Geometry.Meshes
             }
 
             VertexBVH = new SphereBVH(points, ids);
+            _vertexBvhVertices = _vertices;
+            _vertexBvhVersion = _vertices.Version;
         }
 
         /// <summary>
@@ -2621,6 +2631,10 @@ namespace GPC.Geometry.Meshes
             }
 
             FaceBVH = new SphereBVH(faces, ids);
+            _faceBvhVertices = _vertices;
+            _faceBvhFaces = _faces;
+            _faceBvhVertexVersion = _vertices.Version;
+            _faceBvhFaceVersion = _faces.Version;
         }
 
         /// <summary>
@@ -2631,7 +2645,7 @@ namespace GPC.Geometry.Meshes
         /// <returns>The ids of the vertices not farther than <paramref name="range"/></returns>
         public List<int> FindNeighbours(Point3d point, double range)
         {
-            if (VertexBVH == null)
+            if (VertexBVH == null || !ReferenceEquals(_vertexBvhVertices, _vertices) || _vertexBvhVersion != _vertices.Version)
             {
                 UpdateVertexBVH();
             }
@@ -2653,7 +2667,9 @@ namespace GPC.Geometry.Meshes
             intersectionPoint = null;
             double doublePrecision = 1e-12;
 
-            if (FaceBVH == null) { UpdateFaceBVH(); }
+            if (FaceBVH == null || !ReferenceEquals(_faceBvhVertices, _vertices) || !ReferenceEquals(_faceBvhFaces, _faces) ||
+                _faceBvhVertexVersion != _vertices.Version || _faceBvhFaceVersion != _faces.Version)
+                UpdateFaceBVH();
 
             var intersections = FaceBVH.GetRayIntersections(ray);
 

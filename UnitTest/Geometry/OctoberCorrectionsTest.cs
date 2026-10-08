@@ -12,6 +12,29 @@ namespace Geometry
     {
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
+        private static bool Pick(Mesh mesh, double x, double y) =>
+            mesh.PickFace(new Ray3d(P(x, y, 1), new Vector3d(0, 0, -1)), out _, out _);
+
+        [TestMethod]
+        public void MeshSearchesFollowCollectionChanges()
+        {
+            var mesh = new Mesh();
+            mesh.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0, 1) });
+            Assert.IsTrue(Pick(mesh, 0.2, 0.2));
+            mesh.AddFaceMesh(new[] { P(10, 0), P(11, 0), P(10, 1) });
+            Assert.IsTrue(Pick(mesh, 10.2, 0.2));
+            mesh.Faces.RemoveAt(1);
+            Assert.IsFalse(Pick(mesh, 10.2, 0.2));
+
+            Assert.AreEqual(1, mesh.FindNeighbours(P(0, 0), 0.1).Count);
+            int id = mesh.Vertices.Add(new MeshVertex(P(20, 0)));
+            CollectionAssert.AreEqual(new[] { id }, mesh.FindNeighbours(P(20, 0), 0.1));
+            mesh.Vertices.Remove(id);
+            Assert.AreEqual(0, mesh.FindNeighbours(P(20, 0), 0.1).Count);
+            mesh.Faces.Clear();
+            Assert.IsFalse(Pick(mesh, 0.2, 0.2));
+        }
+
         [TestMethod]
         public void SegmentIntersectionDoesNotDependOnTheModelScale()
         {
