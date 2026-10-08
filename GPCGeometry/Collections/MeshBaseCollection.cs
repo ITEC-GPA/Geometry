@@ -195,14 +195,20 @@ namespace GPC.Geometry
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 var oldId = _collection[index].Id;
+                int newId = value.Id == MeshBase.Unset ? _maxId + 1 : value.Id;
+                if (newId != oldId && _ids.ContainsKey(newId))
+                    throw new ArgumentException("The id is already present in the collection", nameof(value));
+                value.Id = newId;
                 if (value.Id != oldId)
                 {
                     _ids.Remove(oldId);
                     _ids.Add(value.Id, index);
                 }
-                _collection.RemoveAt(index);
-                _collection.Insert(index, value);
+                _collection[index] = value;
+                _maxId = Math.Max(_maxId, newId);
                 _version++;
             }
         }

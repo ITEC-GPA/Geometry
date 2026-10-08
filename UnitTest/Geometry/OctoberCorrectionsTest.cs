@@ -16,6 +16,25 @@ namespace Geometry
             mesh.PickFace(new Ray3d(P(x, y, 1), new Vector3d(0, 0, -1)), out _, out _);
 
         [TestMethod]
+        public void CollectionReplacementKeepsIdsUniqueAndFailureIsAtomic()
+        {
+            var collection = new MeshBaseCollection<MeshVertex>();
+            collection.Add(new MeshVertex(P(0, 0)));
+            collection.Add(new MeshVertex(P(1, 0)));
+            var donor = new MeshBaseCollection<MeshVertex>();
+            var replacement = new MeshVertex(P(2, 0));
+            donor.Add(replacement, 2);
+            collection[0] = replacement;
+            Assert.AreEqual(3, collection.Add(new MeshVertex(P(3, 0))));
+            Assert.AreEqual(collection.Count, collection.Select(v => v.Id).Distinct().Count());
+            Assert.ThrowsException<ArgumentException>(() => collection[0] = collection[1]);
+            Assert.AreSame(replacement, collection.GetElementById(2));
+            collection[0] = new MeshVertex(P(4, 0));
+            Assert.AreEqual(4, collection[0].Id);
+            Assert.IsFalse(collection.Contains(2));
+        }
+
+        [TestMethod]
         public void MeshSearchesFollowCollectionChanges()
         {
             var mesh = new Mesh();
