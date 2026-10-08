@@ -13,6 +13,30 @@ namespace Geometry
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
         [TestMethod]
+        public void PickingCoversBothQuadHalvesAndRespectsConcavitiesAndDepth()
+        {
+            var mesh = new Mesh();
+            mesh.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(1, 1), P(0, 1) });
+            Assert.IsTrue(Pick(mesh, 0.75, 0.25));
+            Assert.IsTrue(Pick(mesh, 0.25, 0.75));
+            Assert.IsTrue(Pick(mesh, 0.5, 0.5));
+            Assert.IsFalse(mesh.PickFace(new Ray3d(P(0.25, 0.75, 1), new Vector3d(0, 0, 1)), out _, out _));
+            mesh.AddFaceMesh(new[] { P(0, 0, 0.5), P(1, 0, 0.5), P(1, 1, 0.5), P(0, 1, 0.5) });
+            Assert.IsTrue(mesh.PickFace(new Ray3d(P(0.25, 0.75, 1), new Vector3d(0, 0, -1)), out var face, out var hit));
+            Assert.AreEqual(1, face.Id);
+            Assert.AreEqual(0.5, hit.Z, 1e-12);
+
+            var concave = new Mesh();
+            concave.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0.25, 0.25), P(0, 1) });
+            Assert.IsTrue(Pick(concave, 0.1, 0.5));
+            Assert.IsFalse(Pick(concave, 0.7, 0.2));
+            var otherDiagonal = new Mesh();
+            otherDiagonal.AddFaceMesh(new[] { P(0, 0), P(0.5, 0.25), P(1, 0), P(1, 1) });
+            Assert.IsFalse(Pick(otherDiagonal, 0.5, 0.1));
+            Assert.IsTrue(Pick(otherDiagonal, 0.6, 0.5));
+        }
+
+        [TestMethod]
         public void ToleranceEqualityWorksInHashCollectionsAndExactComparersAreAvailable()
         {
             var a = P(0, 0);

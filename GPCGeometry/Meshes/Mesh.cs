@@ -2479,7 +2479,7 @@ namespace GPC.Geometry.Meshes
         }
 
         /// <summary>
-        /// The face crossed by a ray nearest to its start, in the direction of the ray (for a quadrangle only its triangle A B C is checked;
+        /// The face crossed by a ray nearest to its start, in the direction of the ray (both triangles of a quadrangle are checked;
         /// the faces with aligned vertices are skipped)
         /// </summary>
         /// <param name="ray">The ray: its point and its direction</param>
@@ -2490,70 +2490,50 @@ namespace GPC.Geometry.Meshes
         {
             face = null;
             intersectionPoint = null;
-            double doublePrecision = 1e-12;
-
+            const double precision = 1e-12;
             if (FaceBVH == null || !ReferenceEquals(_faceBvhVertices, _vertices) || !ReferenceEquals(_faceBvhFaces, _faces) ||
                 _faceBvhVertexVersion != _vertices.Version || _faceBvhFaceVersion != _faces.Version)
                 UpdateFaceBVH();
 
-            var intersections = FaceBVH.GetRayIntersections(ray);
-
-            if (intersections.Count == 0)
+            double distance = double.MaxValue;
+            Point3d rayEnd = ray.Point + ray.Direction;
+            foreach (int id in FaceBVH.GetRayIntersections(ray))
             {
-                return false;
-            }
-
-            var closest = -1;
-            var distance = Double.MaxValue;
-
-            for (int i = 0; i < intersections.Count; i++)
-            {
-                var f = GetFace(intersections[i]);
-                var points = GetFacePoints(f);
-
-                Point3d intersection;
-                bool pointsAreColinear = false;
+                MeshFace candidate = GetFace(id);
+                Point3d[] points = GetFacePoints(candidate);
+                int first = 0;
+                if (points.Length == 4)
                 {
-                    if (points[0] == points[1] || points[1] == points[2] || points[2] == points[0])
-                        pointsAreColinear = true;
-                    else
-                    {
-                        var v1 = new Vector3d(points[0], points[1]);
-                        v1.Unitize();
-                        var v2 = new Vector3d(points[0], points[2]);
-                        v2.Unitize();
-                        double sinAlpha = v1.CrossProduct(v2).Norm();
-                        pointsAreColinear = sinAlpha < GeometryBase.AngularTolerance ? true : false;
-                    }
+                    NewellVector(points, out double nx, out double ny, out double nz);
+                    // Use the interior diagonal, including for concave quadrangles.
+                    if (SignedTriangleArea(points[0], points[1], points[2], nx, ny, nz) < 0 ||
+                        SignedTriangleArea(points[0], points[2], points[3], nx, ny, nz) < 0)
+                        first = 1;
                 }
-                if (!pointsAreColinear)
+                for (int t = 1; t < points.Length - 1; t++)
                 {
-                    Plane.GetIntersectionTriangleWihtRay(points[0], points[1], points[2], ray.Point, ray.Point + ray.Direction, out double u, out double v, out double s, out intersection);
-
-                    // Added precision on doubles to also take the vertices of the triangle and not just the strictly contained points.
-                    if (u >= -doublePrecision && v >= -doublePrecision && u + v <= 1.0 + doublePrecision)
+                    Point3d a = points[first], b = points[(first + t) % points.Length], c = points[(first + t + 1) % points.Length];
+                    if (a == b || b == c || c == a) continue;
+                    var ab = new Vector3d(a, b);
+                    var ac = new Vector3d(a, c);
+                    ab.Unitize();
+                    ac.Unitize();
+                    if (ab.CrossProduct(ac).Norm() < GeometryBase.AngularTolerance) continue;
+                    Plane.GetIntersectionTriangleWihtRay(a, b, c, ray.Point, rayEnd,
+                        out double u, out double v, out double s, out Point3d intersection);
+                    if (intersection != null && s > 0 && u >= -precision && v >= -precision && u + v <= 1 + precision)
                     {
-                        if (s > 0)
+                        double d = ray.Point.SquareDistanceTo(intersection);
+                        if (d < distance)
                         {
-                            var d = ray.Point.DistanceTo(intersection);
-                            if (d < distance)
-                            {
-                                closest = f.Id;
-                                intersectionPoint = intersection;
-                                distance = d;
-                            }
+                            distance = d;
+                            face = candidate;
+                            intersectionPoint = intersection;
                         }
                     }
                 }
             }
-
-            if (closest > -1)
-            {
-                face = GetFace(closest);
-                return true;
-            }
-
-            return false;
+            return face != null;
         }
     }
 }
