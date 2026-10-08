@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace GPC.Geometry
 {
@@ -25,6 +26,39 @@ namespace GPC.Geometry
         /// </summary>
         private double _z;
 
+        // Weak observers do not keep a mesh or polygon alive when a caller retains a point.
+        internal sealed class ChangeTracker { internal int Version; }
+        [NonSerialized] private List<WeakReference<ChangeTracker>> _changeTrackers;
+
+        internal void TrackChanges(ChangeTracker tracker)
+        {
+            if (_changeTrackers == null)
+                _changeTrackers = new List<WeakReference<ChangeTracker>>();
+            _changeTrackers.RemoveAll(reference => !reference.TryGetTarget(out _));
+            _changeTrackers.Add(new WeakReference<ChangeTracker>(tracker));
+        }
+
+        internal void UntrackChanges(ChangeTracker tracker)
+        {
+            if (_changeTrackers == null) return;
+            for (int i = _changeTrackers.Count - 1; i >= 0; i--)
+                if (!_changeTrackers[i].TryGetTarget(out ChangeTracker target) || ReferenceEquals(target, tracker))
+                {
+                    _changeTrackers.RemoveAt(i);
+                    if (ReferenceEquals(target, tracker)) return;
+                }
+        }
+
+        private void CoordinatesChanged()
+        {
+            if (_changeTrackers == null) return;
+            for (int i = _changeTrackers.Count - 1; i >= 0; i--)
+                if (_changeTrackers[i].TryGetTarget(out ChangeTracker tracker))
+                    unchecked { tracker.Version++; }
+                else
+                    _changeTrackers.RemoveAt(i);
+        }
+
         #endregion
 
         #region Properties
@@ -37,17 +71,17 @@ namespace GPC.Geometry
         /// <summary>
         /// The X coordinate
         /// </summary>
-        public double X { get => _x; set { _x = value; } }
+        public double X { get => _x; set { _x = value; CoordinatesChanged(); } }
 
         /// <summary>
         /// The Y coordinate
         /// </summary>
-        public double Y { get => _y; set { _y = value; } }
+        public double Y { get => _y; set { _y = value; CoordinatesChanged(); } }
 
         /// <summary>
         /// The Z coordinate
         /// </summary>
-        public double Z { get => _z; set { _z = value; } }
+        public double Z { get => _z; set { _z = value; CoordinatesChanged(); } }
 
         /// <summary>
         /// The coordinates as a new array { X, Y, Z }
@@ -128,6 +162,7 @@ namespace GPC.Geometry
             _x = newX;
             _y = newY;
             _z = newZ;
+            CoordinatesChanged();
         }
 
         /// <summary>
@@ -141,6 +176,7 @@ namespace GPC.Geometry
             _x += dX;
             _y += dY;
             _z += dz;
+            CoordinatesChanged();
         }
 
         /// <summary>

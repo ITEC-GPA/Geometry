@@ -35,6 +35,28 @@ namespace GPC.Geometry
         [NonSerialized]
         private int _version;
 
+        [NonSerialized] private Point3d.ChangeTracker _pointChanges;
+
+        private void TrackPoint(T item)
+        {
+            if (item is MeshVertex vertex)
+            {
+                if (_pointChanges == null) _pointChanges = new Point3d.ChangeTracker();
+                vertex.Point.TrackChanges(_pointChanges);
+            }
+        }
+
+        private void UntrackPoint(T item)
+        {
+            if (item is MeshVertex vertex) vertex.Point.UntrackChanges(_pointChanges);
+        }
+
+        [OnDeserialized]
+        private void RestorePointTracking(StreamingContext context)
+        {
+            foreach (T item in _collection) TrackPoint(item);
+        }
+
         /// <summary>
         /// The number of elements
         /// </summary>
@@ -44,7 +66,7 @@ namespace GPC.Geometry
         /// Incremented at every change of the collection (add, remove, replace, clear).
         /// Used to know if an index built on the collection is still valid
         /// </summary>
-        public int Version => _version;
+        public int Version => unchecked(_version + (_pointChanges?.Version ?? 0));
 
         /// <summary>
         /// True if the inner list is read only
@@ -93,6 +115,7 @@ namespace GPC.Geometry
             }
 
             _collection.Add(item);
+            TrackPoint(item);
             _ids[item.Id] = _collection.Count - 1;
             _maxId = Math.Max(item.Id, _maxId);
             _version++;
@@ -207,7 +230,9 @@ namespace GPC.Geometry
                     _ids.Remove(oldId);
                     _ids.Add(value.Id, index);
                 }
+                UntrackPoint(_collection[index]);
                 _collection[index] = value;
+                TrackPoint(value);
                 _maxId = Math.Max(_maxId, newId);
                 _version++;
             }
@@ -437,6 +462,7 @@ namespace GPC.Geometry
                 return false;
             }
             var pos = _ids[id];
+            UntrackPoint(_collection[pos]);
             _collection.RemoveAt(pos);
             _ids.Remove(id);
             UpdateFromIndex(pos);
@@ -457,6 +483,7 @@ namespace GPC.Geometry
         public virtual bool RemoveAt(int index)
         {
             var item = _collection.ElementAt(index);
+            UntrackPoint(item);
             _collection.RemoveAt(index);
             _ids.Remove(item.Id);
             UpdateFromIndex(index);
@@ -501,6 +528,7 @@ namespace GPC.Geometry
             lock (_locker)
             {
                 _ids.Clear();
+                foreach (T item in _collection) UntrackPoint(item);
                 _collection.Clear();
                 _maxId = -1;
                 _version++;

@@ -16,6 +16,34 @@ namespace Geometry
             mesh.PickFace(new Ray3d(P(x, y, 1), new Vector3d(0, 0, -1)), out _, out _);
 
         [TestMethod]
+        public void MeshIndicesFollowCoordinateEditsIncludingAfterSerialization()
+        {
+            var mesh = new Mesh();
+            mesh.AddFaceMesh(new[] { P(0, 0), P(1, 0), P(0, 1) });
+            Assert.IsTrue(Pick(mesh, 0.2, 0.2));
+            mesh.FindNeighbours(P(0, 0), 0.1);
+            mesh.Vertices[0].Point.X = 10;
+            Assert.AreEqual(0, mesh.AddVertex(new MeshVertex(P(10, 0))));
+            Assert.AreEqual(3, mesh.VerticesCount);
+            CollectionAssert.AreEqual(new[] { 0 }, mesh.FindNeighbours(P(10, 0), 0.1));
+            Assert.IsFalse(Pick(mesh, 0.2, 0.2));
+
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var stream = new System.IO.MemoryStream())
+            {
+                formatter.Serialize(stream, mesh);
+                stream.Position = 0;
+                mesh = (Mesh)formatter.Deserialize(stream);
+            }
+            mesh.FindNeighbours(P(10, 0), 0.1);
+            mesh.Vertices[0].Point.MoveTo(20, 0, 0);
+            Assert.AreEqual(0, mesh.AddVertex(new MeshVertex(P(20, 0))));
+            CollectionAssert.AreEqual(new[] { 0 }, mesh.FindNeighbours(P(20, 0), 0.1));
+            mesh.Vertices[0].Point.Move(10, 0, 0);
+            Assert.AreEqual(0, mesh.AddVertex(new MeshVertex(P(30, 0))));
+        }
+
+        [TestMethod]
         public void CollectionReplacementKeepsIdsUniqueAndFailureIsAtomic()
         {
             var collection = new MeshBaseCollection<MeshVertex>();
