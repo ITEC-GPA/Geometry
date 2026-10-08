@@ -112,12 +112,11 @@ namespace GPC.Geometry
 		/// <param name="tolerance">The tolerance of the planarity check</param>
 		/// <exception cref="ArgumentException">If the polygon is not planar within <paramref name="tolerance"/></exception>
 		public Polygon3d(Polygon3d polygon, double tolerance = GeometryBase.Tolerance)
-			: this()
+			: this(polygon)
 		{
-			for (int i = 0; i < polygon.Count; i++)
-			{
-				Add(new Point3d(polygon[i]), tolerance);
-			}
+			// Copy once and validate the complete polygon, without reallocating at every vertex.
+			if (!IsPlanar(tolerance))
+				throw new ArgumentException("Polygon is not planar", nameof(polygon));
 		}
 
 		/// <summary>

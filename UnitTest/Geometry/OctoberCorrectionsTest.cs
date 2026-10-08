@@ -13,6 +13,29 @@ namespace Geometry
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
         [TestMethod]
+        public void BulkPolygonCopyPreservesCoordinatesIndependenceAndTolerance()
+        {
+            var source = new Polygon3d(Enumerable.Range(0, 8000).Select(i =>
+            {
+                double x = 100 * Math.Cos(2 * Math.PI * i / 8000);
+                double y = 100 * Math.Sin(2 * Math.PI * i / 8000);
+                return P(x, y, 0.2 * x - 0.3 * y);
+            }).ToArray());
+            var copy = new Polygon3d(source, 1e-6);
+            Assert.AreEqual(source.Count, copy.Count);
+            for (int i = 0; i < source.Count; i++)
+            {
+                Assert.AreNotSame(source[i], copy[i]);
+                Assert.AreEqual(0, source[i].SquareDistanceTo(copy[i]), 0);
+            }
+            copy[0].Move(1, 2, 3);
+            Assert.AreNotEqual(source[0], copy[0]);
+            var nonPlanar = new Polygon3d(new[] { P(0, 0), P(1, 0), P(1, 1), P(0, 1, 0.001) });
+            Assert.ThrowsException<ArgumentException>(() => new Polygon3d(nonPlanar, 1e-6));
+            Assert.AreEqual(4, ((Polygon3d)nonPlanar.Clone(0.01)).Count);
+        }
+
+        [TestMethod]
         public void IndexedMeshJoinPreservesToleranceTopologyAndInputIds()
         {
             var target = new Mesh();
