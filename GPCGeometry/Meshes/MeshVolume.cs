@@ -390,13 +390,15 @@ namespace GPC.Geometry.Meshes
         /// <summary>
         /// Equality operator (see <see cref="Equals(MeshVolume)"/>)
         /// </summary>
-        /// <param name="vol1">The first volume (not null, unless both are null)</param>
+        /// <param name="vol1">The first volume, or null</param>
         /// <param name="vol2">The second volume</param>
         /// <returns>True if the volumes are equal</returns>
         public static bool operator ==(MeshVolume vol1, MeshVolume vol2)
         {
             if (ReferenceEquals(vol1, vol2))
                 return true;
+            if (vol1 is null || vol2 is null)
+                return false;
             return vol1.Equals(vol2);
         }
 

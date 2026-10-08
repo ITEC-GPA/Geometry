@@ -13,6 +13,19 @@ namespace Geometry
         private static Point3d P(double x, double y, double z = 0) => new Point3d(x, y, z);
 
         [TestMethod]
+        public void VolumeEqualityHandlesNullOnEitherSide()
+        {
+            MeshVolume missing = null;
+            var volume = new MeshVolume(new[] { 0, 1, 2, 3, 4, 5 });
+            Assert.IsTrue(missing == (MeshVolume)null);
+            Assert.IsFalse(missing == volume);
+            Assert.IsFalse(volume == missing);
+            Assert.IsTrue(missing != volume);
+            Assert.IsTrue(volume != missing);
+            Assert.IsTrue(volume == new MeshVolume(new[] { 0, 1, 2, 3, 4, 5 }));
+        }
+
+        [TestMethod]
         public void PolygonAdditionRechecksChangedCoordinatesAndExportedArraySlots()
         {
             var polygon = new Polygon3d();
