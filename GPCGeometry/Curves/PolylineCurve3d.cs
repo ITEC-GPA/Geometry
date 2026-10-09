@@ -53,17 +53,17 @@ namespace GPC.Geometry
         public double ParameterAtVertex(int index) => Domain.ParameterAt(knots[index]);
         public override Point3d PointAt(double parameter)
         {
-            double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u);
+            double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u);
             return CurveMath.Lerp(points[i], points[i + 1], CurvePartition.Fraction(knots, i, u));
         }
         public override Vector3d TangentAt(double parameter, CurveEvaluationSide side = CurveEvaluationSide.Automatic)
         {
-            double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u, side);
+            double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u, side);
             return CurveMath.Unit(points[i + 1] - points[i], nameof(parameter));
         }
         public override double LengthAt(double parameter)
         {
-            double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u);
+            double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u);
             return lengths[i] + CurvePartition.Fraction(knots, i, u) * (lengths[i + 1] - lengths[i]);
         }
         public override double ParameterAtLength(double distance)
@@ -79,9 +79,7 @@ namespace GPC.Geometry
             {
                 double length = CurveMath.Distance(points[i], points[i + 1]);
                 var unit = CurveMath.Unit(points[i + 1] - points[i], nameof(point));
-                double fraction = ((point.X - points[i].X) / length) * unit.X
-                    + ((point.Y - points[i].Y) / length) * unit.Y + ((point.Z - points[i].Z) / length) * unit.Z;
-                CurveMath.Finite(fraction, nameof(point)); fraction = Math.Max(0, Math.Min(1, fraction));
+                double fraction = CurveMath.ProjectFraction(point, points[i], unit, length);
                 double distance = CurveMath.Distance(point, CurveMath.Lerp(points[i], points[i + 1], fraction));
                 if (distance < bestDistance)
                 {
@@ -92,7 +90,8 @@ namespace GPC.Geometry
         }
         public override Curve3d Trim(double start, double end)
         {
-            ValidateTrim(start, end); double a = Domain.Normalize(start), b = Domain.Normalize(end);
+            ValidateTrim(start, end);
+            double a = CurvePartition.Normalize(Domain, knots, start), b = CurvePartition.Normalize(Domain, knots, end);
             var vertices = new List<Point3d> { PointAt(start) }; var partition = new List<double> { 0 };
             for (int i = 1; i < points.Length - 1; i++)
                 if (knots[i] > a && knots[i] < b) { vertices.Add(points[i]); partition.Add((knots[i] - a) / (b - a)); }

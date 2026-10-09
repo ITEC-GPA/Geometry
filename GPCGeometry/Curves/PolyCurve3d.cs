@@ -69,17 +69,17 @@ namespace GPC.Geometry
             => segments[index].Domain.ParameterAt(CurvePartition.Fraction(knots, index, normalized));
         public override Point3d PointAt(double parameter)
         {
-            EnsureInitialized(); double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u);
+            EnsureInitialized(); double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u);
             return segments[i].PointAt(ChildParameter(i, u));
         }
         public override Vector3d TangentAt(double parameter, CurveEvaluationSide side = CurveEvaluationSide.Automatic)
         {
-            EnsureInitialized(); double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u, side);
+            EnsureInitialized(); double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u, side);
             return segments[i].TangentAt(ChildParameter(i, u), side);
         }
         public override double LengthAt(double parameter)
         {
-            EnsureInitialized(); double u = Domain.Normalize(parameter); int i = CurvePartition.Find(knots, u);
+            EnsureInitialized(); double u = CurvePartition.Normalize(Domain, knots, parameter); int i = CurvePartition.Find(knots, u);
             return lengths[i] + segments[i].LengthAt(ChildParameter(i, u));
         }
         public override double ParameterAtLength(double distance)
@@ -111,7 +111,7 @@ namespace GPC.Geometry
         public override Curve3d Trim(double start, double end)
         {
             EnsureInitialized(); ValidateTrim(start, end);
-            double a = Domain.Normalize(start), b = Domain.Normalize(end);
+            double a = CurvePartition.Normalize(Domain, knots, start), b = CurvePartition.Normalize(Domain, knots, end);
             var curves = new List<Curve3d>(); var partition = new List<double> { 0 };
             for (int i = 0; i < segments.Length; i++)
             {

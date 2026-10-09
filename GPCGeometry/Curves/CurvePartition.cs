@@ -28,6 +28,18 @@ namespace GPC.Geometry
             else if (side == CurveEvaluationSide.Below) index--;
             return Math.Max(0, Math.Min(breaks.Length - 2, index));
         }
+        internal static double Normalize(CurveInterval domain, double[] knots, double parameter)
+        {
+            double value = domain.Normalize(parameter);
+            int index = Array.BinarySearch(knots, value);
+            if (index >= 0) return value;
+            index = ~index;
+            // A labeled corner must round-trip exactly even when domain translation loses a few bits.
+            // Compare the original labels, not a geometric tolerance or a neighborhood in parameter space.
+            if (index < knots.Length && domain.ParameterAt(knots[index]) == parameter) return knots[index];
+            if (index > 0 && domain.ParameterAt(knots[index - 1]) == parameter) return knots[index - 1];
+            return value;
+        }
         internal static double Fraction(double[] knots, int index, double value)
             => Math.Max(0, Math.Min(1, (value - knots[index]) / (knots[index + 1] - knots[index])));
         internal static double[] Reverse(double[] knots)

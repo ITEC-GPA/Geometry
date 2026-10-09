@@ -26,6 +26,33 @@ namespace Geometry
         }
 
         [TestMethod]
+        public void CurveProjectionHandlesFiniteQueriesAtExtremeScale()
+        {
+            var line = new LineCurve3d(P(0), P(1e-100));
+            Assert.AreEqual(1, line.ClosestParameter(P(1e300, 1e300)));
+            Assert.AreEqual(0, line.ClosestParameter(P(-1e300, 1e300)));
+            var polyline = new PolylineCurve3d(new[] { P(0), P(1e-100), P(1e-100, 1e-100) });
+            Assert.IsFalse(double.IsNaN(polyline.ClosestParameter(P(1e300, 1e300))));
+        }
+
+        [TestMethod]
+        public void ArcThreePointConstructionMatchesIndependentSignedSweepsInSpace()
+        {
+            var random = new Random(1837);
+            for (int i = 0; i < 100; i++)
+            {
+                double angle = random.NextDouble() * 2 * Math.PI;
+                var normal = new Vector3d(Math.Cos(angle), 0, Math.Sin(angle));
+                var direction = new Vector3d(0, 1, 0);
+                double sweep = (0.3 + random.NextDouble() * 5.6) * (i % 2 == 0 ? 1 : -1);
+                var expected = new ArcCurve3d(P(3, -2, 5), normal, direction, 0.5 + random.NextDouble() * 20, sweep);
+                var actual = ArcCurve3d.FromThreePoints(expected.StartPoint, expected.PointAt(0.37), expected.EndPoint, 1e-8);
+                Assert.AreEqual(expected.Length, actual.Length, 1e-8);
+                for (int j = 0; j <= 10; j++) Near(expected.PointAt(j / 10.0), actual.PointAt(j / 10.0), 1e-8);
+            }
+        }
+
+        [TestMethod]
         public void ArcCurveSupportsMajorArcsClockwiseArcsAndExactCircleClosure()
         {
             var arc = new ArcCurve3d(P(0), new Vector3d(0, 0, 1), new Vector3d(1, 0, 0), 2, 1.5 * Math.PI);

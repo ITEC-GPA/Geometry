@@ -8,6 +8,22 @@ namespace Geometry
 {
     public partial class Curve3dTest
     {
+        [TestMethod]
+        public void PiecewiseCurveRecognizesCornerParametersAfterDomainChanges()
+        {
+            var vertices = new[] { P(0), P(1), P(1, 2), P(4, 2) };
+            var polyline = new PolylineCurve3d(vertices, new CurveInterval(10, 20));
+            var polycurve = new PolyCurve3d(new Curve3d[] { new LineCurve3d(vertices[0], vertices[1]),
+                new LineCurve3d(vertices[1], vertices[2]), new LineCurve3d(vertices[2], vertices[3]) }, domain: new CurveInterval(10, 20));
+            foreach (var curve in new Curve3d[] { polyline, polycurve })
+            {
+                double corner = curve.Domain.ParameterAt(1.0 / 3);
+                Assert.AreEqual(1, curve.TangentAt(corner, CurveEvaluationSide.Below).X, 1e-12);
+                Assert.AreEqual(1, curve.TangentAt(corner, CurveEvaluationSide.Above).Y, 1e-12);
+                Near(P(1), curve.PointAt(corner), 0);
+            }
+        }
+
         private static PolyCurve3d MixedCurve()
         {
             var arc = new ArcCurve3d(P(2, 1), new Vector3d(0, 0, 1), new Vector3d(0, -1, 0), 1, Math.PI / 2,

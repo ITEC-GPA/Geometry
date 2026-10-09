@@ -45,6 +45,25 @@ namespace GPC.Geometry
             return new Vector3d(x / length, y / length, z / length);
         }
         internal static double Dot(Vector3d a, Vector3d b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        internal static double ProjectFraction(Point3d point, Point3d start, Vector3d unit, double length)
+        {
+            double x = point.X - start.X, y = point.Y - start.Y, z = point.Z - start.Z;
+            double scale = Math.Max(Math.Abs(x), Math.Max(Math.Abs(y), Math.Abs(z)));
+            if (scale == 0) return 0;
+            if (IsFinite(scale)) { x /= scale; y /= scale; z /= scale; }
+            else
+            {
+                // Subtraction itself can overflow for opposite, finite extreme coordinates.
+                scale = Math.Max(Math.Max(Math.Abs(point.X), Math.Max(Math.Abs(point.Y), Math.Abs(point.Z))),
+                    Math.Max(Math.Abs(start.X), Math.Max(Math.Abs(start.Y), Math.Abs(start.Z))));
+                x = point.X / scale - start.X / scale;
+                y = point.Y / scale - start.Y / scale;
+                z = point.Z / scale - start.Z / scale;
+            }
+            double fraction = ((x * unit.X + y * unit.Y + z * unit.Z) * scale) / length;
+            // Infinite projections are outside the finite segment and clamp to its appropriate endpoint.
+            return Math.Max(0, Math.Min(1, fraction));
+        }
         internal static Point3d Lerp(Point3d a, Point3d b, double u) => new Point3d(
             (1 - u) * a.X + u * b.X, (1 - u) * a.Y + u * b.Y, (1 - u) * a.Z + u * b.Z);
         internal static void Tessellation(double tolerance, double maxSegmentLength)

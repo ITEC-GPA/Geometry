@@ -43,10 +43,7 @@ namespace GPC.Geometry
         {
             CurveMath.Copy(point, nameof(point));
             var tangent = TangentAt(Domain.Start);
-            double projection = ((point.X - start.X) / length) * tangent.X
-                + ((point.Y - start.Y) / length) * tangent.Y + ((point.Z - start.Z) / length) * tangent.Z;
-            CurveMath.Finite(projection, nameof(point));
-            return Domain.ParameterAt(Math.Max(0, Math.Min(1, projection)));
+            return Domain.ParameterAt(CurveMath.ProjectFraction(point, start, tangent, length));
         }
         public override Curve3d Trim(double from, double to)
         {
