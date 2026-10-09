@@ -110,6 +110,25 @@ namespace Geometry
         }
 
         [TestMethod]
+        public void CurveConversionsCopyLegacyPrimitivesAndValidatePlanarBoundaries()
+        {
+            var line = new Line3d(P(0), P(1)); var curve = line.ToCurve3d(); line.End.X = 20; Near(P(1), curve.EndPoint);
+            var polygon = new Polygon3d(new[] { P(0), P(2), P(2, 3), P(0, 3) });
+            var boundary = polygon.ToCurve3d(); Assert.IsTrue(boundary.IsClosed);
+            Assert.AreEqual(polygon, boundary.ToPolygon3d());
+            boundary.Move(2, 0, 0); Near(P(0), polygon[0]);
+            Assert.ThrowsException<ArgumentException>(() => curve.ToPolygon3d());
+            var spatial = new PolylineCurve3d(new[] { P(0), P(1), P(1, 1, 1), P(0, 1), P(0) });
+            Assert.ThrowsException<ArgumentException>(() => spatial.ToPolygon3d());
+            var legacyArc = new Circle3dArc(P(1), P(0, 1), P(0));
+            Assert.AreEqual(Math.PI / 2, legacyArc.ToCurve3d().Length, 1e-12);
+            var major = new Circle3dArc(P(1), P(-1), P(0, -1), 1e-6);
+            Assert.AreEqual(1.5 * Math.PI, major.ToCurve3d().Length, 1e-12);
+            var ambiguous = new Circle3dArc(P(1), P(-1), P(0));
+            Assert.ThrowsException<ArgumentException>(() => ambiguous.ToCurve3d());
+        }
+
+        [TestMethod]
         public void LineCurveOwnsItsDataAndReversalIsOriented()
         {
             var legacy = new Line3d(P(0), P(10)); var curve = new LineCurve3d(legacy) { Tag = "axis" };

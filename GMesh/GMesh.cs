@@ -134,13 +134,17 @@ namespace GPC.Geometry.Meshes.GMesh
             // the input is enumerated once (before, Count() and ElementAt(s) at every step)
             IList<Shape> shapesList = shapesInput as IList<Shape> ?? shapesInput.ToList();
 
+            var curveSegments = ExpandEmbeddedCurves(shapesList, ref embeddedGeometriesInput, ref embeddedGeomMeshSize, options);
+
             lock (GmshSync)
             {
                 // Personal Gmsh configuration must not override this library's meshing options.
                 Gmsh.Initialize(readConfigFiles: false);
                 try
                 {
-                    return GenerateCore(shapesList, embeddedGeometriesInput, embeddedGeomMeshSize, options, out meshes, out generateMeshStatus);
+                    bool success = GenerateCore(shapesList, embeddedGeometriesInput, embeddedGeomMeshSize, options, out meshes, out generateMeshStatus);
+                    AddCurveVertexMaps(curveSegments, options, generateMeshStatus);
+                    return success;
                 }
                 finally
                 {
@@ -160,6 +164,68 @@ namespace GPC.Geometry.Meshes.GMesh
         /// <param name="value">The value</param>
         /// <returns>True if the value is positive and not infinite (false for NaN)</returns>
         private static bool IsFinitePositive(double value) => value > 0 && !double.IsInfinity(value);
+
+        // Expand only the new curve types; existing inputs continue through the identical generation path.
+        private static Dictionary<Curve3d, Line3d[]> ExpandEmbeddedCurves(IList<Shape> shapes,
+            ref Dictionary<Shape, GeometryBase[]> embedded, ref Dictionary<GeometryBase, double> sizes, GMeshGenerateOptions options)
+        {
+            var curves = new Dictionary<Curve3d, Line3d[]>(ReferenceComparer<Curve3d>.Instance);
+            if (embedded == null) return curves;
+            foreach (var shape in shapes)
+                if (embedded.TryGetValue(shape, out var geometries) && geometries != null)
+                    foreach (var curve in geometries.OfType<Curve3d>())
+                        if (!curves.ContainsKey(curve))
+                            curves.Add(curve, curve.ToLineSegments(options.CurveChordTolerance, options.CurveMaxSegmentLength));
+            if (curves.Count == 0) return curves;
+            if (!IsFinitePositive(options.GeometryBaseScaleFactor) || !IsFinitePositive(options.MeshScalingFactor))
+                throw new ArgumentException("Curve meshing requires finite positive geometry and mesh scale factors.", nameof(options));
+
+            var expanded = new Dictionary<Shape, GeometryBase[]>(embedded.Comparer);
+            var expandedSizes = sizes == null ? null : new Dictionary<GeometryBase, double>(sizes, GeometryKeyComparer.Instance);
+            foreach (var entry in embedded)
+            {
+                var geometries = new List<GeometryBase>();
+                foreach (var geometry in entry.Value ?? Array.Empty<GeometryBase>())
+                {
+                    if (geometry is Curve3d curve && curves.TryGetValue(curve, out var lines))
+                    {
+                        geometries.AddRange(lines);
+                        if (sizes != null && sizes.TryGetValue(curve, out double size))
+                            foreach (var line in lines)
+                            {
+                                // Overlapping constraints use the finer of the requested sizes.
+                                if (expandedSizes.TryGetValue(line, out double previous)) expandedSizes[line] = Math.Min(previous, size);
+                                else expandedSizes.Add(line, size);
+                            }
+                    }
+                    else geometries.Add(geometry);
+                }
+                expanded.Add(entry.Key, geometries.Distinct(GeometryKeyComparer.Instance).ToArray());
+            }
+            embedded = expanded; sizes = expandedSizes; return curves;
+        }
+
+        private static void AddCurveVertexMaps(Dictionary<Curve3d, Line3d[]> curves, GMeshGenerateOptions options, GMeshGenerateMeshStatus status)
+        {
+            if (curves.Count == 0 || status == null) return;
+            foreach (var meshMap in status.EmbeddedGeometriesVertexMap)
+                foreach (var curve in curves)
+                {
+                    var nodes = new List<int>(); var seen = new HashSet<int>();
+                    foreach (var segment in curve.Value)
+                    {
+                        var scaled = segment.Scale(options.GeometryBaseScaleFactor);
+                        if (!meshMap.Value.TryGetValue(scaled, out var ids)) continue;
+                        // Shared legacy line keys are direction-independent; restore the curve's traversal order.
+                        Point3d first = scaled.Start.Scale(options.MeshScalingFactor);
+                        IEnumerable<int> ordered = ids;
+                        if (ids.Length > 1 && meshMap.Key.GetVertex(ids[0]).Point.DistanceTo(first)
+                            > meshMap.Key.GetVertex(ids[ids.Length - 1]).Point.DistanceTo(first)) ordered = ids.Reverse();
+                        foreach (int id in ordered) if (seen.Add(id)) nodes.Add(id);
+                    }
+                    if (nodes.Count > 0) meshMap.Value[curve.Key] = nodes.ToArray();
+                }
+        }
 
         /// <summary>
         /// The generation, with Gmsh initialized and locked (see <see cref="Generate(IEnumerable{Shape}, Dictionary{Shape, GeometryBase[]}, Dictionary{GeometryBase, double}, GMeshGenerateOptions, out List{Mesh}, out GMeshGenerateMeshStatus)"/>)
@@ -3448,6 +3514,12 @@ namespace GPC.Geometry.Meshes.GMesh
             /// </summary>
             public double AngleToleranceFacetOverlap;
 
+            /// <summary>Maximum chord deviation when discretizing embedded Curve3d objects, in input model units.</summary>
+            public double CurveChordTolerance = GeometryBase.Tolerance;
+
+            /// <summary>Optional maximum chord length of embedded curves, in input model units.</summary>
+            public double CurveMaxSegmentLength = double.PositiveInfinity;
+
             #endregion
 
             #region ScalingOptions
@@ -3643,6 +3715,8 @@ namespace GPC.Geometry.Meshes.GMesh
                     ToleranceInitialDelaunay = ToleranceInitialDelaunay,
                     ToleranceEdgeLength = ToleranceEdgeLength,
                     AngleToleranceFacetOverlap = AngleToleranceFacetOverlap,
+                    CurveChordTolerance = CurveChordTolerance,
+                    CurveMaxSegmentLength = CurveMaxSegmentLength,
 
                     GeometryBaseScaleFactor = GeometryBaseScaleFactor,
                     MeshScalingFactor = MeshScalingFactor
