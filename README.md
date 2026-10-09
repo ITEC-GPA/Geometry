@@ -9,6 +9,7 @@ esplicito. Le implementazioni disponibili sono:
 | --- | --- |
 | `LineCurve3d` | Segmento orientato |
 | `ArcCurve3d` | Arco circolare con angolo percorso positivo o negativo, fino a un giro completo |
+| `EllipseCurve3d` | Ellisse o arco ellittico nello spazio, con due semiassi e angoli iniziale e percorso |
 | `PolylineCurve3d` | Polilinea nello spazio, anche non planare |
 | `PolyCurve3d` | Sequenza ordinata di curve connesse, anche annidate |
 
@@ -28,6 +29,10 @@ specifico per NURBS. I tipi preesistenti (`Line3d`, `Circle3d`, `Circle3dArc`,
   curve composte ogni tratto occupa inizialmente un intervallo uguale, anche se
   ha una lunghezza diversa. Il punto a parametro medio puo' quindi differire
   dal punto a meta' lunghezza.
+- Nelle ellissi il parametro cresce linearmente con l'angolo ellittico. La velocita'
+  varia lungo la curva: lunghezza e inversione della lunghezza usano integrazione
+  numerica adattiva. Gli assi sono orientati da `Normal` e `AxisDirection`, i semiassi
+  positivi `SemiAxisX` e `SemiAxisY` non devono essere ordinati per dimensione.
 - `Trim(a, b)` conserva il dominio `[a,b]` e la parametrizzazione del tratto
   originale. `Split(t)` richiede un parametro interno. Entrambi restituiscono
   copie indipendenti. `Reversed()` mantiene il dominio e inverte il percorso.
@@ -122,9 +127,24 @@ disponibili anche le voci dei segmenti. Per curve parzialmente esterne alla
 superficie la mappa contiene solo le parti effettivamente incorporate. Le
 statistiche delle linee incorporate contano i segmenti generati.
 
-Le funzioni di calcolo in Model e Checker e i formati dei progetti ANTHEA non
-sono migrati alla nuova rappresentazione. Offset, intersezioni generali tra
-curve e NURBS non fanno parte di questa implementazione.
+L'adozione nei progetti Model, Checker e ANTHEA procede nei rispettivi repository.
+Offset, intersezioni generali tra curve e NURBS non fanno parte di questa implementazione.
+
+### Ellissi
+
+```csharp
+var ellipse = new EllipseCurve3d(new Point3d(0, 0, 0), new Vector3d(0, 0, 1),
+    new Vector3d(1, 0, 0), semiAxisX: 100, semiAxisY: 50);
+Curve3d half = ellipse.Trim(0, 0.5);
+Point3d midway = half.PointAtLength(half.Length / 2);
+Polygon3d contour = ellipse.ToPolygon3d(tolerance: 0.01);
+```
+
+`StartAngle` e `SweepAngle` sono in radianti, con lo stesso verso positivo degli
+archi circolari. Il giro completo e' chiuso esattamente. La proiezione considera
+tutti i punti stazionari e gli estremi dell'arco; a parita' di distanza sceglie il
+parametro iniziale. La discretizzazione usa un limite conservativo basato sul
+semiasse maggiore, per rispettare tolleranza e lunghezza massima delle corde.
 
 ### Verifiche
 
@@ -138,3 +158,8 @@ di integrazione Gmsh in `CurveMeshingTest`.
 Eseguire la soluzione in Release con Visual Studio/MSBuild e il test runner x64.
 Il filtro `TestCategory=CurveFeature100` esegue solo i 100 casi dedicati; senza
 filtro viene eseguita anche tutta la suite preesistente.
+
+La categoria `Ellipse100` aggiunge 100 casi per ellissi e archi ellittici: scale,
+eccentricita', domini, orientamenti, lunghezze confrontate con una quadratura
+indipendente, proiezioni, tagli e limiti delle corde. Ulteriori test coprono
+serializzazione, casi degeneri, coordinate estreme e incorporamento in Gmsh.

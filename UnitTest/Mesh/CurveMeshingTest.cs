@@ -14,6 +14,28 @@ namespace Meshes.GMsh
         private static Shape Plate() => new Shape(new Polygon3d(new[] { P(0, 0), P(10, 0), P(10, 10), P(0, 10) }));
 
         [TestMethod]
+        public void GMeshEmbedsEllipticalArcsWithOriginalCurveNodeMaps()
+        {
+            var ellipse = new EllipseCurve3d(P(5, 5), new Vector3d(0, 0, 1), new Vector3d(1, 0, 0), 3, 1, .2, 4);
+            var shape = Plate();
+            var input = new Dictionary<Shape, GeometryBase[]> { [shape] = new GeometryBase[] { ellipse } };
+            var options = new GMesh.GMeshGenerateOptions { MeshSize = 1, CurveChordTolerance = .01, CurveMaxSegmentLength = .4 };
+            Assert.IsTrue(GMesh.Generate(new[] { shape }, input, null, options, out var meshes, out var status), status.GetLastCustomErrorMessage());
+            var mesh = meshes.Single();
+            int[] ids = status.EmbeddedGeometriesVertexMap[mesh][ellipse];
+            Assert.IsTrue(ids.Length > 15);
+            double previous = -1;
+            foreach (int id in ids)
+            {
+                Point3d point = mesh.GetVertex(id).Point;
+                Assert.IsTrue(ellipse.ClosestPoint(point).DistanceTo(point) <= .010001);
+                double parameter = ellipse.ClosestParameter(point);
+                Assert.IsTrue(parameter >= previous - 1e-8); previous = parameter;
+            }
+            Assert.AreEqual(100, mesh.Faces.Sum(f => mesh.GetFaceArea(f)), 1e-6);
+        }
+
+        [TestMethod]
         public void GMeshEmbedsAnArcAndReturnsNodesUnderTheOriginalCurve()
         {
             var arc = new ArcCurve3d(P(5, 5), new Vector3d(0, 0, 1), new Vector3d(1, 0, 0), 2, Math.PI);
