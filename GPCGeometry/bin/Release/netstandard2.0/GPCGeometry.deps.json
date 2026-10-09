@@ -11,7 +11,7 @@
         "dependencies": {
           "MathNet.Numerics": "5.0.0",
           "NETStandard.Library": "2.0.3",
-          "GPCUtilities": "2.0.0.6"
+          "GPCUtilities": "2.0.0.8"
         },
         "runtime": {
           "GPCGeometry.dll": {}
@@ -31,11 +31,11 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
-      "GPCUtilities/2.0.0.6": {
+      "GPCUtilities/2.0.0.8": {
         "runtime": {
           "GPCUtilities.dll": {
-            "assemblyVersion": "2.0.0.6",
-            "fileVersion": "2.0.0.6"
+            "assemblyVersion": "2.0.0.8",
+            "fileVersion": "2.0.0.8"
           }
         }
       }
@@ -68,7 +68,7 @@
       "path": "netstandard.library/2.0.3",
       "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
-    "GPCUtilities/2.0.0.6": {
+    "GPCUtilities/2.0.0.8": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

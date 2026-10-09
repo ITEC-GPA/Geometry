@@ -11,7 +11,7 @@
         "dependencies": {
           "GPCGeometry": "1.0.0",
           "NETStandard.Library": "2.0.3",
-          "GPCUtilities": "2.0.0.5"
+          "GPCUtilities": "2.0.0.8"
         },
         "runtime": {
           "DelaunayMesh.dll": {}
@@ -37,16 +37,16 @@
         },
         "runtime": {
           "GPCGeometry.dll": {
-            "assemblyVersion": "2.0.1.9",
-            "fileVersion": "2.0.1.9"
+            "assemblyVersion": "2.1.0.5",
+            "fileVersion": "2.1.0.5"
           }
         }
       },
-      "GPCUtilities/2.0.0.5": {
+      "GPCUtilities/2.0.0.8": {
         "runtime": {
           "GPCUtilities.dll": {
-            "assemblyVersion": "2.0.0.5",
-            "fileVersion": "2.0.0.5"
+            "assemblyVersion": "2.0.0.8",
+            "fileVersion": "2.0.0.8"
           }
         }
       }
@@ -84,7 +84,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "GPCUtilities/2.0.0.5": {
+    "GPCUtilities/2.0.0.8": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
