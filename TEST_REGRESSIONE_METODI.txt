@@ -1,0 +1,22 @@
+TEST DI REGRESSIONE PER METODO - 9 ottobre 2026
+
+Nuovi test: UnitTest/Geometry/MethodRegressionTests.cs, 23 casi superati.
+Suite completa Release x64: 889/889 superati, nessun test saltato.
+Build: MSBuild GPCGeometry.sln /t:Build /p:Configuration=Release
+Esecuzione: vstest.console.exe UnitTest/bin/Release/UnitTest.dll /Platform:x64
+
+GPCGeometry (19): BoundingBox1d.Update, Reset, Center, GetUnion,
+GetDifference, entrambi gli overload GetIntersection; CoordinateSystem.SetOrigin,
+ToLocal/ToGlobal su vettori e linee, RotateV1/RotateV2/RotateV3; Circle2d.IsPointInside,
+IsPointOnCircle, IsLineInside; Ray3d.IntersectionWith.
+Attese analitiche su geometrie elementari; verifica esplicita della soglia minima,
+dell'origine traslata e della differenza fra asse locale e globale.
+
+DelaunayMesh (3): Generate singolo restituisce diagnosi su forma invalida;
+Generate multiplo interrompe al primo errore conservando solo le mesh precedenti;
+InitialMesh.Generate conserva i quattro vertici del quadrato, con due triangoli.
+GMesh (1): Generate rifiuta dimensioni embedded NaN prima della chiamata nativa.
+
+Le suite esistenti coprono punti/vettori, aree e inerzie, intersezioni, poligoni
+con fori, topologia, clonazione, serializzazione, triangolazione e la generazione
+Gmsh nativa. Nessuna modifica al codice di produzione o alle attese storiche.

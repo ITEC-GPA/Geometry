@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.3.1.1\build\net462\MSTest.TestAdapter.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -73,6 +73,7 @@
     <Compile Include="Geometry\BoundingBox2d.cs" />
     <Compile Include="Geometry\Circle3dTest.cs" />
     <Compile Include="Geometry\ControlTests.cs" />
+    <Compile Include="Geometry\MethodRegressionTests.cs" />
     <Compile Include="Geometry\CoordinateSystemTest.cs" />
     <Compile Include="Geometry\GeometryEqualsHashCode.cs" />
     <Compile Include="Geometry\GeometryPerformance.cs" />
