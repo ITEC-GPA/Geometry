@@ -87,6 +87,9 @@
     <Compile Include="Geometry\ReviewFixesTest.cs" />
     <Compile Include="Geometry\OptimizationTest.cs" />
     <Compile Include="Geometry\OctoberCorrectionsTest.cs" />
+    <Compile Include="Geometry\Curve3dTest.cs" />
+    <Compile Include="Geometry\Curve3dPiecewiseTest.cs" />
+    <Compile Include="Geometry\CurveFeature100Tests.cs" />
     <Compile Include="Geometry\GeometryReviewTest.cs" />
     <Compile Include="Geometry\SerializationTest.cs" />
     <Compile Include="Geometry\Shape2dTest.cs" />
@@ -98,6 +101,7 @@
     <Compile Include="Mesh\MeshCutTest.cs" />
     <Compile Include="Mesh\GMeshReviewTest.cs" />
     <Compile Include="Mesh\GMesh415RegressionTest.cs" />
+    <Compile Include="Mesh\CurveMeshingTest.cs" />
     <Compile Include="Mesh\DelaunayMeshTestGeneric.cs" />
     <Compile Include="Mesh\GenericMeshTest.cs" />
     <Compile Include="Mesh\GMeshTestGeneric.cs" />
