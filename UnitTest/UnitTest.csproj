@@ -88,6 +88,7 @@
     <Compile Include="Geometry\OptimizationTest.cs" />
     <Compile Include="Geometry\OctoberCorrectionsTest.cs" />
     <Compile Include="Geometry\Curve3dTest.cs" />
+    <Compile Include="Geometry\Curve3dPiecewiseTest.cs" />
     <Compile Include="Geometry\GeometryReviewTest.cs" />
     <Compile Include="Geometry\SerializationTest.cs" />
     <Compile Include="Geometry\Shape2dTest.cs" />

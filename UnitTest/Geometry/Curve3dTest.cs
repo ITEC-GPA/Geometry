@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Geometry
 {
     [TestClass]
-    public class Curve3dTest
+    public partial class Curve3dTest
     {
         private static Point3d P(double x, double y = 0, double z = 0) => new Point3d(x, y, z);
         private static void Near(Point3d expected, Point3d actual, double tolerance = 1e-10)
