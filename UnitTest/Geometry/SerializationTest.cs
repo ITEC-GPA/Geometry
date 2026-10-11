@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,7 +20,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, objToTest);
                 ms.Position = 0;
 
@@ -63,7 +62,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, p);
                 ms.Position = 0;
 
@@ -94,7 +93,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, p);
                 ms.Position = 0;
 
@@ -125,7 +124,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, l);
                 ms.Position = 0;
 
@@ -157,7 +156,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, l);
                 ms.Position = 0;
 
@@ -189,7 +188,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, l);
                 ms.Position = 0;
 
@@ -220,7 +219,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, l);
                 ms.Position = 0;
 
@@ -251,7 +250,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, b);
                 ms.Position = 0;
 
@@ -284,7 +283,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, b);
                 ms.Position = 0;
 
@@ -315,7 +314,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, b);
                 ms.Position = 0;
 
@@ -346,7 +345,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, cs);
                 ms.Position = 0;
 
@@ -380,7 +379,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, plane);
                 ms.Position = 0;
 
@@ -420,7 +419,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, poly);
                 ms.Position = 0;
 
@@ -460,7 +459,7 @@ namespace Geometry
 
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, poly);
                 ms.Position = 0;
 
@@ -509,7 +508,7 @@ namespace Geometry
             Shape s = new Shape(poly, new Polygon3d[] { hole });
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, s);
                 ms.Position = 0;
 
@@ -562,7 +561,7 @@ namespace Geometry
             Shape2d s = new Shape2d(poly, new Polygon2d[] { hole });
             using (var ms = new MemoryStream())
             {
-                var formatter = new BinaryFormatter();
+                var formatter = new ContractFormatter();
                 formatter.Serialize(ms, s);
                 ms.Position = 0;
 

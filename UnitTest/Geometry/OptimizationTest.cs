@@ -227,7 +227,7 @@ namespace Geometry
             var vertex = new MeshVertex(new Point3d(1, 2, 3));
             Guid guid = vertex.Guid;
 
-            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            var formatter = new ContractFormatter();
             using (var stream = new System.IO.MemoryStream())
             {
                 formatter.Serialize(stream, vertex);

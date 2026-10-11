@@ -262,7 +262,7 @@ namespace Geometry
 
             foreach (Polygon3d polygon in new[] { circle, warped })
             {
-                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                var formatter = new ContractFormatter();
                 using (var stream = new System.IO.MemoryStream())
                 {
                     formatter.Serialize(stream, polygon);

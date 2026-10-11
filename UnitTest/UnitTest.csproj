@@ -64,12 +64,15 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\CollectionExtension.cs" />
+    <Compile Include="ContractFormatter.cs" />
     <Compile Include="Geometry\BoundingBox2d.cs" />
     <Compile Include="Geometry\Circle3dTest.cs" />
     <Compile Include="Geometry\ControlTests.cs" />

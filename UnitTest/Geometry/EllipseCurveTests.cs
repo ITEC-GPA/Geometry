@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using GPC.Geometry;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -118,7 +117,7 @@ namespace Geometry
             Near(curve.EndPoint, composite.EndPoint);
             using (var stream = new MemoryStream())
             {
-                var formatter = new BinaryFormatter(); formatter.Serialize(stream, curve); stream.Position = 0;
+                var formatter = new ContractFormatter(); formatter.Serialize(stream, curve); stream.Position = 0;
                 var restored = (EllipseCurve3d)formatter.Deserialize(stream);
                 Assert.AreEqual(curve, restored); Assert.AreEqual(curve.Guid, restored.Guid);
                 Near(curve.PointAt(5), restored.PointAt(5));

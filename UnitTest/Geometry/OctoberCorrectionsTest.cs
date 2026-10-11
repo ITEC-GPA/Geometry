@@ -220,7 +220,7 @@ namespace Geometry
             CollectionAssert.AreEqual(new[] { 0 }, mesh.FindNeighbours(P(10, 0), 0.1));
             Assert.IsFalse(Pick(mesh, 0.2, 0.2));
 
-            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            var formatter = new ContractFormatter();
             using (var stream = new System.IO.MemoryStream())
             {
                 formatter.Serialize(stream, mesh);

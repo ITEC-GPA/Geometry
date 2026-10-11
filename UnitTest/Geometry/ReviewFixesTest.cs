@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using GPC.Geometry;
 using GPC.Geometry.Collections;
 using GPC.Geometry.Meshes;
@@ -439,7 +438,7 @@ namespace Geometry
         public void Circle3dSerializationKeepsTheCenter()
         {
             var circle = new Circle3d(P(10, 0, 5), P(0, 10, 5), P(-10, 0, 5));
-            var formatter = new BinaryFormatter();
+            var formatter = new ContractFormatter();
             using (var stream = new MemoryStream())
             {
                 formatter.Serialize(stream, circle);
